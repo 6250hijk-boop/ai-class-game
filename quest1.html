@@ -29,7 +29,12 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">🤖 AI 가디언</div>
     <div class="char-widget">
-      <div id="sb-char-emoji" class="char-emoji">🤖</div>
+      <img id="sb-char-img" src="images/robot_1.png"
+        style="width:80px;height:80px;object-fit:contain;
+               filter:drop-shadow(0 0 12px rgba(99,179,237,0.8));
+               animation:float 3s ease-in-out infinite;"
+        onerror="this.style.display='none';document.getElementById('sb-char-emoji').style.display='block'">
+      <div id="sb-char-emoji" class="char-emoji" style="display:none;">🤖</div>
       <div class="char-name" id="sb-char-name">-</div>
       <div class="char-level" id="sb-char-level">Lv.1</div>
       <div class="char-score" id="sb-score">0 점</div>
@@ -82,7 +87,12 @@
 
       <!-- 캐릭터 패널 -->
       <div class="char-panel">
-        <span class="char-panel-img" id="panel-emoji">🤖</span>
+        <img id="panel-img" src="images/robot_1.png"
+          style="width:120px;height:120px;object-fit:contain;
+                 filter:drop-shadow(0 0 16px rgba(99,179,237,0.8));
+                 animation:float 3s ease-in-out infinite;margin-bottom:12px;"
+          onerror="this.style.display='none';document.getElementById('panel-emoji').style.display='block'">
+        <span class="char-panel-img" id="panel-emoji" style="display:none;">🤖</span>
         <h3 id="panel-name">AI 가디언</h3>
         <p id="panel-level">Lv.1 아기 로봇</p>
         <div class="score-badge" id="panel-score">0 점</div>
@@ -377,6 +387,10 @@ function updateSidebar() {
   const score = userData.score || 0;
   const lv = getLevelByScore(score);
   const next = getNextLevel(score);
+  const imgEl = document.getElementById('sb-char-img');
+  if (imgEl) imgEl.src = lv.img;
+  const panelImg = document.getElementById('panel-img');
+  if (panelImg) panelImg.src = lv.img;
   document.getElementById('sb-char-emoji').textContent = lv.emoji;
   document.getElementById('sb-char-name').textContent = userData.charName || '-';
   document.getElementById('sb-char-level').textContent = `Lv.${lv.level} ${lv.name}`;
