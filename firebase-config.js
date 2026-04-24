@@ -2,12 +2,12 @@
 //  Firebase 설정 - 본인 프로젝트 값으로 교체
 // ══════════════════════════════════════════
 const firebaseConfig = {
-  apiKey: "AIzaSyAEqfJTRbb48PyNabGSL2p5Y5Gciw7ljRQ",
+  apiKey: "여기에_API_KEY",
   authDomain: "ai-class-2731a.firebaseapp.com",
   projectId: "ai-class-2731a",
   storageBucket: "ai-class-2731a.appspot.com",
-  messagingSenderId: "590479208871",
-  appId: "1:590479208871:web:33059fdf5780b379bd0682"
+  messagingSenderId: "여기에_SENDER_ID",
+  appId: "여기에_APP_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -31,11 +31,11 @@ function filterName(name) {
 
 // ── 레벨 설정 ──
 const LEVELS = [
-  { level:1, name:"아기 로봇",       minScore:0,    img:"robot_1.png", emoji:"🤖" },
-  { level:2, name:"초보 AI",         minScore:50,   img:"robot_2.png", emoji:"🦾" },
-  { level:3, name:"학습 AI",         minScore:150,  img:"robot_3.png", emoji:"🧠" },
-  { level:4, name:"지능형 AI",       minScore:300,  img:"robot_4.png", emoji:"⚡" },
-  { level:5, name:"미래형 가디언",   minScore:500,  img:"robot_5.png", emoji:"🌟" },
+  { level:1, name:"아기 로봇",       minScore:0,    img:"images/robot_1.png", emoji:"🤖" },
+  { level:2, name:"초보 AI",         minScore:50,   img:"images/robot_2.png", emoji:"🦾" },
+  { level:3, name:"학습 AI",         minScore:150,  img:"images/robot_3.png", emoji:"🧠" },
+  { level:4, name:"지능형 AI",       minScore:300,  img:"images/robot_4.png", emoji:"⚡" },
+  { level:5, name:"미래형 가디언",   minScore:500,  img:"images/robot_5.png", emoji:"🌟" },
 ];
 
 function getLevelByScore(score) {
