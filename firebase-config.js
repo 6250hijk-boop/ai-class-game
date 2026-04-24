@@ -2,12 +2,12 @@
 //  Firebase 설정 - 본인 프로젝트 값으로 교체
 // ══════════════════════════════════════════
 const firebaseConfig = {
-  apiKey: "여기에_API_KEY",
+  apiKey: "AIzaSyAEqfJTRbb48PyNabGSL2p5Y5Gciw7ljRQ",
   authDomain: "ai-class-2731a.firebaseapp.com",
   projectId: "ai-class-2731a",
   storageBucket: "ai-class-2731a.appspot.com",
-  messagingSenderId: "여기에_SENDER_ID",
-  appId: "여기에_APP_ID"
+  messagingSenderId: "590479208871",
+  appId: "1:590479208871:web:33059fdf5780b379bd0682"
 };
 
 firebase.initializeApp(firebaseConfig);
