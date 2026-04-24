@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AI 가디언 - 메인</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+
+<!-- 스토리 오프닝 -->
+<div id="story-screen" class="story-overlay" style="display:none;">
+  <div class="story-robot">🤖</div>
+  <div class="story-text" id="story-text"></div>
+  <button class="btn btn-primary" id="story-btn" onclick="nextStory()"
+    style="max-width:200px;margin-top:32px;opacity:0;transition:opacity .5s;">
+    계속하기 →
+  </button>
+</div>
+
+<!-- 캐릭터 이름 짓기 -->
+<div id="name-screen" class="story-overlay" style="display:none;">
+  <div class="name-box">
+    <div style="font-size:60px;margin-bottom:16px;">🤖</div>
+    <h2>AI에게 이름을 지어주세요!</h2>
+    <p>당신의 AI 캐릭터 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
+    <div id="name-alert"></div>
+    <div class="field" style="margin-top:16px;">
+      <input id="char-name-input" class="field input" placeholder="예: 스타봇, 루나AI ..."
+        style="background:rgba(255,255,255,0.06);border:1px solid var(--border);
+               border-radius:10px;padding:12px 14px;color:var(--text);
+               font-size:15px;width:100%;outline:none;">
+    </div>
+    <button class="btn btn-primary" onclick="saveName()" style="margin-top:8px;">
+      이름 확정하기 ✨
+    </button>
+  </div>
+</div>
+
+<!-- 앱 레이아웃 -->
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app-layout">
+  <!-- 사이드바 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">🤖 AI 가디언</div>
+
+    <!-- 캐릭터 위젯 -->
+    <div class="char-widget">
+      <div id="sb-char-emoji" class="char-emoji">🤖</div>
+      <div class="char-name" id="sb-char-name">-</div>
+      <div class="char-level" id="sb-char-level">Lv.1 아기 로봇</div>
+      <div class="char-score" id="sb-score">0 점</div>
+      <div class="xp-bar-wrap"><div class="xp-bar" id="sb-xp-bar" style="width:0%"></div></div>
+      <div class="xp-label" id="sb-xp-label">다음 레벨까지 50점</div>
+    </div>
+
+    <!-- 퀘스트 목록 -->
+    <div class="quest-section">
+      <h4>📋 퀘스트</h4>
+      <div id="quest-list"></div>
+    </div>
+
+    <!-- 참고 사이트 -->
+    <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border);">
+      <h4 style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 8px;margin-bottom:8px;">참고 사이트</h4>
+      <a href="https://www.msit.go.kr" target="_blank" class="ref-link">🏛️ 과학기술정보통신부</a>
+      <a href="https://www.kisa.or.kr" target="_blank" class="ref-link">🔒 한국인터넷진흥원</a>
+      <a href="https://ai-hub.kr" target="_blank" class="ref-link">🤖 AI 허브</a>
+    </div>
+
+    <!-- 로그아웃 -->
+    <button class="btn btn-ghost" onclick="logout()"
+      style="margin-top:12px;padding:10px;font-size:13px;">🚪 로그아웃</button>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main-content">
+    <div id="page-home">
+      <h2 style="font-family:'Jua',sans-serif;font-size:26px;margin-bottom:8px;">
+        안녕하세요! <span id="greeting-name"></span> 👋
+      </h2>
+      <p style="color:var(--muted);margin-bottom:32px;">오늘도 AI를 학습시켜볼까요?</p>
+
+      <!-- 퀘스트 카드 그리드 -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+        <!-- 퀘스트 카드들은 JS로 생성 -->
+        <div id="quest-cards"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+let currentUser = null;
+let userData = null;
+let storyStep = 0;
+
+const STORY = [
+  "안녕하세요! 저는 AI 가디언 시스템입니다. 🌟",
+  "인류의 문제를 해결하기 위해 갓 태어난 초보 AI(아기 로봇)가 당신에게 배달되었습니다! 🤖",
+  "당신은 이제 'AI 멘토'가 되어야 합니다.",
+  "현실 세계의 데이터를 수집하고 라벨링하여...",
+  "이 AI를 최종 형태인 '미래형 가디언'으로 진화시켜야 합니다! ⚡",
+  "퀘스트를 완료할수록 AI가 점점 강해집니다.",
+  "자, 이제 시작해볼까요? 먼저 AI에게 이름을 지어주세요! 💫"
+];
+
+requireAuth(async (user) => {
+  currentUser = user;
+
+  if (user.uid === 'student' || user.uid === 'admin') {
+    userData = { id: user.id, name: user.name, score: 0, level: 1, charName: '임시봇', quests: {} };
+    initUI();
+    return;
+  }
+
+  const snap = await db.collection('users').where('id','==',user.id).get();
+  if (!snap.empty) {
+    userData = snap.docs[0].data();
+    userData._docId = snap.docs[0].id;
+    currentUser.uid = snap.docs[0].id;
+  }
+
+  // 첫 로그인 체크
+  if (!userData.charName) {
+    showStory();
+  } else {
+    initUI();
+  }
+});
+
+function showStory() {
+  document.getElementById('story-screen').style.display = 'flex';
+  document.getElementById('story-text').textContent = STORY[storyStep];
+  setTimeout(() => {
+    document.getElementById('story-btn').style.opacity = '1';
+  }, 1000);
+}
+
+function nextStory() {
+  storyStep++;
+  if (storyStep >= STORY.length) {
+    document.getElementById('story-screen').style.display = 'none';
+    document.getElementById('name-screen').style.display = 'flex';
+    return;
+  }
+  document.getElementById('story-btn').style.opacity = '0';
+  document.getElementById('story-text').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('story-text').textContent = STORY[storyStep];
+    document.getElementById('story-text').style.opacity = '1';
+    setTimeout(() => document.getElementById('story-btn').style.opacity = '1', 600);
+  }, 400);
+}
+
+async function saveName() {
+  const name = document.getElementById('char-name-input').value.trim();
+  if (!name) return showNameAlert('이름을 입력하세요.');
+  if (name.length < 2 || name.length > 10) return showNameAlert('2~10자 사이로 입력하세요.');
+  if (filterName(name)) return showNameAlert('⚠️ 사용할 수 없는 이름입니다.');
+
+  if (currentUser.uid !== 'student') {
+    await db.collection('users').doc(currentUser.uid).update({ charName: name });
+  }
+  userData.charName = name;
+  currentUser.charName = name;
+  sessionStorage.setItem('gameUser', JSON.stringify(currentUser));
+  document.getElementById('name-screen').style.display = 'none';
+  initUI();
+}
+
+function showNameAlert(msg) {
+  document.getElementById('name-alert').innerHTML = `<div class="alert alert-error">${msg}</div>`;
+}
+
+function initUI() {
+  const score = userData.score || 0;
+  const lv = getLevelByScore(score);
+  const next = getNextLevel(score);
+
+  // 사이드바
+  document.getElementById('sb-char-emoji').textContent = lv.emoji;
+  document.getElementById('sb-char-name').textContent = userData.charName || '이름 없음';
+  document.getElementById('sb-char-level').textContent = `Lv.${lv.level} ${lv.name}`;
+  document.getElementById('sb-score').textContent = `${score} 점`;
+
+  const pct = next
+    ? ((score - lv.minScore) / (next.minScore - lv.minScore)) * 100
+    : 100;
+  document.getElementById('sb-xp-bar').style.width = Math.min(100,pct) + '%';
+  document.getElementById('sb-xp-label').textContent =
+    next ? `다음 레벨까지 ${next.minScore - score}점` : '🌟 최고 레벨!';
+
+  // 인사
+  document.getElementById('greeting-name').textContent =
+    `${userData.name}님 (${userData.charName || ''})`;
+
+  // 퀘스트 사이드바
+  const ql = document.getElementById('quest-list');
+  ql.innerHTML = QUESTS.map(q => {
+    const done = (userData.quests||{})[`q${q.id}_done`];
+    return `<a href="quest${q.id}.html" class="quest-item ${done?'done':''}">
+      <div class="quest-check ${done?'done':''}">${done?'✓':''}</div>
+      <span>${q.icon} ${q.title}</span>
+    </a>`;
+  }).join('');
+
+  // 퀘스트 카드 그리드
+  document.getElementById('quest-cards').parentElement.innerHTML =
+    QUESTS.map(q => {
+      const done = (userData.quests||{})[`q${q.id}_done`];
+      return `
+      <a href="quest${q.id}.html" style="text-decoration:none;">
+        <div style="background:var(--card);border:1px solid ${done?'var(--green)':'var(--border)'};
+             border-radius:16px;padding:20px;cursor:pointer;transition:all .2s;
+             ${done ? 'opacity:.7' : ''}"
+             onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(99,179,237,0.15)'"
+             onmouseout="this.style.transform='';this.style.boxShadow=''">
+          <div style="font-size:36px;margin-bottom:10px;">${q.icon}</div>
+          <div style="font-weight:700;margin-bottom:4px;">퀘스트 ${q.id}</div>
+          <div style="font-size:14px;color:var(--muted);">${q.title}</div>
+          <div style="margin-top:12px;font-size:12px;color:${done?'var(--green)':'var(--muted)'};">
+            ${done ? '✅ 완료' : '🔒 진행 중'}
+          </div>
+        </div>
+      </a>`;
+    }).join('');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+function logout() {
+  sessionStorage.removeItem('gameUser');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

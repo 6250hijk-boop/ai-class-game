@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>퀘스트1 - 인공지능 세계의 법률</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+
+<!-- 퀴즈 팝업 -->
+<div id="quiz-overlay" class="quiz-overlay" style="display:none;">
+  <div class="quiz-box">
+    <h2>⚖️ 법률 퀴즈 타임!</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+      배운 내용을 확인해봐요!
+    </p>
+    <div class="quiz-progress" id="quiz-dots"></div>
+    <div id="quiz-content"></div>
+    <div id="quiz-result" style="display:none;"></div>
+  </div>
+</div>
+
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app-layout">
+  <!-- 사이드바 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">🤖 AI 가디언</div>
+    <div class="char-widget">
+      <div id="sb-char-emoji" class="char-emoji">🤖</div>
+      <div class="char-name" id="sb-char-name">-</div>
+      <div class="char-level" id="sb-char-level">Lv.1</div>
+      <div class="char-score" id="sb-score">0 점</div>
+      <div class="xp-bar-wrap"><div class="xp-bar" id="sb-xp-bar" style="width:0%"></div></div>
+    </div>
+    <div class="quest-section">
+      <h4>📋 퀘스트</h4>
+      <div id="quest-list"></div>
+    </div>
+    <button class="btn btn-ghost" onclick="window.location.href='main.html'"
+      style="margin-top:auto;padding:10px;font-size:13px;">🏠 메인으로</button>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main-content">
+    <div style="margin-bottom:20px;">
+      <a href="main.html" style="color:var(--muted);font-size:13px;text-decoration:none;">← 메인으로</a>
+      <h2 style="font-family:'Jua',sans-serif;font-size:24px;margin-top:8px;">
+        ⚖️ 퀘스트 1: 인공지능 세계의 법률
+      </h2>
+    </div>
+
+    <div class="quest-layout">
+      <!-- 대화창 -->
+      <div class="chat-box">
+        <div class="chat-header">
+          <span style="font-size:24px;">🤖</span>
+          <div>
+            <h3 id="chat-char-name">AI 가디언</h3>
+            <p style="font-size:12px;color:var(--muted);">대화형 학습</p>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <span id="progress-badge"
+              style="background:rgba(99,179,237,0.15);color:var(--primary);
+                     padding:4px 12px;border-radius:20px;font-size:12px;">
+              0 / 12
+            </span>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+          <div class="loading"><div class="spinner"></div><p>불러오는 중...</p></div>
+        </div>
+
+        <div class="chat-actions" id="chat-actions">
+          <button class="btn btn-primary btn-sm" onclick="nextMessage()">계속하기 →</button>
+          <button class="btn btn-ghost btn-sm" onclick="saveAndExit()">💾 저장하고 나가기</button>
+        </div>
+      </div>
+
+      <!-- 캐릭터 패널 -->
+      <div class="char-panel">
+        <span class="char-panel-img" id="panel-emoji">🤖</span>
+        <h3 id="panel-name">AI 가디언</h3>
+        <p id="panel-level">Lv.1 아기 로봇</p>
+        <div class="score-badge" id="panel-score">0 점</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:12px;">
+          퀘스트를 완료하면<br>점수를 얻어요! ✨
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const MESSAGES = [
+  { text:"여기는 대한민국 인공지능 세계야 🌏", delay:0 },
+  { text:"여기에서 살아가려면 법을 알고 있어야겠지? ⚖️", delay:800 },
+  { text:"여기 세계의 법을 알려줄게!", delay:500 },
+  { text:"나는 AI로 만들어진 캐릭터야 🤖", delay:600 },
+  { text:"나는 AI로 만들어진 이미지이기 때문에 AI로 생성된 사실을 알려줘야 해.", delay:700 },
+  { text:"대한민국에서 2026년 1월 22일부터 시행되었지! 📅", delay:600 },
+  { text:"그래서 AI로 만들어진 광고를 보면 아래에<br>\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지.", delay:800 },
+  { text:"이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️", delay:700 },
+  { text:"특히 실제와 구분이 어렵다면 잘 보이도록 표시해야 하지.", delay:600 },
+  { text:"개인정보 보호법에 대해서도 알아볼까? 🔒", delay:700 },
+  { text:"AI가 더 똑똑한 AI로 성장하기 위해서는 많은 정보를 학습해야 해.", delay:600 },
+  { text:"하지만 개인정보는 허락 없이 사용할 수 없어! 아주 중요한 법이야. ⚠️", delay:700 },
+  { type:"quiz_trigger", text:"✨ 배운 내용을 퀴즈로 확인해볼까? 준비됐어?", delay:800 },
+];
+
+const QUIZZES = [
+  {
+    q: "AI로 만들어진 광고에는 무엇을 표기해야 하나요?",
+    opts: ["본 광고는 AI로 만들어졌습니다.", "이 광고는 가짜입니다.", "표기하지 않아도 됩니다.", "AI 광고 금지"],
+    ans: 0,
+    exp: "2026년 1월 22일부터 AI 생성 광고에는 '본 광고는 AI로 만들어졌습니다.'를 표기해야 합니다."
+  },
+  {
+    q: "AI 콘텐츠 표시 의무가 적용되는 것은?",
+    opts: ["이미지만", "동영상만", "이미지, 동영상, 오디오 모두", "텍스트만"],
+    ans: 2,
+    exp: "이미지, 동영상, 오디오 콘텐츠 모두 AI 생성 표시 의무가 적용됩니다."
+  },
+  {
+    q: "AI가 더 똑똑해지기 위해 무엇이 필요한가요?",
+    opts: ["전기", "많은 학습 데이터", "물", "더 큰 컴퓨터"],
+    ans: 1,
+    exp: "AI는 많은 데이터를 학습해야 더 발전할 수 있습니다."
+  },
+];
+
+let currentUser = null;
+let userData = null;
+let msgIdx = 0;
+let isTyping = false;
+let quizIdx = 0;
+let quizScore = 0;
+
+requireAuth(async (user) => {
+  currentUser = user;
+
+  if (user.uid === 'student') {
+    userData = { charName:'임시봇', score:0, quests:{} };
+  } else {
+    const snap = await db.collection('users').where('id','==',user.id).get();
+    if (!snap.empty) {
+      userData = snap.docs[0].data();
+      currentUser.uid = snap.docs[0].id;
+    }
+  }
+
+  updateSidebar();
+
+  // 저장된 진행도 불러오기
+  const savedIdx = (userData.quests||{}).q1_msgIdx || 0;
+  msgIdx = Math.min(savedIdx, MESSAGES.length - 1);
+
+  // 이전 메시지들 한번에 표시
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  for (let i = 0; i < msgIdx; i++) {
+    if (MESSAGES[i].type !== 'quiz_trigger') {
+      addBubble(MESSAGES[i].text, false);
+    }
+  }
+  document.getElementById('progress-badge').textContent = `${msgIdx} / ${MESSAGES.length}`;
+
+  if (msgIdx < MESSAGES.length) {
+    setTimeout(() => showMessage(msgIdx), 500);
+  } else {
+    showComplete();
+  }
+});
+
+function showMessage(idx) {
+  if (idx >= MESSAGES.length) { showComplete(); return; }
+  const msg = MESSAGES[idx];
+  isTyping = true;
+  document.getElementById('chat-actions').style.opacity = '0.5';
+
+  setTimeout(() => {
+    if (msg.type === 'quiz_trigger') {
+      addBubble(msg.text, true);
+      document.getElementById('chat-actions').innerHTML = `
+        <button class="btn btn-accent btn-sm" onclick="startQuiz()">🎮 퀴즈 시작!</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveAndExit()">💾 저장하고 나가기</button>
+      `;
+    } else {
+      addBubble(msg.text, true);
+      document.getElementById('chat-actions').innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="nextMessage()">계속하기 →</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveAndExit()">💾 저장하고 나가기</button>
+      `;
+    }
+    document.getElementById('chat-actions').style.opacity = '1';
+    document.getElementById('progress-badge').textContent = `${idx+1} / ${MESSAGES.length}`;
+    isTyping = false;
+  }, msg.delay || 400);
+}
+
+function addBubble(text, animate=true) {
+  const div = document.createElement('div');
+  div.className = 'bubble bubble-ai';
+  if (!animate) div.style.animation = 'none';
+  div.innerHTML = text;
+  document.getElementById('chat-messages').appendChild(div);
+  document.getElementById('chat-messages').scrollTop = 9999;
+}
+
+function nextMessage() {
+  if (isTyping) return;
+  msgIdx++;
+  showMessage(msgIdx);
+  autoSave();
+}
+
+async function autoSave() {
+  if (currentUser.uid === 'student') return;
+  await db.collection('users').doc(currentUser.uid).update({
+    'quests.q1_msgIdx': msgIdx
+  });
+}
+
+async function saveAndExit() {
+  await autoSave();
+  window.location.href = 'main.html';
+}
+
+// ── 퀴즈 ──
+function startQuiz() {
+  quizIdx = 0; quizScore = 0;
+  document.getElementById('quiz-overlay').style.display = 'flex';
+  showQuiz();
+}
+
+function showQuiz() {
+  const q = QUIZZES[quizIdx];
+  // 진행 점
+  document.getElementById('quiz-dots').innerHTML = QUIZZES.map((_, i) =>
+    `<div class="quiz-dot ${i<quizIdx?'done':i===quizIdx?'cur':''}"></div>`
+  ).join('');
+
+  document.getElementById('quiz-content').innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+      문제 ${quizIdx+1} / ${QUIZZES.length}
+    </div>
+    <div class="quiz-question">${q.q}</div>
+    ${q.opts.map((opt,i) =>
+      `<button class="quiz-opt" onclick="selectQuizAns(${i},this)">${opt}</button>`
+    ).join('')}
+  `;
+  document.getElementById('quiz-result').style.display = 'none';
+}
+
+async function selectQuizAns(idx, btn) {
+  const q = QUIZZES[quizIdx];
+  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+  const correct = idx === q.ans;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
+  if (correct) quizScore++;
+
+  document.getElementById('quiz-result').style.display = 'block';
+  document.getElementById('quiz-result').innerHTML = `
+    <div class="alert ${correct?'alert-success':'alert-error'}" style="margin-top:12px;">
+      ${correct?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="nextQuiz()" style="margin-top:8px;">
+      ${quizIdx+1 < QUIZZES.length ? '다음 문제 →' : '결과 보기 →'}
+    </button>
+  `;
+}
+
+async function nextQuiz() {
+  quizIdx++;
+  if (quizIdx >= QUIZZES.length) {
+    await finishQuiz();
+  } else {
+    showQuiz();
+  }
+}
+
+async function finishQuiz() {
+  const xp = quizScore * 10 + (quizScore === QUIZZES.length ? 20 : 0);
+
+  // 점수 저장
+  if (currentUser.uid !== 'student') {
+    await addScore(currentUser.uid, xp, '퀘스트1 퀴즈');
+    await db.collection('users').doc(currentUser.uid).update({
+      'quests.q1_quiz_done': true,
+      'quests.q1_quiz_score': quizScore,
+    });
+
+    // 퀴즈 결과 기록
+    await db.collection('quiz_results').doc(currentUser.uid).set({
+      q1: firebase.firestore.FieldValue.arrayUnion({
+        score: quizScore, total: QUIZZES.length,
+        xp, date: new Date().toISOString()
+      })
+    }, {merge:true});
+
+    userData.score = (userData.score||0) + xp;
+    updateSidebar();
+    checkLevelUp(userData.score - xp, userData.score);
+  }
+
+  document.getElementById('quiz-content').innerHTML = `
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:60px;margin-bottom:16px;">
+        ${quizScore === QUIZZES.length ? '🏆' : quizScore >= 2 ? '👍' : '💪'}
+      </div>
+      <h3 style="font-size:22px;margin-bottom:8px;">${quizScore} / ${QUIZZES.length} 정답</h3>
+      <div style="color:var(--accent);font-size:18px;margin-bottom:24px;">+${xp} 점 획득!</div>
+      <button class="btn btn-primary" onclick="closeQuiz()">계속 학습하기 →</button>
+    </div>
+  `;
+  document.getElementById('quiz-dots').innerHTML = '';
+  document.getElementById('quiz-result').style.display = 'none';
+  showXPPopup('+' + xp + ' 점');
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-overlay').style.display = 'none';
+  // 퀘스트1 완료 처리
+  msgIdx++;
+  if (currentUser.uid !== 'student') {
+    db.collection('users').doc(currentUser.uid).update({
+      'quests.q1_done': true,
+      'quests.q1_msgIdx': MESSAGES.length
+    });
+  }
+  showComplete();
+}
+
+function showComplete() {
+  document.getElementById('chat-messages').innerHTML += `
+    <div class="bubble bubble-ai" style="border-color:var(--green);">
+      🎉 퀘스트 1 완료! 법률에 대해 잘 배웠어!<br>
+      다음 퀘스트로 넘어가볼까?
+    </div>
+  `;
+  document.getElementById('chat-actions').innerHTML = `
+    <button class="btn btn-green btn-sm" onclick="window.location.href='quest2.html'">
+      다음 퀘스트 →
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="window.location.href='main.html'">
+      🏠 메인으로
+    </button>
+  `;
+}
+
+function checkLevelUp(before, after) {
+  const lvBefore = getLevelByScore(before);
+  const lvAfter  = getLevelByScore(after);
+  if (lvAfter.level > lvBefore.level) {
+    const el = document.createElement('div');
+    el.className = 'levelup-screen';
+    el.innerHTML = `
+      <div class="levelup-char">${lvAfter.emoji}</div>
+      <h1>레벨 업! 🎉</h1>
+      <p>Lv.${lvAfter.level} ${lvAfter.name}</p>
+      <button class="btn btn-accent" style="max-width:200px;margin-top:20px;"
+        onclick="this.parentElement.remove()">확인</button>
+    `;
+    document.body.appendChild(el);
+  }
+}
+
+function updateSidebar() {
+  const score = userData.score || 0;
+  const lv = getLevelByScore(score);
+  const next = getNextLevel(score);
+  document.getElementById('sb-char-emoji').textContent = lv.emoji;
+  document.getElementById('sb-char-name').textContent = userData.charName || '-';
+  document.getElementById('sb-char-level').textContent = `Lv.${lv.level} ${lv.name}`;
+  document.getElementById('sb-score').textContent = score + ' 점';
+  const pct = next ? ((score-lv.minScore)/(next.minScore-lv.minScore))*100 : 100;
+  document.getElementById('sb-xp-bar').style.width = Math.min(100,pct)+'%';
+
+  // 캐릭터 패널
+  document.getElementById('panel-emoji').textContent = lv.emoji;
+  document.getElementById('panel-name').textContent = userData.charName || 'AI';
+  document.getElementById('panel-level').textContent = `Lv.${lv.level} ${lv.name}`;
+  document.getElementById('panel-score').textContent = score + ' 점';
+  document.getElementById('chat-char-name').textContent = userData.charName || 'AI 가디언';
+
+  // 퀘스트 사이드바
+  document.getElementById('quest-list').innerHTML = QUESTS.map(q => {
+    const done = (userData.quests||{})[`q${q.id}_done`];
+    return `<a href="quest${q.id}.html" class="quest-item ${q.id===1?'active':''} ${done?'done':''}">
+      <div class="quest-check ${done?'done':''}">${done?'✓':''}</div>
+      <span>${q.icon} ${q.title}</span>
+    </a>`;
+  }).join('');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+</script>
+</body>
+</html>

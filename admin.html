@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>관리자 페이지 👑</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page">
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">👑 관리자</div>
+    <div style="padding:0 8px;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:32px;">👑</div>
+        <div style="font-weight:700;margin-top:6px;">관리자</div>
+      </div>
+      <a href="#tab-students" class="quest-item active" onclick="showTab('students')">👥 학생 현황</a>
+      <a href="#tab-quiz" class="quest-item" onclick="showTab('quiz')">📝 퀴즈 결과</a>
+      <a href="#tab-stats" class="quest-item" onclick="showTab('stats')">📊 전체 통계</a>
+    </div>
+    <button class="btn btn-ghost" onclick="logout()"
+      style="margin-top:auto;padding:10px;font-size:13px;">🚪 로그아웃</button>
+  </aside>
+
+  <main class="main-content">
+    <h2 style="font-family:'Jua',sans-serif;font-size:24px;margin-bottom:24px;">
+      👑 관리자 페이지
+    </h2>
+
+    <!-- 통계 카드 -->
+    <div class="stat-cards" id="stat-cards">
+      <div class="stat-card"><div class="num" id="stat-total">-</div><div class="lbl">총 학생 수</div></div>
+      <div class="stat-card"><div class="num" id="stat-active">-</div><div class="lbl">퀘스트 진행 중</div></div>
+      <div class="stat-card"><div class="num" id="stat-quiz-total">-</div><div class="lbl">총 퀴즈 응시</div></div>
+      <div class="stat-card"><div class="num" id="stat-avg-score">-</div><div class="lbl">평균 점수</div></div>
+    </div>
+
+    <!-- 학생 현황 탭 -->
+    <div id="tab-students">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <h3>👥 학생 현황</h3>
+          <button class="btn btn-ghost btn-sm" onclick="loadData()">🔄 새로고침</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>학번</th><th>이름</th><th>아이디</th>
+                <th>캐릭터명</th><th>레벨</th><th>점수</th>
+                <th>퀘스트 진행</th><th>가입일</th>
+              </tr>
+            </thead>
+            <tbody id="student-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;">
+                <div class="spinner" style="margin:0 auto;"></div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 퀴즈 결과 탭 -->
+    <div id="tab-quiz" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+          <h3>📝 퀴즈 결과</h3>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>학번</th><th>이름</th><th>퀘스트</th>
+                <th>응시횟수</th><th>최고점수</th><th>평균점수</th><th>마지막 응시</th>
+              </tr>
+            </thead>
+            <tbody id="quiz-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
+                데이터 로딩 중...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체 통계 탭 -->
+    <div id="tab-stats" style="display:none;">
+      <div class="chat-box" style="max-width:500px;">
+        <div class="chat-header"><h3>📊 전체 통계</h3></div>
+        <div style="padding:24px;" id="stats-content">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+requireAdmin(async () => { loadData(); });
+
+async function loadData() {
+  const [usersSnap, quizSnap] = await Promise.all([
+    db.collection('users').orderBy('created_at','desc').get(),
+    db.collection('quiz_results').get()
+  ]);
+
+  const users = usersSnap.docs.map(d => ({...d.data(), _id: d.id}));
+  const quizMap = {};
+  quizSnap.docs.forEach(d => { quizMap[d.id] = d.data(); });
+
+  // 통계 카드
+  const totalScore = users.reduce((s,u) => s+(u.score||0), 0);
+  const avgScore = users.length ? Math.round(totalScore/users.length) : 0;
+  const activeUsers = users.filter(u => Object.keys(u.quests||{}).length > 0).length;
+  const totalQuiz = Object.values(quizMap).reduce((s,u) => {
+    return s + Object.values(u).reduce((s2,arr) => s2+(Array.isArray(arr)?arr.length:0), 0);
+  }, 0);
+
+  document.getElementById('stat-total').textContent = users.length;
+  document.getElementById('stat-active').textContent = activeUsers;
+  document.getElementById('stat-quiz-total').textContent = totalQuiz;
+  document.getElementById('stat-avg-score').textContent = avgScore;
+
+  // 학생 테이블
+  document.getElementById('student-tbody').innerHTML = users.length === 0
+    ? '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
+    : users.map(u => {
+        const lv = getLevelByScore(u.score||0);
+        const questDone = Object.keys(u.quests||{}).filter(k=>k.endsWith('_done')).length;
+        return `<tr>
+          <td>${u.stunum||'-'}</td>
+          <td>${u.name||'-'}</td>
+          <td><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">${u.id||'-'}</code></td>
+          <td>${u.charName||'미설정'}</td>
+          <td><span style="color:var(--accent);">Lv.${lv.level}</span> ${lv.emoji}</td>
+          <td><strong style="color:var(--primary);">${u.score||0}</strong></td>
+          <td>${questDone} / 8 완료</td>
+          <td style="color:var(--muted);font-size:12px;">${(u.created_at||'').slice(0,10)}</td>
+        </tr>`;
+      }).join('');
+
+  // 퀴즈 테이블
+  const quizRows = [];
+  users.forEach(u => {
+    const qdata = quizMap[u._id] || {};
+    Object.entries(qdata).forEach(([questKey, attempts]) => {
+      if (!Array.isArray(attempts)) return;
+      const scores = attempts.map(a => a.score);
+      const totals = attempts.map(a => a.total);
+      const best = Math.max(...scores);
+      const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+      const last = attempts[attempts.length-1]?.date?.slice(0,16) || '-';
+      quizRows.push(`<tr>
+        <td>${u.stunum||'-'}</td>
+        <td>${u.name||'-'}</td>
+        <td>${questKey}</td>
+        <td>${attempts.length}회</td>
+        <td><strong style="color:var(--green);">${best}/${totals[0]||'?'}</strong></td>
+        <td>${avg}점</td>
+        <td style="font-size:12px;color:var(--muted);">${last}</td>
+      </tr>`);
+    });
+  });
+  document.getElementById('quiz-tbody').innerHTML = quizRows.length
+    ? quizRows.join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">퀴즈 기록이 없습니다</td></tr>';
+
+  // 통계
+  const levelDist = {};
+  users.forEach(u => {
+    const lv = getLevelByScore(u.score||0);
+    levelDist[lv.name] = (levelDist[lv.name]||0) + 1;
+  });
+  document.getElementById('stats-content').innerHTML = `
+    <div style="margin-bottom:20px;">
+      <h4 style="margin-bottom:12px;color:var(--muted);">레벨 분포</h4>
+      ${Object.entries(levelDist).map(([name,cnt]) => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span>${name}</span>
+          <span style="color:var(--primary);font-weight:700;">${cnt}명</span>
+        </div>`).join('')}
+    </div>
+    <div>
+      <h4 style="margin-bottom:12px;color:var(--muted);">점수 현황</h4>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;">
+        <span>최고 점수</span>
+        <span style="color:var(--accent);font-weight:700;">
+          ${users.length ? Math.max(...users.map(u=>u.score||0)) : 0}점
+        </span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;">
+        <span>평균 점수</span>
+        <span style="color:var(--primary);font-weight:700;">${avgScore}점</span>
+      </div>
+    </div>
+  `;
+}
+
+function showTab(t) {
+  ['students','quiz','stats'].forEach(id => {
+    document.getElementById('tab-'+id).style.display = id===t?'block':'none';
+  });
+  document.querySelectorAll('.sidebar .quest-item').forEach((el,i) => {
+    el.classList.toggle('active', ['students','quiz','stats'][i]===t);
+  });
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+function logout() {
+  sessionStorage.removeItem('gameUser');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>
