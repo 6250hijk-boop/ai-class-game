@@ -99,16 +99,17 @@
       background:rgba(10,14,26,0.92);
       border:2px solid rgba(99,179,237,0.4);
       border-radius:0 12px 12px 12px;
-      padding:18px 50px 18px 20px;
+      padding:22px 60px 22px 24px;
       position:relative;
-      min-height:80px;
+      min-height:120px;
       backdrop-filter:blur(10px);
       box-shadow:0 -4px 30px rgba(0,0,0,0.5);
     }
     .dialog-text {
-      font-size:16px; line-height:1.7;
+      font-size:17px; line-height:1.9;
       color:#e2e8f0;
       text-shadow:0 1px 3px rgba(0,0,0,0.5);
+      white-space:pre-line;
     }
 
     /* 다음 화살표 */
@@ -274,19 +275,13 @@
 <script src="firebase-config.js"></script>
 <script>
 const MESSAGES = [
-  { text:"여기는 대한민국 인공지능 세계야 🌏" },
-  { text:"여기에서 살아가려면 법을 알고 있어야겠지? ⚖️" },
-  { text:"여기 세계의 법을 알려줄게!" },
-  { text:"나는 AI로 만들어진 캐릭터야 🤖" },
-  { text:"나는 AI로 만들어진 이미지이기 때문에 AI로 생성된 사실을 알려줘야 해." },
-  { text:"대한민국에서 2026년 1월 22일부터 시행되었지! 📅" },
-  { text:"그래서 AI로 만들어진 광고를 보면 아래에<br>\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지." },
-  { text:"이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️" },
-  { text:"특히 실제와 구분이 어렵다면 잘 보이도록 표시해야 하지." },
-  { text:"개인정보 보호법에 대해서도 알아볼까? 🔒" },
-  { text:"AI가 더 똑똑한 AI로 성장하기 위해서는 많은 정보를 학습해야 해." },
-  { text:"하지만 개인정보는 허락 없이 사용할 수 없어! 아주 중요한 법이야. ⚠️" },
-  { type:"quiz_trigger", text:"✨ 배운 내용을 퀴즈로 확인해볼까? 준비됐어?" },
+  { text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️\n여기 세계의 법을 알려줄게!" },
+  { text:"나는 AI로 만들어진 캐릭터야 🤖\n나는 AI로 만들어진 이미지이기 때문에\nAI로 생성된 사실을 알려줘야 해." },
+  { text:"대한민국에서 2026년 1월 22일부터 시행되었지! 📅\n그래서 AI로 만들어진 광고를 보면 아래에\n\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지." },
+  { text:"이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️\n특히 실제와 구분이 어렵다면\n잘 보이도록 표시해야 하지." },
+  { text:"개인정보 보호법에 대해서도 알아볼까? 🔒\nAI가 더 똑똑한 AI로 성장하기 위해서는\n많은 정보를 학습해야 해." },
+  { text:"하지만 개인정보는 허락 없이 사용할 수 없어! ⚠️\n이것은 아주 중요한 법이야.\n꼭 기억해둬!" },
+  { type:"quiz_trigger", text:"✨ 배운 내용을 퀴즈로 확인해볼까?\n준비됐으면 아래 버튼을 눌러봐!" },
 ];
 
 const QUIZZES = [
@@ -353,20 +348,20 @@ function typeText(el, text, cb) {
   el.innerHTML = '';
   isTyping = true;
   document.getElementById('dialog-next').style.opacity = '0.3';
-  const plain = text.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '');
+  // \n을 그대로 유지하며 타이핑
   let i = 0;
   typingTimer = setInterval(() => {
-    if (i < plain.length) {
-      el.innerHTML = plain.slice(0,i+1).replace(/\n/g,'<br>') + '<span class="typing-cursor"></span>';
+    if (i < text.length) {
+      el.textContent = text.slice(0, i+1);
       i++;
     } else {
       clearInterval(typingTimer);
-      el.innerHTML = text;
+      el.textContent = text;
       isTyping = false;
       document.getElementById('dialog-next').style.opacity = '1';
       if (cb) cb();
     }
-  }, 30);
+  }, 25);
 }
 
 function showMessage(idx) {
@@ -396,7 +391,7 @@ function nextMessage() {
     // 타이핑 중이면 즉시 완성
     clearInterval(typingTimer);
     const msg = MESSAGES[msgIdx];
-    document.getElementById('dialog-text').innerHTML = msg.text;
+    document.getElementById('dialog-text').textContent = msg.text;
     isTyping = false;
     document.getElementById('dialog-next').style.opacity = '1';
     return;
@@ -418,7 +413,16 @@ async function saveAndExit() {
   window.location.href = 'main.html';
 }
 
-// 키보드/화면 클릭으로 다음 대화
+// 화면 클릭, 키보드로 다음 대화
+document.addEventListener('click', (e) => {
+  // 버튼, 퀴즈 팝업 클릭은 제외
+  if (e.target.closest('.dialog-choices') ||
+      e.target.closest('.quiz-overlay') ||
+      e.target.closest('.dialog-next') ||
+      e.target.closest('.hud-back')) return;
+  nextMessage();
+});
+
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'Enter') nextMessage();
 });
