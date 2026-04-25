@@ -75,12 +75,13 @@
           <table class="admin-table">
             <thead>
               <tr>
-                <th>학번</th><th>이름</th><th>퀘스트</th>
-                <th>응시횟수</th><th>최고점수</th><th>평균점수</th><th>마지막 응시</th>
+                <th>학번</th><th>이름</th><th>퀴즈명</th>
+                <th>응시횟수</th><th>최고점수</th><th>평균점수</th>
+                <th>평균정답률</th><th>마지막 응시</th>
               </tr>
             </thead>
             <tbody id="quiz-tbody">
-              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">
                 데이터 로딩 중...
               </td></tr>
             </tbody>
@@ -155,25 +156,29 @@ async function loadData() {
     const qdata = quizMap[u._id] || {};
     Object.entries(qdata).forEach(([questKey, attempts]) => {
       if (!Array.isArray(attempts)) return;
-      const scores = attempts.map(a => a.score);
-      const totals = attempts.map(a => a.total);
-      const best = Math.max(...scores);
-      const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
-      const last = attempts[attempts.length-1]?.date?.slice(0,16) || '-';
+      const scores   = attempts.map(a => a.score);
+      const totals   = attempts.map(a => a.total);
+      const accuracy = attempts.map(a => a.accuracy || Math.round(a.score/a.total*100));
+      const best     = Math.max(...scores);
+      const avg      = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+      const avgAcc   = Math.round(accuracy.reduce((a,b)=>a+b,0)/accuracy.length);
+      const last     = attempts[attempts.length-1]?.date?.slice(0,16) || '-';
+      const accColor = avgAcc>=80?'var(--green)':avgAcc>=60?'var(--accent)':'var(--red)';
       quizRows.push(`<tr>
         <td>${u.stunum||'-'}</td>
         <td>${u.name||'-'}</td>
-        <td>${questKey}</td>
+        <td><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px;">${questKey}</code></td>
         <td>${attempts.length}회</td>
         <td><strong style="color:var(--green);">${best}/${totals[0]||'?'}</strong></td>
         <td>${avg}점</td>
+        <td><strong style="color:${accColor};">${avgAcc}%</strong></td>
         <td style="font-size:12px;color:var(--muted);">${last}</td>
       </tr>`);
     });
   });
   document.getElementById('quiz-tbody').innerHTML = quizRows.length
     ? quizRows.join('')
-    : '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">퀴즈 기록이 없습니다</td></tr>';
+    : `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">퀴즈 기록이 없습니다</td></tr>`;
 
   // 통계
   const levelDist = {};
