@@ -6,222 +6,186 @@
   <title>퀘스트1 - 인공지능 세계의 법률</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* ── 게임 화면 ── */
-    body { margin:0; overflow:hidden; }
-
-    .game-screen {
-      position:fixed; inset:0;
-      background:#000;
-    }
-
-    /* 배경 */
+    body { margin:0; overflow:hidden; user-select:none; }
+    .game-screen { position:fixed; inset:0; background:#000; }
     .game-bg {
       position:absolute; inset:0;
       background: url('images/bgq1-1.png') center/cover no-repeat;
-      transition: background-image 0.5s ease;
+      transition: background-image 0.8s ease;
     }
     .game-bg::after {
-      content:'';
-      position:absolute; inset:0;
-      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7) 100%);
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%);
     }
 
-    /* 캐릭터 */
-    .game-character {
-      position:absolute;
-      bottom:200px; right:8%;
-      height:55vh; max-height:420px;
+    /* 말하는 캐릭터 (왼쪽) */
+    .speaker-char {
+      position:absolute; bottom:200px; left:5%;
+      height:50vh; max-height:380px;
       object-fit:contain;
       filter:drop-shadow(4px 4px 12px rgba(0,0,0,0.8));
       animation:charFloat 3s ease-in-out infinite;
       z-index:10;
-      transition: src 0.3s ease;
+      transition:all 0.5s ease;
+    }
+    /* 내 캐릭터 (오른쪽) */
+    .my-char {
+      position:absolute; bottom:200px; right:5%;
+      height:45vh; max-height:350px;
+      object-fit:contain;
+      filter:drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(0.8);
+      animation:charFloat 3s ease-in-out infinite 0.5s;
+      z-index:10;
+      transition:all 0.5s ease;
     }
     @keyframes charFloat {
       0%,100% { transform:translateY(0); }
       50%      { transform:translateY(-10px); }
     }
 
-    /* 상단 HUD */
+    /* HUD */
     .game-hud {
       position:absolute; top:0; left:0; right:0;
-      padding:16px 20px;
+      padding:14px 20px;
       display:flex; align-items:center; gap:12px;
-      background:linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+      background:linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
       z-index:20;
     }
     .hud-back {
-      background:rgba(255,255,255,0.15);
-      border:1px solid rgba(255,255,255,0.2);
+      background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2);
       border-radius:8px; padding:6px 12px;
       color:white; font-size:13px; cursor:pointer;
       text-decoration:none; transition:all .2s;
     }
     .hud-back:hover { background:rgba(255,255,255,0.25); }
-    .hud-title {
-      font-family:'Jua',sans-serif;
-      font-size:15px; color:white;
-      text-shadow:0 2px 4px rgba(0,0,0,0.8);
-    }
-    .hud-score {
-      margin-left:auto;
-      background:rgba(99,179,237,0.25);
-      border:1px solid rgba(99,179,237,0.4);
-      border-radius:20px; padding:5px 14px;
-      font-size:13px; color:#63b3ed; font-weight:700;
-    }
-    .hud-progress {
-      background:rgba(255,255,255,0.15);
-      border-radius:20px; padding:5px 12px;
-      font-size:12px; color:rgba(255,255,255,0.7);
-    }
+    .hud-title { font-family:'Jua',sans-serif; font-size:15px; color:white; text-shadow:0 2px 4px rgba(0,0,0,0.8); }
+    .hud-score { margin-left:auto; background:rgba(99,179,237,0.25); border:1px solid rgba(99,179,237,0.4); border-radius:20px; padding:5px 14px; font-size:13px; color:#63b3ed; font-weight:700; }
+    .hud-progress { background:rgba(255,255,255,0.15); border-radius:20px; padding:5px 12px; font-size:12px; color:rgba(255,255,255,0.7); }
 
-    /* 하단 대화창 */
+    /* 대화창 */
     .dialog-box {
       position:absolute; bottom:0; left:0; right:0;
-      z-index:20;
-      padding:0 20px 20px;
+      z-index:20; padding:0 20px 20px;
     }
-
-    /* 이름 태그 */
     .char-name-tag {
       display:inline-block;
       background:linear-gradient(135deg, #63b3ed, #4299e1);
-      color:#0a0e1a; font-weight:700;
-      font-family:'Jua',sans-serif;
+      color:#0a0e1a; font-weight:700; font-family:'Jua',sans-serif;
       padding:6px 20px; border-radius:10px 10px 0 0;
-      font-size:15px; margin-bottom:0;
-      box-shadow:0 -2px 10px rgba(99,179,237,0.3);
+      font-size:15px; box-shadow:0 -2px 10px rgba(99,179,237,0.3);
+      transition: background 0.4s ease;
     }
-
-    /* 대화 텍스트 박스 */
+    .char-name-tag.speaker2 {
+      background:linear-gradient(135deg, #f6ad55, #ed8936);
+    }
     .dialog-text-box {
-      background:rgba(10,14,26,0.92);
+      background:rgba(10,14,26,0.93);
       border:2px solid rgba(99,179,237,0.4);
       border-radius:0 12px 12px 12px;
       padding:22px 60px 22px 24px;
-      position:relative;
-      min-height:120px;
+      position:relative; min-height:120px;
       backdrop-filter:blur(10px);
       box-shadow:0 -4px 30px rgba(0,0,0,0.5);
     }
     .dialog-text {
-      font-size:17px; line-height:1.9;
-      color:#e2e8f0;
+      font-size:17px; line-height:1.9; color:#e2e8f0;
       text-shadow:0 1px 3px rgba(0,0,0,0.5);
       white-space:pre-line;
     }
-
-    /* 다음 화살표 */
     .dialog-next {
       position:absolute; bottom:14px; right:16px;
       width:28px; height:28px;
-      background:rgba(99,179,237,0.2);
-      border:2px solid rgba(99,179,237,0.5);
-      border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; transition:all .2s;
-      animation:arrowBounce 1s ease-in-out infinite;
+      background:rgba(99,179,237,0.2); border:2px solid rgba(99,179,237,0.5);
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; animation:arrowBounce 1s ease-in-out infinite;
     }
-    .dialog-next:hover { background:rgba(99,179,237,0.4); }
-    @keyframes arrowBounce {
-      0%,100% { transform:translateY(0); }
-      50%      { transform:translateY(3px); }
-    }
-    .dialog-next::after {
-      content:'▼'; font-size:11px; color:#63b3ed;
-    }
-
-    /* 선택지 버튼들 */
-    .dialog-choices {
-      display:flex; flex-direction:column; gap:8px;
-      margin-top:10px;
-    }
+    .dialog-next::after { content:'▼'; font-size:11px; color:#63b3ed; }
+    @keyframes arrowBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
+    .dialog-choices { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
     .choice-btn {
-      background:rgba(99,179,237,0.1);
-      border:1px solid rgba(99,179,237,0.3);
-      border-radius:10px; padding:12px 16px;
-      color:#e2e8f0; font-size:14px;
-      cursor:pointer; text-align:left;
-      transition:all .2s; font-family:inherit;
+      background:rgba(99,179,237,0.1); border:1px solid rgba(99,179,237,0.3);
+      border-radius:10px; padding:12px 16px; color:#e2e8f0; font-size:14px;
+      cursor:pointer; text-align:left; transition:all .2s; font-family:inherit;
       backdrop-filter:blur(5px);
     }
-    .choice-btn:hover {
-      background:rgba(99,179,237,0.25);
-      border-color:rgba(99,179,237,0.6);
-      transform:translateX(4px);
-    }
+    .choice-btn:hover { background:rgba(99,179,237,0.25); border-color:rgba(99,179,237,0.6); transform:translateX(4px); }
+    .typing-cursor { display:inline-block; width:2px; height:1em; background:#63b3ed; margin-left:2px; animation:blink .7s infinite; vertical-align:text-bottom; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-    /* 퀴즈 팝업 */
+    /* ══ 드래그앤드롭 퀴즈 팝업 ══ */
     .quiz-overlay {
       position:fixed; inset:0;
-      background:rgba(0,0,0,0.85);
-      backdrop-filter:blur(6px);
-      z-index:200;
-      display:flex; align-items:center; justify-content:center;
-      padding:20px;
+      background:rgba(0,0,0,0.88);
+      backdrop-filter:blur(8px);
+      z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;
     }
     .quiz-box {
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:24px;
-      width:100%; max-width:500px;
-      padding:32px;
-      animation:slideUp .4s ease;
-      box-shadow:0 0 80px rgba(99,179,237,0.2);
+      background:#111827; border:1px solid rgba(99,179,237,0.3);
+      border-radius:24px; width:100%; max-width:560px; padding:28px;
+      animation:slideUp .4s ease; box-shadow:0 0 80px rgba(99,179,237,0.15);
+      max-height:90vh; overflow-y:auto;
     }
-    @keyframes slideUp {
-      from { opacity:0; transform:translateY(40px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-    .quiz-box h2 { font-family:'Jua',sans-serif; font-size:20px; color:var(--primary); margin-bottom:6px; }
-    .quiz-question { font-size:16px; font-weight:600; margin:16px 0; line-height:1.5; }
-    .quiz-opt {
-      width:100%; padding:13px 16px;
-      background:rgba(255,255,255,0.06);
-      border:2px solid var(--border);
-      border-radius:12px; color:var(--text);
-      font-size:14px; cursor:pointer;
-      margin-bottom:10px; text-align:left;
-      font-family:inherit; transition:all .2s;
-    }
-    .quiz-opt:hover { border-color:var(--primary); background:rgba(99,179,237,0.1); }
-    .quiz-opt.correct { border-color:var(--green); background:rgba(104,211,145,0.15); }
-    .quiz-opt.wrong   { border-color:var(--red);   background:rgba(252,129,129,0.15); }
-    .quiz-progress { display:flex; gap:6px; margin-bottom:20px; }
-    .quiz-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.15); transition:background .3s; }
-    .quiz-dot.done { background:var(--green); }
-    .quiz-dot.cur  { background:var(--primary); }
+    @keyframes slideUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+    .quiz-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    .quiz-header h2 { font-family:'Jua',sans-serif; font-size:20px; color:#63b3ed; }
+    .quiz-step { font-size:12px; color:rgba(255,255,255,0.4); margin-left:auto; }
+    .quiz-question { font-size:16px; font-weight:600; margin-bottom:20px; line-height:1.6; color:#e2e8f0; }
+    .quiz-desc { font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:16px; }
 
-    /* 타이핑 효과 커서 */
-    .typing-cursor {
-      display:inline-block; width:2px; height:1em;
-      background:#63b3ed; margin-left:2px;
-      animation:blink .7s infinite;
-      vertical-align:text-bottom;
+    /* 드래그앤드롭 */
+    .dnd-wrap { display:flex; gap:16px; }
+    .dnd-source, .dnd-target { flex:1; }
+    .dnd-source h4, .dnd-target h4 { font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; }
+    .dnd-item {
+      background:rgba(99,179,237,0.1); border:2px solid rgba(99,179,237,0.25);
+      border-radius:10px; padding:12px 14px; margin-bottom:8px;
+      cursor:grab; font-size:14px; color:#e2e8f0;
+      transition:all .2s; display:flex; align-items:center; gap:8px;
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .dnd-item:hover { background:rgba(99,179,237,0.2); border-color:rgba(99,179,237,0.5); transform:translateX(2px); }
+    .dnd-item.dragging { opacity:0.4; cursor:grabbing; }
+    .dnd-item .drag-handle { color:rgba(255,255,255,0.3); font-size:16px; }
+    .dnd-slot {
+      background:rgba(255,255,255,0.04); border:2px dashed rgba(255,255,255,0.15);
+      border-radius:10px; padding:12px 14px; margin-bottom:8px;
+      min-height:48px; font-size:14px; color:rgba(255,255,255,0.3);
+      transition:all .2s; display:flex; align-items:center;
+    }
+    .dnd-slot.over { background:rgba(99,179,237,0.1); border-color:rgba(99,179,237,0.4); }
+    .dnd-slot.filled { background:rgba(99,179,237,0.08); border-color:rgba(99,179,237,0.3); border-style:solid; color:#e2e8f0; }
+    .dnd-slot.correct { background:rgba(104,211,145,0.15); border-color:#68d391; color:#68d391; }
+    .dnd-slot.wrong   { background:rgba(252,129,129,0.15); border-color:#fc8181; color:#fc8181; }
+    .quiz-check-btn {
+      width:100%; padding:14px; margin-top:16px;
+      background:linear-gradient(135deg,#63b3ed,#4299e1);
+      border:none; border-radius:12px; color:#0a0e1a;
+      font-size:15px; font-weight:700; cursor:pointer;
+      font-family:inherit; transition:all .3s;
+    }
+    .quiz-check-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(99,179,237,0.4); }
+    .quiz-feedback { margin-top:12px; padding:12px 16px; border-radius:10px; font-size:14px; }
+    .quiz-feedback.correct { background:rgba(104,211,145,0.15); border:1px solid #68d391; color:#68d391; }
+    .quiz-feedback.wrong   { background:rgba(252,129,129,0.15); border:1px solid #fc8181; color:#fc8181; }
+
+    /* 결과 */
+    .quiz-result { text-align:center; padding:20px 0; }
+    .quiz-result .big-emoji { font-size:64px; margin-bottom:16px; }
+    .quiz-result h3 { font-size:22px; margin-bottom:8px; }
+    .quiz-result .xp-gain { color:#f6ad55; font-size:20px; margin-bottom:20px; }
 
     /* 레벨업 */
     .levelup-screen {
       position:fixed; inset:0; z-index:400;
       background:rgba(0,0,0,0.9);
-      display:flex; align-items:center; justify-content:center;
-      flex-direction:column; gap:16px;
+      display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px;
     }
     .levelup-screen h1 { font-family:'Jua',sans-serif; font-size:48px; color:#f6ad55; }
     .levelup-screen p  { font-size:20px; color:#63b3ed; }
-
-    /* XP 팝업 */
     .xp-popup {
-      position:fixed; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      background:linear-gradient(135deg,#63b3ed,#f6ad55);
-      color:#0a0e1a; font-weight:700;
-      font-size:24px; padding:16px 40px;
-      border-radius:20px; z-index:500;
-      animation:popIn .4s ease, fadeOutUp .5s ease 1.5s forwards;
-      pointer-events:none;
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      background:linear-gradient(135deg,#63b3ed,#f6ad55); color:#0a0e1a;
+      font-weight:700; font-size:24px; padding:16px 40px; border-radius:20px;
+      z-index:500; animation:popIn .4s ease, fadeOutUp .5s ease 1.5s forwards; pointer-events:none;
     }
     @keyframes popIn { from{transform:translate(-50%,-50%) scale(.5);opacity:0} to{transform:translate(-50%,-50%) scale(1);opacity:1} }
     @keyframes fadeOutUp { to{opacity:0;transform:translate(-50%,-70%)} }
@@ -232,37 +196,36 @@
 <!-- 퀴즈 팝업 -->
 <div id="quiz-overlay" class="quiz-overlay" style="display:none;">
   <div class="quiz-box">
-    <h2>⚖️ 법률 퀴즈 타임!</h2>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">배운 내용을 확인해봐요!</p>
-    <div class="quiz-progress" id="quiz-dots"></div>
+    <div class="quiz-header">
+      <h2>⚖️ 법률 퀴즈!</h2>
+      <span class="quiz-step" id="quiz-step"></span>
+    </div>
     <div id="quiz-content"></div>
-    <div id="quiz-result" style="display:none;"></div>
   </div>
 </div>
 
 <!-- 게임 화면 -->
-<div class="game-screen">
-  <!-- 배경 -->
+<div class="game-screen" id="game-screen">
   <div class="game-bg" id="game-bg"></div>
 
-  <!-- 캐릭터 -->
-  <img class="game-character" id="game-char" src="images/robot_1.png" alt="캐릭터">
+  <!-- 말하는 캐릭터 (왼쪽) -->
+  <img class="speaker-char" id="speaker-char" src="images/char1-1.png" alt="캐릭터">
+  <!-- 내 캐릭터 (오른쪽) -->
+  <img class="my-char" id="my-char" src="images/robot_1.png" alt="내캐릭터">
 
-  <!-- 상단 HUD -->
+  <!-- HUD -->
   <div class="game-hud">
     <a href="main.html" class="hud-back">← 메인</a>
     <div class="hud-title">⚖️ 퀘스트 1: 인공지능 세계의 법률</div>
-    <div class="hud-progress" id="hud-progress">0 / 12</div>
+    <div class="hud-progress" id="hud-progress">1 / 9</div>
     <div class="hud-score" id="hud-score">0 점</div>
   </div>
 
-  <!-- 하단 대화창 -->
+  <!-- 대화창 -->
   <div class="dialog-box">
     <div class="char-name-tag" id="dialog-name">AI 가디언</div>
     <div class="dialog-text-box">
-      <div class="dialog-text" id="dialog-text">
-        <span class="typing-cursor"></span>
-      </div>
+      <div class="dialog-text" id="dialog-text"></div>
       <div class="dialog-next" id="dialog-next" onclick="nextMessage()"></div>
     </div>
     <div class="dialog-choices" id="dialog-choices"></div>
@@ -274,34 +237,51 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
+// speaker: 1=char1-1, 2=char1-2
 const MESSAGES = [
-  { text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️\n여기 세계의 법을 알려줄게!" },
-  { text:"나는 AI로 만들어진 캐릭터야 🤖\n나는 AI로 만들어진 이미지이기 때문에\nAI로 생성된 사실을 알려줘야 해." },
-  { text:"대한민국에서 2026년 1월 22일부터 시행되었지! 📅\n그래서 AI로 만들어진 광고를 보면 아래에\n\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지." },
-  { text:"이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️\n특히 실제와 구분이 어렵다면\n잘 보이도록 표시해야 하지." },
-  { text:"개인정보 보호법에 대해서도 알아볼까? 🔒\nAI가 더 똑똑한 AI로 성장하기 위해서는\n많은 정보를 학습해야 해." },
-  { text:"하지만 개인정보는 허락 없이 사용할 수 없어! ⚠️\n이것은 아주 중요한 법이야.\n꼭 기억해둬!" },
-  { type:"quiz_trigger", text:"✨ 배운 내용을 퀴즈로 확인해볼까?\n준비됐으면 아래 버튼을 눌러봐!" },
+  { speaker:1, name:"AI 가디언", text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️\n여기 세계의 법을 알려줄게!" },
+  { speaker:1, name:"AI 가디언", text:"나는 AI로 만들어진 캐릭터야 🤖\n나는 AI로 만들어진 이미지이기 때문에\nAI로 생성된 사실을 알려줘야 해.\n대한민국에서 2026년 1월 22일부터 시행되었지! 📅" },
+  { speaker:1, name:"AI 가디언", text:"그래서 AI로 만들어진 광고를 보면 아래에\n\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지.\n이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️\n특히 실제와 구분이 어렵다면 잘 보이도록 표시해야 하지." },
+  { speaker:2, name:"새로운 친구", text:"좋은 AI가 되기 위해서는 많은 정보를 궁금해해야해! 🤔\n하지만 문제가 있어.\n아무 정보나 공부할 순 없지." },
+  { speaker:2, name:"새로운 친구", text:"인공지능은 마치 '엄청난 공부벌레'와 같아. 📚\n인공지능이 똑똑해지려면 수많은 데이터를 읽고 학습해야 하는데,\n이 과정에서 우리가 일상에서 남긴 기록들이 사용되지." },
+  { speaker:2, name:"새로운 친구", text:"학습 데이터는 AI가 배우는 교과서야. 📖\nSNS 게시글, 검색 기록 등도 포함되지.\n개인정보는 이름, 주소뿐만 아니라\n나의 취향, 위치, 심지어 목소리와 얼굴 특징까지 포함돼!" },
+  { speaker:2, name:"새로운 친구", text:"AI시대의 개인정보 보호 3대 핵심 원칙을 알려줄게! ⚖️\n법은 AI가 무분별하게 우리의 정보를 가져가지 못하도록\n다음과 같은 규칙을 정하고 있어." },
+  { speaker:2, name:"새로운 친구", text:"[① 투명성] \"내 정보를 어디에 쓰는지 알려줘!\"\nAI 서비스를 만들 때는 어떤 정보를 가져가서\n어떻게 학습시키는지 사용자에게 명확하게 알려줘야해.\n어려운 약관 속에 숨겨두어서는 안 돼!!" },
+  { speaker:2, name:"새로운 친구", text:"[② 목적 제한] \"공부하라고 준 정보로 딴짓하지 마!\"\n예를 들어, 학습용 앱이 내 성적 데이터를 가져갔다면\n성적 분석에만 써야 하지.\n이 정보를 몰래 광고 회사에 팔거나 다른 목적으로 사용하는 것은 불법이야!" },
+  { speaker:2, name:"새로운 친구", text:"[③ 안전성] \"내 정보가 새나가지 않게 꽉 잠가줘!\" 🔒\nAI가 학습한 데이터에서 거꾸로 특정 개인을 찾아낼 수 없도록\n익명화(비식별화) 처리를 철저히 해야해." },
+  { speaker:2, name:"새로운 친구", text:"자, 이제 배운 내용을 확인해볼까? 🎮\n순서 맞추기 게임으로 확인해보자!\n준비됐으면 아래 버튼을 눌러봐!", type:"quiz_trigger" },
 ];
 
+// 드래그앤드롭 퀴즈
 const QUIZZES = [
   {
-    q:"AI로 만들어진 광고에는 무엇을 표기해야 하나요?",
-    opts:["본 광고는 AI로 만들어졌습니다.","이 광고는 가짜입니다.","표기하지 않아도 됩니다.","AI 광고 금지"],
-    ans:0,
-    exp:"2026년 1월 22일부터 AI 생성 광고에는 '본 광고는 AI로 만들어졌습니다.'를 표기해야 합니다."
+    title:"개인정보 보호 3대 원칙 순서 맞추기",
+    desc:"AI 시대 개인정보 보호의 3가지 원칙을 올바른 순서로 맞춰보세요!",
+    type:"order",
+    items:[
+      { id:"a", text:"① 투명성 - 정보 사용 목적 명시" },
+      { id:"b", text:"② 목적 제한 - 정해진 목적 외 사용 금지" },
+      { id:"c", text:"③ 안전성 - 익명화/비식별화 처리" },
+    ],
+    answer:["a","b","c"],
+    exp:"투명성 → 목적 제한 → 안전성 순서가 맞습니다! 정보를 '어떻게 쓰는지 알리고', '정해진 목적에만 쓰고', '안전하게 보관'하는 것이 핵심이에요."
   },
   {
-    q:"AI 콘텐츠 표시 의무가 적용되는 것은?",
-    opts:["이미지만","동영상만","이미지, 동영상, 오디오 모두","텍스트만"],
-    ans:2,
-    exp:"이미지, 동영상, 오디오 콘텐츠 모두 AI 생성 표시 의무가 적용됩니다."
-  },
-  {
-    q:"AI가 더 똑똑해지기 위해 무엇이 필요한가요?",
-    opts:["전기","많은 학습 데이터","물","더 큰 컴퓨터"],
-    ans:1,
-    exp:"AI는 많은 데이터를 학습해야 더 발전할 수 있습니다."
+    title:"AI 법률 내용 짝 맞추기",
+    desc:"각 상황에 맞는 원칙을 드래그해서 연결해보세요!",
+    type:"match",
+    left:[
+      { id:"l1", text:"📢 AI 광고에 생성 사실 표시" },
+      { id:"l2", text:"🎓 성적 앱이 광고에 데이터 판매" },
+      { id:"l3", text:"🔐 학습 데이터 익명화 처리" },
+    ],
+    right:[
+      { id:"r1", text:"투명성 원칙" },
+      { id:"r2", text:"목적 제한 위반" },
+      { id:"r3", text:"안전성 원칙" },
+    ],
+    answer:{ l1:"r1", l2:"r2", l3:"r3" },
+    exp:"AI 생성 표시=투명성, 목적 외 판매=목적 제한 위반, 익명화=안전성 원칙에 해당해요!"
   },
 ];
 
@@ -312,6 +292,11 @@ let isTyping = false;
 let typingTimer = null;
 let quizIdx = 0;
 let quizScore = 0;
+let dragItem = null;
+
+// 드래그앤드롭 상태
+let orderList = [];
+let matchMap = {};
 
 requireAuth(async (user) => {
   currentUser = user;
@@ -319,49 +304,24 @@ requireAuth(async (user) => {
     userData = { charName:'AI', score:0, quests:{} };
   } else {
     const snap = await db.collection('users').where('id','==',user.id).get();
-    if (!snap.empty) {
-      userData = snap.docs[0].data();
-      currentUser.uid = snap.docs[0].id;
-    }
+    if (!snap.empty) { userData = snap.docs[0].data(); currentUser.uid = snap.docs[0].id; }
   }
   updateHUD();
   const savedIdx = (userData.quests||{}).q1_msgIdx || 0;
   msgIdx = Math.min(savedIdx, MESSAGES.length - 1);
-  document.getElementById('dialog-name').textContent = userData.charName || 'AI 가디언';
-  updateCharImage();
+  updateCharImages();
   setTimeout(() => showMessage(msgIdx), 500);
 });
 
-function updateCharImage() {
+function updateCharImages() {
   const score = userData.score || 0;
   const lv = getLevelByScore(score);
-  document.getElementById('game-char').src = lv.img;
+  document.getElementById('my-char').src = lv.img;
 }
 
 function updateHUD() {
-  const score = userData.score || 0;
-  document.getElementById('hud-score').textContent = score + ' 점';
+  document.getElementById('hud-score').textContent = (userData.score||0) + ' 점';
   document.getElementById('hud-progress').textContent = `${msgIdx+1} / ${MESSAGES.length}`;
-}
-
-function typeText(el, text, cb) {
-  el.innerHTML = '';
-  isTyping = true;
-  document.getElementById('dialog-next').style.opacity = '0.3';
-  // \n을 그대로 유지하며 타이핑
-  let i = 0;
-  typingTimer = setInterval(() => {
-    if (i < text.length) {
-      el.textContent = text.slice(0, i+1);
-      i++;
-    } else {
-      clearInterval(typingTimer);
-      el.textContent = text;
-      isTyping = false;
-      document.getElementById('dialog-next').style.opacity = '1';
-      if (cb) cb();
-    }
-  }, 25);
 }
 
 function showMessage(idx) {
@@ -370,8 +330,24 @@ function showMessage(idx) {
   document.getElementById('hud-progress').textContent = `${idx+1} / ${MESSAGES.length}`;
   document.getElementById('dialog-choices').innerHTML = '';
 
-  const textEl = document.getElementById('dialog-text');
+  // 화자 변경
+  const nameTag = document.getElementById('dialog-name');
+  const speakerImg = document.getElementById('speaker-char');
+  nameTag.textContent = msg.name;
+  if (msg.speaker === 2) {
+    nameTag.classList.add('speaker2');
+    speakerImg.src = 'images/char1-2.png';
+    speakerImg.style.left = '5%';
+    speakerImg.style.right = 'auto';
+    document.getElementById('my-char').style.filter = 'drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(1)';
+  } else {
+    nameTag.classList.remove('speaker2');
+    speakerImg.src = 'images/char1-1.png';
+    speakerImg.style.left = '5%';
+    document.getElementById('my-char').style.filter = 'drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(0.8)';
+  }
 
+  const textEl = document.getElementById('dialog-text');
   if (msg.type === 'quiz_trigger') {
     typeText(textEl, msg.text, () => {
       document.getElementById('dialog-next').style.display = 'none';
@@ -386,12 +362,29 @@ function showMessage(idx) {
   }
 }
 
+function typeText(el, text, cb) {
+  el.textContent = '';
+  isTyping = true;
+  document.getElementById('dialog-next').style.opacity = '0.3';
+  let i = 0;
+  typingTimer = setInterval(() => {
+    if (i < text.length) {
+      el.textContent = text.slice(0, i+1);
+      i++;
+    } else {
+      clearInterval(typingTimer);
+      el.textContent = text;
+      isTyping = false;
+      document.getElementById('dialog-next').style.opacity = '1';
+      if (cb) cb();
+    }
+  }, 22);
+}
+
 function nextMessage() {
   if (isTyping) {
-    // 타이핑 중이면 즉시 완성
     clearInterval(typingTimer);
-    const msg = MESSAGES[msgIdx];
-    document.getElementById('dialog-text').textContent = msg.text;
+    document.getElementById('dialog-text').textContent = MESSAGES[msgIdx].text;
     isTyping = false;
     document.getElementById('dialog-next').style.opacity = '1';
     return;
@@ -403,121 +396,277 @@ function nextMessage() {
 
 async function autoSave() {
   if (currentUser.uid === 'student') return;
-  await db.collection('users').doc(currentUser.uid).update({
-    'quests.q1_msgIdx': msgIdx
-  });
+  await db.collection('users').doc(currentUser.uid).update({ 'quests.q1_msgIdx': msgIdx });
 }
+async function saveAndExit() { await autoSave(); window.location.href = 'main.html'; }
 
-async function saveAndExit() {
-  await autoSave();
-  window.location.href = 'main.html';
-}
-
-// 화면 클릭, 키보드로 다음 대화
+// 화면 클릭으로 다음
 document.addEventListener('click', (e) => {
-  // 버튼, 퀴즈 팝업 클릭은 제외
-  if (e.target.closest('.dialog-choices') ||
-      e.target.closest('.quiz-overlay') ||
-      e.target.closest('.dialog-next') ||
-      e.target.closest('.hud-back')) return;
+  if (e.target.closest('.dialog-choices') || e.target.closest('.quiz-overlay') ||
+      e.target.closest('.dialog-next') || e.target.closest('.hud-back')) return;
   nextMessage();
 });
-
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'Enter') nextMessage();
 });
 
-// ── 퀴즈 ──
+// ══════════════════════════════
+//  퀴즈 - 드래그앤드롭
+// ══════════════════════════════
 function startQuiz() {
   quizIdx = 0; quizScore = 0;
   document.getElementById('quiz-overlay').style.display = 'flex';
-  showQuiz();
+  renderQuiz();
 }
 
-function showQuiz() {
+function renderQuiz() {
   const q = QUIZZES[quizIdx];
-  document.getElementById('quiz-dots').innerHTML = QUIZZES.map((_,i) =>
-    `<div class="quiz-dot ${i<quizIdx?'done':i===quizIdx?'cur':''}"></div>`
-  ).join('');
+  document.getElementById('quiz-step').textContent = `${quizIdx+1} / ${QUIZZES.length}`;
+  if (q.type === 'order') renderOrderQuiz(q);
+  else renderMatchQuiz(q);
+}
+
+// 순서 맞추기
+function renderOrderQuiz(q) {
+  // 섞기
+  const shuffled = [...q.items].sort(() => Math.random() - 0.5);
+  orderList = [];
+
   document.getElementById('quiz-content').innerHTML = `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
-      문제 ${quizIdx+1} / ${QUIZZES.length}
+    <div class="quiz-question">${q.title}</div>
+    <p class="quiz-desc">${q.desc}<br><small style="color:rgba(255,255,255,0.3);">📱 모바일: 길게 눌러 드래그 | PC: 드래그앤드롭</small></p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <h4 style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;">📦 항목</h4>
+        <div id="order-source">
+          ${shuffled.map(item => `
+            <div class="dnd-item" id="item-${item.id}"
+              draggable="true"
+              ondragstart="dragStart(event,'${item.id}')"
+              ondragend="dragEnd(event)"
+              ontouchstart="touchStart(event,'${item.id}')"
+              ontouchmove="touchMove(event)"
+              ontouchend="touchEnd(event)">
+              <span class="drag-handle">⠿</span>${item.text}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <h4 style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;">✅ 순서 (1→3)</h4>
+        <div id="order-target">
+          ${[1,2,3].map(n => `
+            <div class="dnd-slot" id="slot-${n}" data-slot="${n}"
+              ondragover="dragOver(event)"
+              ondragleave="dragLeave(event)"
+              ondrop="dropOrder(event,${n})">
+              ${n}번째
+            </div>`).join('')}
+        </div>
+      </div>
     </div>
-    <div class="quiz-question">${q.q}</div>
-    ${q.opts.map((opt,i) =>
-      `<button class="quiz-opt" onclick="selectQuizAns(${i},this)">${opt}</button>`
-    ).join('')}
+    <div id="quiz-feedback"></div>
+    <button class="quiz-check-btn" onclick="checkOrder()">✅ 정답 확인</button>
   `;
-  document.getElementById('quiz-result').style.display = 'none';
 }
 
-async function selectQuizAns(idx, btn) {
-  const q = QUIZZES[quizIdx];
-  document.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
-  const correct = idx === q.ans;
-  btn.classList.add(correct ? 'correct' : 'wrong');
-  if (!correct) document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
-  if (correct) quizScore++;
-  document.getElementById('quiz-result').style.display = 'block';
-  document.getElementById('quiz-result').innerHTML = `
-    <div class="alert ${correct?'alert-success':'alert-error'}" style="margin-top:12px;">
-      ${correct?'✅ 정답!':'❌ 오답!'} ${q.exp}
+// 짝 맞추기
+function renderMatchQuiz(q) {
+  matchMap = {};
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="quiz-question">${q.title}</div>
+    <p class="quiz-desc">${q.desc}<br><small style="color:rgba(255,255,255,0.3);">왼쪽 항목을 오른쪽 빈칸으로 드래그하세요</small></p>
+    <div class="dnd-wrap">
+      <div class="dnd-source">
+        <h4>상황</h4>
+        ${q.left.map(item => `
+          <div class="dnd-item" id="item-${item.id}"
+            draggable="true"
+            ondragstart="dragStart(event,'${item.id}')"
+            ondragend="dragEnd(event)"
+            ontouchstart="touchStart(event,'${item.id}')"
+            ontouchmove="touchMove(event)"
+            ontouchend="touchEnd(event)">
+            <span class="drag-handle">⠿</span>${item.text}
+          </div>`).join('')}
+      </div>
+      <div class="dnd-target">
+        <h4>원칙</h4>
+        ${q.right.map(r => `
+          <div class="dnd-slot" id="rslot-${r.id}" data-rid="${r.id}"
+            ondragover="dragOver(event)"
+            ondragleave="dragLeave(event)"
+            ondrop="dropMatch(event,'${r.id}')">
+            ${r.text}
+          </div>`).join('')}
+      </div>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="nextQuiz()" style="margin-top:8px;">
-      ${quizIdx+1 < QUIZZES.length ? '다음 문제 →' : '결과 보기 →'}
-    </button>
+    <div id="quiz-feedback"></div>
+    <button class="quiz-check-btn" onclick="checkMatch()">✅ 정답 확인</button>
   `;
+}
+
+// ── 드래그 이벤트 ──
+let currentDragId = null;
+function dragStart(e, id) {
+  currentDragId = id;
+  e.dataTransfer.setData('text', id);
+  setTimeout(() => document.getElementById('item-'+id)?.classList.add('dragging'), 0);
+}
+function dragEnd(e) {
+  document.querySelectorAll('.dnd-item').forEach(el => el.classList.remove('dragging'));
+}
+function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('over'); }
+
+function dropOrder(e, slotNum) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('over');
+  const id = e.dataTransfer.getData('text') || currentDragId;
+  const item = QUIZZES[quizIdx].items.find(i => i.id === id);
+  if (!item) return;
+  // 이미 슬롯에 있으면 제거
+  const prevSlot = Object.entries(orderSlots||{}).find(([k,v])=>v===id);
+  if (prevSlot) { document.getElementById('slot-'+prevSlot[0]).textContent = prevSlot[0]+'번째'; document.getElementById('slot-'+prevSlot[0]).classList.remove('filled'); delete (orderSlots||{})[prevSlot[0]]; }
+  if (!orderSlots) orderSlots = {};
+  orderSlots[slotNum] = id;
+  const slot = document.getElementById('slot-'+slotNum);
+  slot.textContent = item.text;
+  slot.classList.add('filled');
+}
+
+let orderSlots = {};
+function dropMatch(e, rid) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('over');
+  const lid = e.dataTransfer.getData('text') || currentDragId;
+  const leftItem = QUIZZES[quizIdx].left.find(i => i.id === lid);
+  if (!leftItem) return;
+  // 기존 연결 제거
+  Object.keys(matchMap).forEach(k => { if (matchMap[k]===rid) delete matchMap[k]; });
+  matchMap[lid] = rid;
+  const slot = document.getElementById('rslot-'+rid);
+  slot.textContent = leftItem.text + ' → ' + QUIZZES[quizIdx].right.find(r=>r.id===rid).text;
+  slot.classList.add('filled');
+}
+
+// ── 터치 드래그 (모바일) ──
+let touchDragId = null;
+let touchClone = null;
+function touchStart(e, id) {
+  touchDragId = id;
+  const el = document.getElementById('item-'+id);
+  touchClone = el.cloneNode(true);
+  touchClone.style.cssText = `position:fixed;opacity:0.8;pointer-events:none;z-index:999;width:${el.offsetWidth}px;`;
+  document.body.appendChild(touchClone);
+}
+function touchMove(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (touchClone) { touchClone.style.left=(t.clientX-60)+'px'; touchClone.style.top=(t.clientY-20)+'px'; }
+  // 슬롯 하이라이트
+  document.querySelectorAll('.dnd-slot').forEach(s => s.classList.remove('over'));
+  const el = document.elementFromPoint(t.clientX, t.clientY);
+  el?.closest('.dnd-slot')?.classList.add('over');
+}
+function touchEnd(e) {
+  if (touchClone) { touchClone.remove(); touchClone = null; }
+  document.querySelectorAll('.dnd-slot').forEach(s => s.classList.remove('over'));
+  const t = e.changedTouches[0];
+  const el = document.elementFromPoint(t.clientX, t.clientY)?.closest('.dnd-slot');
+  if (!el || !touchDragId) return;
+  const q = QUIZZES[quizIdx];
+  if (q.type === 'order') {
+    const slotNum = parseInt(el.dataset.slot);
+    const item = q.items.find(i=>i.id===touchDragId);
+    if (!orderSlots) orderSlots = {};
+    orderSlots[slotNum] = touchDragId;
+    el.textContent = item.text; el.classList.add('filled');
+  } else {
+    const rid = el.dataset.rid;
+    const leftItem = q.left.find(i=>i.id===touchDragId);
+    if (leftItem && rid) {
+      matchMap[touchDragId] = rid;
+      el.textContent = leftItem.text + ' → ' + q.right.find(r=>r.id===rid).text;
+      el.classList.add('filled');
+    }
+  }
+  touchDragId = null;
+}
+
+// ── 정답 확인 ──
+function checkOrder() {
+  const q = QUIZZES[quizIdx];
+  const ans = q.answer;
+  let correct = true;
+  [1,2,3].forEach((n,i) => {
+    const slot = document.getElementById('slot-'+n);
+    if (orderSlots[n] === ans[i]) { slot.classList.add('correct'); }
+    else { slot.classList.add('wrong'); correct = false; }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.innerHTML = `<div class="quiz-feedback ${correct?'correct':'wrong'}">
+    ${correct ? '🎉 완벽해요!' : '❌ 아쉬워요!'} ${q.exp}
+  </div>
+  <button class="quiz-check-btn" onclick="nextQuiz()" style="margin-top:8px;">
+    ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+  </button>`;
+  if (correct) quizScore++;
+  document.querySelector('.quiz-check-btn').style.display = 'none';
+}
+
+function checkMatch() {
+  const q = QUIZZES[quizIdx];
+  let correct = true;
+  q.left.forEach(l => {
+    const rid = matchMap[l.id];
+    const slot = rid ? document.getElementById('rslot-'+rid) : null;
+    if (rid && q.answer[l.id] === rid) { slot?.classList.add('correct'); }
+    else { if(slot) slot.classList.add('wrong'); correct = false; }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.innerHTML = `<div class="quiz-feedback ${correct?'correct':'wrong'}">
+    ${correct ? '🎉 완벽해요!' : '❌ 아쉬워요!'} ${q.exp}
+  </div>
+  <button class="quiz-check-btn" onclick="nextQuiz()" style="margin-top:8px;">
+    ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+  </button>`;
+  if (correct) quizScore++;
+  document.querySelector('.quiz-check-btn').style.display = 'none';
 }
 
 async function nextQuiz() {
   quizIdx++;
-  if (quizIdx >= QUIZZES.length) {
-    await finishQuiz();
-  } else {
-    showQuiz();
-  }
+  orderSlots = {}; matchMap = {};
+  if (quizIdx >= QUIZZES.length) { await finishQuiz(); }
+  else { renderQuiz(); }
 }
 
 async function finishQuiz() {
-  const xp = quizScore * 10 + (quizScore === QUIZZES.length ? 20 : 0);
+  const xp = quizScore * 15 + (quizScore === QUIZZES.length ? 20 : 0);
   if (currentUser.uid !== 'student') {
     await addScore(currentUser.uid, xp, '퀘스트1 퀴즈');
-    await db.collection('users').doc(currentUser.uid).update({
-      'quests.q1_quiz_done': true,
-    });
+    await db.collection('users').doc(currentUser.uid).update({ 'quests.q1_quiz_done': true });
     await db.collection('quiz_results').doc(currentUser.uid).set({
-      q1: firebase.firestore.FieldValue.arrayUnion({
-        score: quizScore, total: QUIZZES.length,
-        xp, date: new Date().toISOString()
-      })
+      q1: firebase.firestore.FieldValue.arrayUnion({ score:quizScore, total:QUIZZES.length, xp, date:new Date().toISOString() })
     }, {merge:true});
     userData.score = (userData.score||0) + xp;
-    updateHUD();
-    updateCharImage();
+    updateHUD(); updateCharImages();
     checkLevelUp(userData.score - xp, userData.score);
   }
   document.getElementById('quiz-content').innerHTML = `
-    <div style="text-align:center;padding:20px;">
-      <div style="font-size:60px;margin-bottom:16px;">
-        ${quizScore === QUIZZES.length ? '🏆' : quizScore >= 2 ? '👍' : '💪'}
-      </div>
-      <h3 style="font-size:22px;margin-bottom:8px;">${quizScore} / ${QUIZZES.length} 정답</h3>
-      <div style="color:var(--accent);font-size:18px;margin-bottom:24px;">+${xp} 점 획득!</div>
-      <button class="btn btn-primary" onclick="closeQuiz()">계속 학습하기 →</button>
-    </div>
-  `;
-  document.getElementById('quiz-dots').innerHTML = '';
-  document.getElementById('quiz-result').style.display = 'none';
+    <div class="quiz-result">
+      <div class="big-emoji">${quizScore===QUIZZES.length?'🏆':quizScore>=1?'👍':'💪'}</div>
+      <h3>${quizScore} / ${QUIZZES.length} 정답</h3>
+      <div class="xp-gain">+${xp} 점 획득!</div>
+      <button class="quiz-check-btn" onclick="closeQuiz()">계속 학습하기 →</button>
+    </div>`;
   showXPPopup('+' + xp + ' 점');
 }
 
 function closeQuiz() {
   document.getElementById('quiz-overlay').style.display = 'none';
   if (currentUser.uid !== 'student') {
-    db.collection('users').doc(currentUser.uid).update({
-      'quests.q1_done': true,
-      'quests.q1_msgIdx': MESSAGES.length
-    });
+    db.collection('users').doc(currentUser.uid).update({ 'quests.q1_done':true, 'quests.q1_msgIdx':MESSAGES.length });
   }
   showComplete();
 }
@@ -525,32 +674,24 @@ function closeQuiz() {
 function showComplete() {
   document.getElementById('dialog-next').style.display = 'none';
   typeText(document.getElementById('dialog-text'),
-    '🎉 퀘스트 1 완료! 법률에 대해 잘 배웠어!', () => {
+    '🎉 퀘스트 1 완료!\n법률에 대해 잘 배웠어!\n다음 퀘스트로 넘어가볼까?', () => {
     document.getElementById('dialog-choices').innerHTML = `
-      <button class="choice-btn" onclick="window.location.href='quest2.html'">
-        다음 퀘스트 →
-      </button>
-      <button class="choice-btn" onclick="window.location.href='main.html'">
-        🏠 메인으로
-      </button>
+      <button class="choice-btn" onclick="window.location.href='quest2.html'">다음 퀘스트 →</button>
+      <button class="choice-btn" onclick="window.location.href='main.html'">🏠 메인으로</button>
     `;
   });
 }
 
 function checkLevelUp(before, after) {
-  const lvBefore = getLevelByScore(before);
-  const lvAfter  = getLevelByScore(after);
-  if (lvAfter.level > lvBefore.level) {
+  const lvB = getLevelByScore(before), lvA = getLevelByScore(after);
+  if (lvA.level > lvB.level) {
     const el = document.createElement('div');
     el.className = 'levelup-screen';
     el.innerHTML = `
-      <img src="${lvAfter.img}" style="height:150px;object-fit:contain;
-        filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));animation:charFloat 1s ease-in-out infinite;">
+      <img src="${lvA.img}" style="height:150px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));animation:charFloat 1s ease-in-out infinite;">
       <h1>레벨 업! 🎉</h1>
-      <p>Lv.${lvAfter.level} ${lvAfter.name}</p>
-      <button class="btn btn-accent" style="max-width:200px;margin-top:20px;"
-        onclick="this.parentElement.remove()">확인</button>
-    `;
+      <p>Lv.${lvA.level} ${lvA.name}</p>
+      <button class="btn btn-accent" style="max-width:200px;margin-top:20px;" onclick="this.parentElement.remove()">확인</button>`;
     document.body.appendChild(el);
   }
 }
