@@ -11,30 +11,29 @@
     .game-bg {
       position:absolute; inset:0;
       background: url('images/bgq1-1.png') center/cover no-repeat;
-      transition: background-image 0.8s ease;
     }
     .game-bg::after {
       content:''; position:absolute; inset:0;
       background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%);
     }
 
-    /* 말하는 캐릭터 (왼쪽) */
-    .speaker-char {
+    /* 내 캐릭터 (왼쪽) */
+    .my-char {
       position:absolute; bottom:200px; left:5%;
       height:50vh; max-height:380px;
       object-fit:contain;
-      filter:drop-shadow(4px 4px 12px rgba(0,0,0,0.8));
-      animation:charFloat 3s ease-in-out infinite;
+      filter:drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(0.85);
+      animation:charFloat 3s ease-in-out infinite 0.5s;
       z-index:10;
       transition:all 0.5s ease;
     }
-    /* 내 캐릭터 (오른쪽) */
-    .my-char {
+    /* 말하는 캐릭터 (오른쪽) */
+    .speaker-char {
       position:absolute; bottom:200px; right:5%;
-      height:45vh; max-height:350px;
+      height:50vh; max-height:380px;
       object-fit:contain;
-      filter:drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(0.8);
-      animation:charFloat 3s ease-in-out infinite 0.5s;
+      filter:drop-shadow(-4px 4px 12px rgba(0,0,0,0.8));
+      animation:charFloat 3s ease-in-out infinite;
       z-index:10;
       transition:all 0.5s ease;
     }
@@ -109,14 +108,11 @@
       backdrop-filter:blur(5px);
     }
     .choice-btn:hover { background:rgba(99,179,237,0.25); border-color:rgba(99,179,237,0.6); transform:translateX(4px); }
-    .typing-cursor { display:inline-block; width:2px; height:1em; background:#63b3ed; margin-left:2px; animation:blink .7s infinite; vertical-align:text-bottom; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-    /* ══ 드래그앤드롭 퀴즈 팝업 ══ */
+    /* 퀴즈 팝업 */
     .quiz-overlay {
       position:fixed; inset:0;
-      background:rgba(0,0,0,0.88);
-      backdrop-filter:blur(8px);
+      background:rgba(0,0,0,0.88); backdrop-filter:blur(8px);
       z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;
     }
     .quiz-box {
@@ -129,45 +125,56 @@
     .quiz-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
     .quiz-header h2 { font-family:'Jua',sans-serif; font-size:20px; color:#63b3ed; }
     .quiz-step { font-size:12px; color:rgba(255,255,255,0.4); margin-left:auto; }
-    .quiz-question { font-size:16px; font-weight:600; margin-bottom:20px; line-height:1.6; color:#e2e8f0; }
-    .quiz-desc { font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:16px; }
+    .quiz-question { font-size:16px; font-weight:600; margin:16px 0; line-height:1.6; color:#e2e8f0; }
+    .quiz-progress { display:flex; gap:6px; margin-bottom:20px; }
+    .quiz-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.15); transition:background .3s; }
+    .quiz-dot.done { background:#68d391; }
+    .quiz-dot.cur  { background:#63b3ed; }
+
+    /* 객관식 */
+    .quiz-opt {
+      width:100%; padding:13px 16px;
+      background:rgba(255,255,255,0.06); border:2px solid rgba(99,179,237,0.2);
+      border-radius:12px; color:#e2e8f0; font-size:14px; cursor:pointer;
+      margin-bottom:10px; text-align:left; font-family:inherit; transition:all .2s;
+    }
+    .quiz-opt:hover { border-color:#63b3ed; background:rgba(99,179,237,0.1); }
+    .quiz-opt.correct { border-color:#68d391; background:rgba(104,211,145,0.15); }
+    .quiz-opt.wrong   { border-color:#fc8181; background:rgba(252,129,129,0.15); }
 
     /* 드래그앤드롭 */
-    .dnd-wrap { display:flex; gap:16px; }
-    .dnd-source, .dnd-target { flex:1; }
+    .dnd-wrap { display:flex; gap:16px; flex-wrap:wrap; }
+    .dnd-source, .dnd-target { flex:1; min-width:180px; }
     .dnd-source h4, .dnd-target h4 { font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; }
     .dnd-item {
       background:rgba(99,179,237,0.1); border:2px solid rgba(99,179,237,0.25);
       border-radius:10px; padding:12px 14px; margin-bottom:8px;
-      cursor:grab; font-size:14px; color:#e2e8f0;
+      cursor:grab; font-size:13px; color:#e2e8f0;
       transition:all .2s; display:flex; align-items:center; gap:8px;
     }
-    .dnd-item:hover { background:rgba(99,179,237,0.2); border-color:rgba(99,179,237,0.5); transform:translateX(2px); }
-    .dnd-item.dragging { opacity:0.4; cursor:grabbing; }
-    .dnd-item .drag-handle { color:rgba(255,255,255,0.3); font-size:16px; }
+    .dnd-item:hover { background:rgba(99,179,237,0.2); border-color:rgba(99,179,237,0.5); }
+    .dnd-item.dragging { opacity:0.4; }
+    .drag-handle { color:rgba(255,255,255,0.3); }
     .dnd-slot {
       background:rgba(255,255,255,0.04); border:2px dashed rgba(255,255,255,0.15);
       border-radius:10px; padding:12px 14px; margin-bottom:8px;
-      min-height:48px; font-size:14px; color:rgba(255,255,255,0.3);
+      min-height:48px; font-size:13px; color:rgba(255,255,255,0.3);
       transition:all .2s; display:flex; align-items:center;
     }
     .dnd-slot.over { background:rgba(99,179,237,0.1); border-color:rgba(99,179,237,0.4); }
     .dnd-slot.filled { background:rgba(99,179,237,0.08); border-color:rgba(99,179,237,0.3); border-style:solid; color:#e2e8f0; }
-    .dnd-slot.correct { background:rgba(104,211,145,0.15); border-color:#68d391; color:#68d391; }
-    .dnd-slot.wrong   { background:rgba(252,129,129,0.15); border-color:#fc8181; color:#fc8181; }
+    .dnd-slot.correct { background:rgba(104,211,145,0.15); border-color:#68d391; color:#68d391; border-style:solid; }
+    .dnd-slot.wrong   { background:rgba(252,129,129,0.15); border-color:#fc8181; color:#fc8181; border-style:solid; }
     .quiz-check-btn {
       width:100%; padding:14px; margin-top:16px;
       background:linear-gradient(135deg,#63b3ed,#4299e1);
       border:none; border-radius:12px; color:#0a0e1a;
-      font-size:15px; font-weight:700; cursor:pointer;
-      font-family:inherit; transition:all .3s;
+      font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .3s;
     }
-    .quiz-check-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(99,179,237,0.4); }
-    .quiz-feedback { margin-top:12px; padding:12px 16px; border-radius:10px; font-size:14px; }
+    .quiz-check-btn:hover { transform:translateY(-2px); }
+    .quiz-feedback { margin-top:12px; padding:12px 16px; border-radius:10px; font-size:14px; line-height:1.5; }
     .quiz-feedback.correct { background:rgba(104,211,145,0.15); border:1px solid #68d391; color:#68d391; }
     .quiz-feedback.wrong   { background:rgba(252,129,129,0.15); border:1px solid #fc8181; color:#fc8181; }
-
-    /* 결과 */
     .quiz-result { text-align:center; padding:20px 0; }
     .quiz-result .big-emoji { font-size:64px; margin-bottom:16px; }
     .quiz-result h3 { font-size:22px; margin-bottom:8px; }
@@ -200,24 +207,25 @@
       <h2>⚖️ 법률 퀴즈!</h2>
       <span class="quiz-step" id="quiz-step"></span>
     </div>
+    <div class="quiz-progress" id="quiz-dots"></div>
     <div id="quiz-content"></div>
   </div>
 </div>
 
 <!-- 게임 화면 -->
-<div class="game-screen" id="game-screen">
+<div class="game-screen">
   <div class="game-bg" id="game-bg"></div>
 
-  <!-- 말하는 캐릭터 (왼쪽) -->
-  <img class="speaker-char" id="speaker-char" src="images/char1-1.png" alt="캐릭터">
-  <!-- 내 캐릭터 (오른쪽) -->
+  <!-- 내 캐릭터 (왼쪽) -->
   <img class="my-char" id="my-char" src="images/robot_1.png" alt="내캐릭터">
+  <!-- 말하는 캐릭터 (오른쪽) -->
+  <img class="speaker-char" id="speaker-char" src="images/char1-1.png" alt="캐릭터">
 
   <!-- HUD -->
   <div class="game-hud">
     <a href="main.html" class="hud-back">← 메인</a>
     <div class="hud-title">⚖️ 퀘스트 1: 인공지능 세계의 법률</div>
-    <div class="hud-progress" id="hud-progress">1 / 9</div>
+    <div class="hud-progress" id="hud-progress">1 / 11</div>
     <div class="hud-score" id="hud-score">0 점</div>
   </div>
 
@@ -237,39 +245,62 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-// speaker: 1=char1-1, 2=char1-2
+// speaker 1=char1-1(오른쪽), 2=char1-2(오른쪽 교체)
 const MESSAGES = [
-  { speaker:1, name:"AI 가디언", text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️\n여기 세계의 법을 알려줄게!" },
-  { speaker:1, name:"AI 가디언", text:"나는 AI로 만들어진 캐릭터야 🤖\n나는 AI로 만들어진 이미지이기 때문에\nAI로 생성된 사실을 알려줘야 해.\n대한민국에서 2026년 1월 22일부터 시행되었지! 📅" },
-  { speaker:1, name:"AI 가디언", text:"그래서 AI로 만들어진 광고를 보면 아래에\n\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지.\n이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️\n특히 실제와 구분이 어렵다면 잘 보이도록 표시해야 하지." },
-  { speaker:2, name:"새로운 친구", text:"좋은 AI가 되기 위해서는 많은 정보를 궁금해해야해! 🤔\n하지만 문제가 있어.\n아무 정보나 공부할 순 없지." },
-  { speaker:2, name:"새로운 친구", text:"인공지능은 마치 '엄청난 공부벌레'와 같아. 📚\n인공지능이 똑똑해지려면 수많은 데이터를 읽고 학습해야 하는데,\n이 과정에서 우리가 일상에서 남긴 기록들이 사용되지." },
-  { speaker:2, name:"새로운 친구", text:"학습 데이터는 AI가 배우는 교과서야. 📖\nSNS 게시글, 검색 기록 등도 포함되지.\n개인정보는 이름, 주소뿐만 아니라\n나의 취향, 위치, 심지어 목소리와 얼굴 특징까지 포함돼!" },
-  { speaker:2, name:"새로운 친구", text:"AI시대의 개인정보 보호 3대 핵심 원칙을 알려줄게! ⚖️\n법은 AI가 무분별하게 우리의 정보를 가져가지 못하도록\n다음과 같은 규칙을 정하고 있어." },
-  { speaker:2, name:"새로운 친구", text:"[① 투명성] \"내 정보를 어디에 쓰는지 알려줘!\"\nAI 서비스를 만들 때는 어떤 정보를 가져가서\n어떻게 학습시키는지 사용자에게 명확하게 알려줘야해.\n어려운 약관 속에 숨겨두어서는 안 돼!!" },
-  { speaker:2, name:"새로운 친구", text:"[② 목적 제한] \"공부하라고 준 정보로 딴짓하지 마!\"\n예를 들어, 학습용 앱이 내 성적 데이터를 가져갔다면\n성적 분석에만 써야 하지.\n이 정보를 몰래 광고 회사에 팔거나 다른 목적으로 사용하는 것은 불법이야!" },
-  { speaker:2, name:"새로운 친구", text:"[③ 안전성] \"내 정보가 새나가지 않게 꽉 잠가줘!\" 🔒\nAI가 학습한 데이터에서 거꾸로 특정 개인을 찾아낼 수 없도록\n익명화(비식별화) 처리를 철저히 해야해." },
-  { speaker:2, name:"새로운 친구", text:"자, 이제 배운 내용을 확인해볼까? 🎮\n순서 맞추기 게임으로 확인해보자!\n준비됐으면 아래 버튼을 눌러봐!", type:"quiz_trigger" },
+  // ── 기존 내용 (char1-1) ──
+  { speaker:1, name:"AI 가디언",
+    text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️\n여기 세계의 법을 알려줄게!" },
+  { speaker:1, name:"AI 가디언",
+    text:"나는 AI로 만들어진 캐릭터야 🤖\n나는 AI로 만들어진 이미지이기 때문에\nAI로 생성된 사실을 알려줘야 해.\n대한민국에서 2026년 1월 22일부터 시행되었지! 📅" },
+  { speaker:1, name:"AI 가디언",
+    text:"그래서 AI로 만들어진 광고를 보면 아래에\n\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지.\n이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬🎵🖼️\n특히 실제와 구분이 어렵다면 잘 보이도록 표시해야 하지." },
+  { speaker:1, name:"AI 가디언",
+    text:"개인정보 보호법에 대해 알아볼까? 🔒\nAI가 더 똑똑한 AI로 성장하기 위해서는\n많은 정보를 학습해야 해." },
+  // ── 새 내용 (char1-2로 교체) ──
+  { speaker:2, name:"새로운 친구",
+    text:"좋은 AI가 되기 위해서는 많은 정보를 궁금해해야해! 🤔\n하지만 문제가 있어.\n아무 정보나 공부할 순 없지." },
+  { speaker:2, name:"새로운 친구",
+    text:"인공지능은 마치 '엄청난 공부벌레'와 같아. 📚\n인공지능이 똑똑해지려면 수많은 데이터를 읽고 학습해야 하는데,\n이 과정에서 우리가 일상에서 남긴 기록들이 사용되지." },
+  { speaker:2, name:"새로운 친구",
+    text:"학습 데이터는 AI가 배우는 교과서야. 📖\nSNS 게시글, 검색 기록 등도 포함되지.\n개인정보는 이름, 주소뿐만 아니라\n나의 취향, 위치, 심지어 목소리와 얼굴 특징까지 포함돼!" },
+  { speaker:2, name:"새로운 친구",
+    text:"AI시대 개인정보 보호 3대 핵심 원칙을 알려줄게! ⚖️\n법은 AI가 무분별하게 우리의 정보를 가져가지 못하도록\n다음과 같은 규칙을 정하고 있어." },
+  { speaker:2, name:"새로운 친구",
+    text:"[① 투명성] \"내 정보를 어디에 쓰는지 알려줘!\"\nAI 서비스를 만들 때는 어떤 정보를 가져가서\n어떻게 학습시키는지 사용자에게 명확하게 알려줘야해.\n어려운 약관 속에 숨겨두어서는 안 돼!!" },
+  { speaker:2, name:"새로운 친구",
+    text:"[② 목적 제한] \"공부하라고 준 정보로 딴짓하지 마!\"\n학습용 앱이 내 성적 데이터를 가져갔다면 성적 분석에만 써야 하지.\n몰래 광고 회사에 팔거나 다른 목적으로 사용하는 것은 불법이야!\n\n[③ 안전성] \"내 정보가 새나가지 않게 꽉 잠가줘!\" 🔒\nAI가 학습한 데이터에서 거꾸로 특정 개인을 찾아낼 수 없도록\n익명화(비식별화) 처리를 철저히 해야해." },
+  { speaker:2, name:"새로운 친구",
+    text:"자, 이제 배운 내용을 확인해볼까? 🎮\n퀴즈로 확인해보자! 준비됐으면 아래 버튼을 눌러봐!",
+    type:"quiz_trigger" },
 ];
 
-// 드래그앤드롭 퀴즈
+// ── 퀴즈: 객관식 3문제 + 드래그앤드롭 2문제 ──
 const QUIZZES = [
-  {
+  // 객관식
+  { type:"mc", q:"AI로 만들어진 광고에는 무엇을 표기해야 하나요?",
+    opts:["본 광고는 AI로 만들어졌습니다.","이 광고는 가짜입니다.","표기하지 않아도 됩니다.","AI 광고 금지"],
+    ans:0, exp:"2026년 1월 22일부터 AI 생성 광고에는 '본 광고는 AI로 만들어졌습니다.'를 표기해야 합니다." },
+  { type:"mc", q:"AI 콘텐츠 표시 의무가 적용되는 것은?",
+    opts:["이미지만","동영상만","이미지, 동영상, 오디오 모두","텍스트만"],
+    ans:2, exp:"이미지, 동영상, 오디오 콘텐츠 모두 AI 생성 표시 의무가 적용됩니다." },
+  { type:"mc", q:"개인정보에 포함되는 것이 아닌 것은?",
+    opts:["이름과 주소","나의 취향과 위치","목소리와 얼굴 특징","오늘 날씨"],
+    ans:3, exp:"개인정보에는 이름, 주소, 취향, 위치, 목소리, 얼굴 특징 등이 포함됩니다. 날씨는 개인정보가 아니에요!" },
+  // 드래그앤드롭 - 순서 맞추기
+  { type:"order",
     title:"개인정보 보호 3대 원칙 순서 맞추기",
-    desc:"AI 시대 개인정보 보호의 3가지 원칙을 올바른 순서로 맞춰보세요!",
-    type:"order",
+    desc:"3가지 원칙을 올바른 순서로 배치하세요!",
     items:[
       { id:"a", text:"① 투명성 - 정보 사용 목적 명시" },
       { id:"b", text:"② 목적 제한 - 정해진 목적 외 사용 금지" },
       { id:"c", text:"③ 안전성 - 익명화/비식별화 처리" },
     ],
     answer:["a","b","c"],
-    exp:"투명성 → 목적 제한 → 안전성 순서가 맞습니다! 정보를 '어떻게 쓰는지 알리고', '정해진 목적에만 쓰고', '안전하게 보관'하는 것이 핵심이에요."
-  },
-  {
-    title:"AI 법률 내용 짝 맞추기",
-    desc:"각 상황에 맞는 원칙을 드래그해서 연결해보세요!",
-    type:"match",
+    exp:"투명성 → 목적 제한 → 안전성 순서가 맞습니다!" },
+  // 드래그앤드롭 - 짝 맞추기
+  { type:"match",
+    title:"상황과 원칙 짝 맞추기",
+    desc:"각 상황에 맞는 원칙을 연결하세요!",
     left:[
       { id:"l1", text:"📢 AI 광고에 생성 사실 표시" },
       { id:"l2", text:"🎓 성적 앱이 광고에 데이터 판매" },
@@ -281,46 +312,37 @@ const QUIZZES = [
       { id:"r3", text:"안전성 원칙" },
     ],
     answer:{ l1:"r1", l2:"r2", l3:"r3" },
-    exp:"AI 생성 표시=투명성, 목적 외 판매=목적 제한 위반, 익명화=안전성 원칙에 해당해요!"
-  },
+    exp:"AI 생성 표시=투명성, 목적 외 판매=목적 제한 위반, 익명화=안전성 원칙!" },
 ];
 
-let currentUser = null;
-let userData = null;
-let msgIdx = 0;
-let isTyping = false;
-let typingTimer = null;
-let quizIdx = 0;
-let quizScore = 0;
-let dragItem = null;
-
-// 드래그앤드롭 상태
-let orderList = [];
-let matchMap = {};
+let currentUser=null, userData=null;
+let msgIdx=0, isTyping=false, typingTimer=null;
+let quizIdx=0, quizScore=0;
+let orderSlots={}, matchMap={};
+let currentDragId=null, touchDragId=null, touchClone=null;
 
 requireAuth(async (user) => {
   currentUser = user;
-  if (user.uid === 'student') {
+  if (user.uid==='student') {
     userData = { charName:'AI', score:0, quests:{} };
   } else {
     const snap = await db.collection('users').where('id','==',user.id).get();
-    if (!snap.empty) { userData = snap.docs[0].data(); currentUser.uid = snap.docs[0].id; }
+    if (!snap.empty) { userData=snap.docs[0].data(); currentUser.uid=snap.docs[0].id; }
   }
   updateHUD();
-  const savedIdx = (userData.quests||{}).q1_msgIdx || 0;
-  msgIdx = Math.min(savedIdx, MESSAGES.length - 1);
   updateCharImages();
+  const savedIdx = (userData.quests||{}).q1_msgIdx || 0;
+  msgIdx = Math.min(savedIdx, MESSAGES.length-1);
   setTimeout(() => showMessage(msgIdx), 500);
 });
 
 function updateCharImages() {
-  const score = userData.score || 0;
-  const lv = getLevelByScore(score);
+  const lv = getLevelByScore(userData.score||0);
   document.getElementById('my-char').src = lv.img;
 }
 
 function updateHUD() {
-  document.getElementById('hud-score').textContent = (userData.score||0) + ' 점';
+  document.getElementById('hud-score').textContent = (userData.score||0)+' 점';
   document.getElementById('hud-progress').textContent = `${msgIdx+1} / ${MESSAGES.length}`;
 }
 
@@ -334,27 +356,21 @@ function showMessage(idx) {
   const nameTag = document.getElementById('dialog-name');
   const speakerImg = document.getElementById('speaker-char');
   nameTag.textContent = msg.name;
-  if (msg.speaker === 2) {
+  if (msg.speaker===2) {
     nameTag.classList.add('speaker2');
     speakerImg.src = 'images/char1-2.png';
-    speakerImg.style.left = '5%';
-    speakerImg.style.right = 'auto';
-    document.getElementById('my-char').style.filter = 'drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(1)';
   } else {
     nameTag.classList.remove('speaker2');
     speakerImg.src = 'images/char1-1.png';
-    speakerImg.style.left = '5%';
-    document.getElementById('my-char').style.filter = 'drop-shadow(4px 4px 12px rgba(0,0,0,0.8)) brightness(0.8)';
   }
 
   const textEl = document.getElementById('dialog-text');
-  if (msg.type === 'quiz_trigger') {
+  if (msg.type==='quiz_trigger') {
     typeText(textEl, msg.text, () => {
       document.getElementById('dialog-next').style.display = 'none';
       document.getElementById('dialog-choices').innerHTML = `
         <button class="choice-btn" onclick="startQuiz()">🎮 퀴즈 시작하기!</button>
-        <button class="choice-btn" onclick="saveAndExit()">💾 저장하고 나가기</button>
-      `;
+        <button class="choice-btn" onclick="saveAndExit()">💾 저장하고 나가기</button>`;
     });
   } else {
     typeText(textEl, msg.text);
@@ -363,20 +379,16 @@ function showMessage(idx) {
 }
 
 function typeText(el, text, cb) {
-  el.textContent = '';
-  isTyping = true;
-  document.getElementById('dialog-next').style.opacity = '0.3';
-  let i = 0;
+  el.textContent=''; isTyping=true;
+  document.getElementById('dialog-next').style.opacity='0.3';
+  let i=0;
   typingTimer = setInterval(() => {
-    if (i < text.length) {
-      el.textContent = text.slice(0, i+1);
-      i++;
-    } else {
+    if (i<text.length) { el.textContent=text.slice(0,i+1); i++; }
+    else {
       clearInterval(typingTimer);
-      el.textContent = text;
-      isTyping = false;
-      document.getElementById('dialog-next').style.opacity = '1';
-      if (cb) cb();
+      el.textContent=text; isTyping=false;
+      document.getElementById('dialog-next').style.opacity='1';
+      if(cb) cb();
     }
   }, 22);
 }
@@ -385,79 +397,95 @@ function nextMessage() {
   if (isTyping) {
     clearInterval(typingTimer);
     document.getElementById('dialog-text').textContent = MESSAGES[msgIdx].text;
-    isTyping = false;
-    document.getElementById('dialog-next').style.opacity = '1';
+    isTyping=false;
+    document.getElementById('dialog-next').style.opacity='1';
     return;
   }
-  msgIdx++;
-  autoSave();
-  showMessage(msgIdx);
+  msgIdx++; autoSave(); showMessage(msgIdx);
 }
 
 async function autoSave() {
-  if (currentUser.uid === 'student') return;
-  await db.collection('users').doc(currentUser.uid).update({ 'quests.q1_msgIdx': msgIdx });
+  if (currentUser.uid==='student') return;
+  await db.collection('users').doc(currentUser.uid).update({'quests.q1_msgIdx':msgIdx});
 }
-async function saveAndExit() { await autoSave(); window.location.href = 'main.html'; }
+async function saveAndExit() { await autoSave(); window.location.href='main.html'; }
 
-// 화면 클릭으로 다음
 document.addEventListener('click', (e) => {
-  if (e.target.closest('.dialog-choices') || e.target.closest('.quiz-overlay') ||
-      e.target.closest('.dialog-next') || e.target.closest('.hud-back')) return;
+  if (e.target.closest('.dialog-choices')||e.target.closest('.quiz-overlay')||
+      e.target.closest('.dialog-next')||e.target.closest('.hud-back')) return;
   nextMessage();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' || e.code === 'Enter') nextMessage();
+  if (e.code==='Space'||e.code==='Enter') nextMessage();
 });
 
-// ══════════════════════════════
-//  퀴즈 - 드래그앤드롭
-// ══════════════════════════════
+// ══ 퀴즈 ══
 function startQuiz() {
-  quizIdx = 0; quizScore = 0;
-  document.getElementById('quiz-overlay').style.display = 'flex';
+  quizIdx=0; quizScore=0;
+  document.getElementById('quiz-overlay').style.display='flex';
   renderQuiz();
 }
 
 function renderQuiz() {
   const q = QUIZZES[quizIdx];
   document.getElementById('quiz-step').textContent = `${quizIdx+1} / ${QUIZZES.length}`;
-  if (q.type === 'order') renderOrderQuiz(q);
-  else renderMatchQuiz(q);
+  document.getElementById('quiz-dots').innerHTML = QUIZZES.map((_,i) =>
+    `<div class="quiz-dot ${i<quizIdx?'done':i===quizIdx?'cur':''}"></div>`
+  ).join('');
+  if (q.type==='mc') renderMC(q);
+  else if (q.type==='order') renderOrder(q);
+  else renderMatch(q);
+}
+
+// 객관식
+function renderMC(q) {
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="quiz-question">${q.q}</div>
+    ${q.opts.map((opt,i)=>`<button class="quiz-opt" onclick="selectMC(${i},this)">${opt}</button>`).join('')}
+    <div id="quiz-feedback"></div>`;
+}
+function selectMC(idx, btn) {
+  const q = QUIZZES[quizIdx];
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const correct = idx===q.ans;
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct) document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
+  if(correct) quizScore++;
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div class="quiz-feedback ${correct?'correct':'wrong'}" style="margin-top:12px;">
+      ${correct?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button class="quiz-check-btn" onclick="nextQuiz()">
+      ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
 }
 
 // 순서 맞추기
-function renderOrderQuiz(q) {
-  // 섞기
-  const shuffled = [...q.items].sort(() => Math.random() - 0.5);
-  orderList = [];
-
-  document.getElementById('quiz-content').innerHTML = `
+function renderOrder(q) {
+  orderSlots={};
+  const shuffled = [...q.items].sort(()=>Math.random()-.5);
+  document.getElementById('quiz-content').innerHTML=`
     <div class="quiz-question">${q.title}</div>
-    <p class="quiz-desc">${q.desc}<br><small style="color:rgba(255,255,255,0.3);">📱 모바일: 길게 눌러 드래그 | PC: 드래그앤드롭</small></p>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:200px;">
-        <h4 style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;">📦 항목</h4>
+    <p style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;">${q.desc}<br>
+    <small>📱 모바일: 길게 눌러 드래그 | PC: 드래그앤드롭</small></p>
+    <div class="dnd-wrap">
+      <div class="dnd-source">
+        <h4>📦 항목</h4>
         <div id="order-source">
-          ${shuffled.map(item => `
-            <div class="dnd-item" id="item-${item.id}"
-              draggable="true"
-              ondragstart="dragStart(event,'${item.id}')"
-              ondragend="dragEnd(event)"
-              ontouchstart="touchStart(event,'${item.id}')"
-              ontouchmove="touchMove(event)"
-              ontouchend="touchEnd(event)">
+          ${shuffled.map(item=>`
+            <div class="dnd-item" id="item-${item.id}" draggable="true"
+              ondragstart="dragStart(event,'${item.id}')" ondragend="dragEnd(event)"
+              ontouchstart="touchStart(event,'${item.id}')" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">
               <span class="drag-handle">⠿</span>${item.text}
             </div>`).join('')}
         </div>
       </div>
-      <div style="flex:1;min-width:200px;">
-        <h4 style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;">✅ 순서 (1→3)</h4>
+      <div class="dnd-target">
+        <h4>✅ 순서 (1→3)</h4>
         <div id="order-target">
-          ${[1,2,3].map(n => `
+          ${[1,2,3].map(n=>`
             <div class="dnd-slot" id="slot-${n}" data-slot="${n}"
-              ondragover="dragOver(event)"
-              ondragleave="dragLeave(event)"
+              ondragover="dragOver(event)" ondragleave="dragLeave(event)"
               ondrop="dropOrder(event,${n})">
               ${n}번째
             </div>`).join('')}
@@ -465,235 +493,181 @@ function renderOrderQuiz(q) {
       </div>
     </div>
     <div id="quiz-feedback"></div>
-    <button class="quiz-check-btn" onclick="checkOrder()">✅ 정답 확인</button>
-  `;
+    <button class="quiz-check-btn" id="check-btn" onclick="checkOrder()">✅ 정답 확인</button>`;
+}
+
+function checkOrder() {
+  const q = QUIZZES[quizIdx];
+  let correct=true;
+  [1,2,3].forEach((n,i)=>{
+    const slot=document.getElementById('slot-'+n);
+    if(orderSlots[n]===q.answer[i]) slot.classList.add('correct');
+    else { slot.classList.add('wrong'); correct=false; }
+  });
+  if(correct) quizScore++;
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div class="quiz-feedback ${correct?'correct':'wrong'}" style="margin-top:12px;">
+      ${correct?'🎉 완벽해요!':'❌ 아쉬워요!'} ${q.exp}
+    </div>
+    <button class="quiz-check-btn" onclick="nextQuiz()">
+      ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
+  document.getElementById('check-btn').style.display='none';
 }
 
 // 짝 맞추기
-function renderMatchQuiz(q) {
-  matchMap = {};
-  document.getElementById('quiz-content').innerHTML = `
+function renderMatch(q) {
+  matchMap={};
+  document.getElementById('quiz-content').innerHTML=`
     <div class="quiz-question">${q.title}</div>
-    <p class="quiz-desc">${q.desc}<br><small style="color:rgba(255,255,255,0.3);">왼쪽 항목을 오른쪽 빈칸으로 드래그하세요</small></p>
+    <p style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;">${q.desc}</p>
     <div class="dnd-wrap">
       <div class="dnd-source">
         <h4>상황</h4>
-        ${q.left.map(item => `
-          <div class="dnd-item" id="item-${item.id}"
-            draggable="true"
-            ondragstart="dragStart(event,'${item.id}')"
-            ondragend="dragEnd(event)"
-            ontouchstart="touchStart(event,'${item.id}')"
-            ontouchmove="touchMove(event)"
-            ontouchend="touchEnd(event)">
+        ${q.left.map(item=>`
+          <div class="dnd-item" id="item-${item.id}" draggable="true"
+            ondragstart="dragStart(event,'${item.id}')" ondragend="dragEnd(event)"
+            ontouchstart="touchStart(event,'${item.id}')" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">
             <span class="drag-handle">⠿</span>${item.text}
           </div>`).join('')}
       </div>
       <div class="dnd-target">
         <h4>원칙</h4>
-        ${q.right.map(r => `
+        ${q.right.map(r=>`
           <div class="dnd-slot" id="rslot-${r.id}" data-rid="${r.id}"
-            ondragover="dragOver(event)"
-            ondragleave="dragLeave(event)"
+            ondragover="dragOver(event)" ondragleave="dragLeave(event)"
             ondrop="dropMatch(event,'${r.id}')">
             ${r.text}
           </div>`).join('')}
       </div>
     </div>
     <div id="quiz-feedback"></div>
-    <button class="quiz-check-btn" onclick="checkMatch()">✅ 정답 확인</button>
-  `;
-}
-
-// ── 드래그 이벤트 ──
-let currentDragId = null;
-function dragStart(e, id) {
-  currentDragId = id;
-  e.dataTransfer.setData('text', id);
-  setTimeout(() => document.getElementById('item-'+id)?.classList.add('dragging'), 0);
-}
-function dragEnd(e) {
-  document.querySelectorAll('.dnd-item').forEach(el => el.classList.remove('dragging'));
-}
-function dragOver(e) { e.preventDefault(); e.currentTarget.classList.add('over'); }
-function dragLeave(e) { e.currentTarget.classList.remove('over'); }
-
-function dropOrder(e, slotNum) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('over');
-  const id = e.dataTransfer.getData('text') || currentDragId;
-  const item = QUIZZES[quizIdx].items.find(i => i.id === id);
-  if (!item) return;
-  // 이미 슬롯에 있으면 제거
-  const prevSlot = Object.entries(orderSlots||{}).find(([k,v])=>v===id);
-  if (prevSlot) { document.getElementById('slot-'+prevSlot[0]).textContent = prevSlot[0]+'번째'; document.getElementById('slot-'+prevSlot[0]).classList.remove('filled'); delete (orderSlots||{})[prevSlot[0]]; }
-  if (!orderSlots) orderSlots = {};
-  orderSlots[slotNum] = id;
-  const slot = document.getElementById('slot-'+slotNum);
-  slot.textContent = item.text;
-  slot.classList.add('filled');
-}
-
-let orderSlots = {};
-function dropMatch(e, rid) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('over');
-  const lid = e.dataTransfer.getData('text') || currentDragId;
-  const leftItem = QUIZZES[quizIdx].left.find(i => i.id === lid);
-  if (!leftItem) return;
-  // 기존 연결 제거
-  Object.keys(matchMap).forEach(k => { if (matchMap[k]===rid) delete matchMap[k]; });
-  matchMap[lid] = rid;
-  const slot = document.getElementById('rslot-'+rid);
-  slot.textContent = leftItem.text + ' → ' + QUIZZES[quizIdx].right.find(r=>r.id===rid).text;
-  slot.classList.add('filled');
-}
-
-// ── 터치 드래그 (모바일) ──
-let touchDragId = null;
-let touchClone = null;
-function touchStart(e, id) {
-  touchDragId = id;
-  const el = document.getElementById('item-'+id);
-  touchClone = el.cloneNode(true);
-  touchClone.style.cssText = `position:fixed;opacity:0.8;pointer-events:none;z-index:999;width:${el.offsetWidth}px;`;
-  document.body.appendChild(touchClone);
-}
-function touchMove(e) {
-  e.preventDefault();
-  const t = e.touches[0];
-  if (touchClone) { touchClone.style.left=(t.clientX-60)+'px'; touchClone.style.top=(t.clientY-20)+'px'; }
-  // 슬롯 하이라이트
-  document.querySelectorAll('.dnd-slot').forEach(s => s.classList.remove('over'));
-  const el = document.elementFromPoint(t.clientX, t.clientY);
-  el?.closest('.dnd-slot')?.classList.add('over');
-}
-function touchEnd(e) {
-  if (touchClone) { touchClone.remove(); touchClone = null; }
-  document.querySelectorAll('.dnd-slot').forEach(s => s.classList.remove('over'));
-  const t = e.changedTouches[0];
-  const el = document.elementFromPoint(t.clientX, t.clientY)?.closest('.dnd-slot');
-  if (!el || !touchDragId) return;
-  const q = QUIZZES[quizIdx];
-  if (q.type === 'order') {
-    const slotNum = parseInt(el.dataset.slot);
-    const item = q.items.find(i=>i.id===touchDragId);
-    if (!orderSlots) orderSlots = {};
-    orderSlots[slotNum] = touchDragId;
-    el.textContent = item.text; el.classList.add('filled');
-  } else {
-    const rid = el.dataset.rid;
-    const leftItem = q.left.find(i=>i.id===touchDragId);
-    if (leftItem && rid) {
-      matchMap[touchDragId] = rid;
-      el.textContent = leftItem.text + ' → ' + q.right.find(r=>r.id===rid).text;
-      el.classList.add('filled');
-    }
-  }
-  touchDragId = null;
-}
-
-// ── 정답 확인 ──
-function checkOrder() {
-  const q = QUIZZES[quizIdx];
-  const ans = q.answer;
-  let correct = true;
-  [1,2,3].forEach((n,i) => {
-    const slot = document.getElementById('slot-'+n);
-    if (orderSlots[n] === ans[i]) { slot.classList.add('correct'); }
-    else { slot.classList.add('wrong'); correct = false; }
-  });
-  const fb = document.getElementById('quiz-feedback');
-  fb.innerHTML = `<div class="quiz-feedback ${correct?'correct':'wrong'}">
-    ${correct ? '🎉 완벽해요!' : '❌ 아쉬워요!'} ${q.exp}
-  </div>
-  <button class="quiz-check-btn" onclick="nextQuiz()" style="margin-top:8px;">
-    ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
-  </button>`;
-  if (correct) quizScore++;
-  document.querySelector('.quiz-check-btn').style.display = 'none';
+    <button class="quiz-check-btn" id="check-btn" onclick="checkMatch()">✅ 정답 확인</button>`;
 }
 
 function checkMatch() {
-  const q = QUIZZES[quizIdx];
-  let correct = true;
-  q.left.forEach(l => {
-    const rid = matchMap[l.id];
-    const slot = rid ? document.getElementById('rslot-'+rid) : null;
-    if (rid && q.answer[l.id] === rid) { slot?.classList.add('correct'); }
-    else { if(slot) slot.classList.add('wrong'); correct = false; }
+  const q=QUIZZES[quizIdx]; let correct=true;
+  q.left.forEach(l=>{
+    const rid=matchMap[l.id];
+    const slot=rid?document.getElementById('rslot-'+rid):null;
+    if(rid&&q.answer[l.id]===rid) slot?.classList.add('correct');
+    else { if(slot) slot.classList.add('wrong'); correct=false; }
   });
-  const fb = document.getElementById('quiz-feedback');
-  fb.innerHTML = `<div class="quiz-feedback ${correct?'correct':'wrong'}">
-    ${correct ? '🎉 완벽해요!' : '❌ 아쉬워요!'} ${q.exp}
-  </div>
-  <button class="quiz-check-btn" onclick="nextQuiz()" style="margin-top:8px;">
-    ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
-  </button>`;
-  if (correct) quizScore++;
-  document.querySelector('.quiz-check-btn').style.display = 'none';
+  if(correct) quizScore++;
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div class="quiz-feedback ${correct?'correct':'wrong'}" style="margin-top:12px;">
+      ${correct?'🎉 완벽해요!':'❌ 아쉬워요!'} ${q.exp}
+    </div>
+    <button class="quiz-check-btn" onclick="nextQuiz()">
+      ${quizIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
+  document.getElementById('check-btn').style.display='none';
 }
 
 async function nextQuiz() {
-  quizIdx++;
-  orderSlots = {}; matchMap = {};
-  if (quizIdx >= QUIZZES.length) { await finishQuiz(); }
-  else { renderQuiz(); }
+  quizIdx++; orderSlots={}; matchMap={};
+  if(quizIdx>=QUIZZES.length) await finishQuiz();
+  else renderQuiz();
 }
 
 async function finishQuiz() {
-  const xp = quizScore * 15 + (quizScore === QUIZZES.length ? 20 : 0);
-  if (currentUser.uid !== 'student') {
+  const xp = quizScore*12 + (quizScore===QUIZZES.length?20:0);
+  if(currentUser.uid!=='student') {
     await addScore(currentUser.uid, xp, '퀘스트1 퀴즈');
-    await db.collection('users').doc(currentUser.uid).update({ 'quests.q1_quiz_done': true });
+    await db.collection('users').doc(currentUser.uid).update({'quests.q1_quiz_done':true});
     await db.collection('quiz_results').doc(currentUser.uid).set({
-      q1: firebase.firestore.FieldValue.arrayUnion({ score:quizScore, total:QUIZZES.length, xp, date:new Date().toISOString() })
-    }, {merge:true});
-    userData.score = (userData.score||0) + xp;
+      q1: firebase.firestore.FieldValue.arrayUnion({score:quizScore,total:QUIZZES.length,xp,date:new Date().toISOString()})
+    },{merge:true});
+    userData.score=(userData.score||0)+xp;
     updateHUD(); updateCharImages();
-    checkLevelUp(userData.score - xp, userData.score);
+    checkLevelUp(userData.score-xp, userData.score);
   }
-  document.getElementById('quiz-content').innerHTML = `
+  document.getElementById('quiz-dots').innerHTML='';
+  document.getElementById('quiz-content').innerHTML=`
     <div class="quiz-result">
-      <div class="big-emoji">${quizScore===QUIZZES.length?'🏆':quizScore>=1?'👍':'💪'}</div>
+      <div class="big-emoji">${quizScore===QUIZZES.length?'🏆':quizScore>=3?'👍':'💪'}</div>
       <h3>${quizScore} / ${QUIZZES.length} 정답</h3>
       <div class="xp-gain">+${xp} 점 획득!</div>
       <button class="quiz-check-btn" onclick="closeQuiz()">계속 학습하기 →</button>
     </div>`;
-  showXPPopup('+' + xp + ' 점');
+  showXPPopup('+'+xp+' 점');
 }
 
 function closeQuiz() {
-  document.getElementById('quiz-overlay').style.display = 'none';
-  if (currentUser.uid !== 'student') {
-    db.collection('users').doc(currentUser.uid).update({ 'quests.q1_done':true, 'quests.q1_msgIdx':MESSAGES.length });
+  document.getElementById('quiz-overlay').style.display='none';
+  if(currentUser.uid!=='student') {
+    db.collection('users').doc(currentUser.uid).update({'quests.q1_done':true,'quests.q1_msgIdx':MESSAGES.length});
   }
   showComplete();
 }
 
 function showComplete() {
-  document.getElementById('dialog-next').style.display = 'none';
+  document.getElementById('dialog-next').style.display='none';
   typeText(document.getElementById('dialog-text'),
-    '🎉 퀘스트 1 완료!\n법률에 대해 잘 배웠어!\n다음 퀘스트로 넘어가볼까?', () => {
-    document.getElementById('dialog-choices').innerHTML = `
+    '🎉 퀘스트 1 완료!\n법률에 대해 잘 배웠어!\n다음 퀘스트로 넘어가볼까?', ()=>{
+    document.getElementById('dialog-choices').innerHTML=`
       <button class="choice-btn" onclick="window.location.href='quest2.html'">다음 퀘스트 →</button>
-      <button class="choice-btn" onclick="window.location.href='main.html'">🏠 메인으로</button>
-    `;
+      <button class="choice-btn" onclick="window.location.href='main.html'">🏠 메인으로</button>`;
   });
 }
 
 function checkLevelUp(before, after) {
-  const lvB = getLevelByScore(before), lvA = getLevelByScore(after);
-  if (lvA.level > lvB.level) {
-    const el = document.createElement('div');
-    el.className = 'levelup-screen';
-    el.innerHTML = `
-      <img src="${lvA.img}" style="height:150px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));animation:charFloat 1s ease-in-out infinite;">
-      <h1>레벨 업! 🎉</h1>
-      <p>Lv.${lvA.level} ${lvA.name}</p>
-      <button class="btn btn-accent" style="max-width:200px;margin-top:20px;" onclick="this.parentElement.remove()">확인</button>`;
+  const lvB=getLevelByScore(before), lvA=getLevelByScore(after);
+  if(lvA.level>lvB.level) {
+    const el=document.createElement('div');
+    el.className='levelup-screen';
+    el.innerHTML=`<img src="${lvA.img}" style="height:150px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));">
+      <h1>레벨 업! 🎉</h1><p>Lv.${lvA.level} ${lvA.name}</p>
+      <button class="quiz-check-btn" style="max-width:200px;margin-top:20px;" onclick="this.parentElement.remove()">확인</button>`;
     document.body.appendChild(el);
   }
+}
+
+// ── 드래그 이벤트 ──
+function dragStart(e,id){ currentDragId=id; e.dataTransfer.setData('text',id); setTimeout(()=>document.getElementById('item-'+id)?.classList.add('dragging'),0); }
+function dragEnd(e){ document.querySelectorAll('.dnd-item').forEach(el=>el.classList.remove('dragging')); }
+function dragOver(e){ e.preventDefault(); e.currentTarget.classList.add('over'); }
+function dragLeave(e){ e.currentTarget.classList.remove('over'); }
+function dropOrder(e,n){
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  const id=e.dataTransfer.getData('text')||currentDragId;
+  const item=QUIZZES[quizIdx].items?.find(i=>i.id===id); if(!item) return;
+  orderSlots[n]=id;
+  const slot=document.getElementById('slot-'+n);
+  slot.textContent=item.text; slot.classList.add('filled');
+}
+function dropMatch(e,rid){
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  const lid=e.dataTransfer.getData('text')||currentDragId;
+  const q=QUIZZES[quizIdx];
+  const leftItem=q.left?.find(i=>i.id===lid); if(!leftItem) return;
+  Object.keys(matchMap).forEach(k=>{ if(matchMap[k]===rid) delete matchMap[k]; });
+  matchMap[lid]=rid;
+  const slot=document.getElementById('rslot-'+rid);
+  slot.textContent=leftItem.text+' → '+q.right.find(r=>r.id===rid).text;
+  slot.classList.add('filled');
+}
+
+// ── 터치 ──
+function touchStart(e,id){ touchDragId=id; const el=document.getElementById('item-'+id); touchClone=el.cloneNode(true); touchClone.style.cssText=`position:fixed;opacity:0.8;pointer-events:none;z-index:999;width:${el.offsetWidth}px;background:#1a2235;border-radius:10px;`; document.body.appendChild(touchClone); }
+function touchMove(e){ e.preventDefault(); const t=e.touches[0]; if(touchClone){touchClone.style.left=(t.clientX-60)+'px';touchClone.style.top=(t.clientY-20)+'px';} document.querySelectorAll('.dnd-slot').forEach(s=>s.classList.remove('over')); document.elementFromPoint(t.clientX,t.clientY)?.closest('.dnd-slot')?.classList.add('over'); }
+function touchEnd(e){
+  if(touchClone){touchClone.remove();touchClone=null;}
+  document.querySelectorAll('.dnd-slot').forEach(s=>s.classList.remove('over'));
+  const t=e.changedTouches[0];
+  const el=document.elementFromPoint(t.clientX,t.clientY)?.closest('.dnd-slot');
+  if(!el||!touchDragId) return;
+  const q=QUIZZES[quizIdx];
+  if(q.type==='order'){
+    const n=parseInt(el.dataset.slot);
+    const item=q.items?.find(i=>i.id===touchDragId);
+    if(item){orderSlots[n]=touchDragId;el.textContent=item.text;el.classList.add('filled');}
+  } else {
+    const rid=el.dataset.rid;
+    const leftItem=q.left?.find(i=>i.id===touchDragId);
+    if(leftItem&&rid){matchMap[touchDragId]=rid;el.textContent=leftItem.text+' → '+q.right.find(r=>r.id===rid).text;el.classList.add('filled');}
+  }
+  touchDragId=null;
 }
 </script>
 </body>
