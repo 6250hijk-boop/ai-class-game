@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>퀘스트8 - 테스트해보기</title>
+  <title>퀘스트7 - 라벨링하기</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="page">
@@ -13,7 +13,12 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">🤖 AI 가디언</div>
     <div class="char-widget">
-      <div id="sb-char-emoji" class="char-emoji">🤖</div>
+      <img id="sb-char-img" src="images/robot_1.png"
+        style="width:80px;height:80px;object-fit:contain;
+               filter:drop-shadow(0 0 12px rgba(99,179,237,0.8));
+               animation:float 3s ease-in-out infinite;"
+        onerror="this.style.display='none';document.getElementById('sb-char-emoji').style.display='block'">
+      <div id="sb-char-emoji" class="char-emoji" style="display:none;">🤖</div>
       <div class="char-name" id="sb-char-name">-</div>
       <div class="char-level" id="sb-char-level">Lv.1</div>
       <div class="char-score" id="sb-score">0 점</div>
@@ -29,21 +34,26 @@
   <main class="main-content">
     <a href="main.html" style="color:var(--muted);font-size:13px;text-decoration:none;">← 메인으로</a>
     <h2 style="font-family:'Jua',sans-serif;font-size:24px;margin-top:8px;margin-bottom:24px;">
-      🧪 퀘스트 8: 테스트해보기
+      🏷️ 퀘스트 7: 라벨링하기
     </h2>
     <div class="chat-box" style="max-width:600px;">
       <div class="chat-header">
-        <span style="font-size:24px;">🤖</span>
-        <h3>테스트해보기</h3>
+        <img id="panel-img" src="images/robot_1.png"
+          style="width:40px;height:40px;object-fit:contain;
+                 filter:drop-shadow(0 0 8px rgba(99,179,237,0.6));">
+        <h3>라벨링하기</h3>
       </div>
       <div style="padding:40px;text-align:center;">
-        <div style="font-size:64px;margin-bottom:20px;">🧪</div>
-        <h3 style="font-size:20px;margin-bottom:12px;">테스트해보기</h3>
+        <img id="center-img" src="images/robot_1.png"
+          style="width:120px;height:120px;object-fit:contain;
+                 filter:drop-shadow(0 0 16px rgba(99,179,237,0.8));
+                 animation:float 3s ease-in-out infinite;margin-bottom:20px;">
+        <h3 style="font-size:20px;margin-bottom:12px;">라벨링하기</h3>
         <p style="color:var(--muted);margin-bottom:32px;">
           이 퀘스트는 준비 중이에요!<br>곧 콘텐츠가 추가될 예정입니다. ✨
         </p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick="window.location.href='quest7.html'">
+          <button class="btn btn-ghost btn-sm" onclick="window.location.href='quest6.html'">
             ← 이전 퀘스트
           </button>
           <button class="btn btn-primary btn-sm" onclick="window.location.href='main.html'">
@@ -65,22 +75,31 @@ requireAuth(async (user) => {
     const snap = await db.collection("users").where("id","==",user.id).get();
     if (!snap.empty) { userData = snap.docs[0].data(); user.uid = snap.docs[0].id; }
   }
-  const score = userData.score||0;
+  const score = userData.score || 0;
   const lv = getLevelByScore(score);
-  document.getElementById("sb-char-emoji").textContent = lv.emoji;
-  document.getElementById("sb-char-name").textContent = userData.charName||"-";
+  const next = getNextLevel(score);
+
+  // 이미지 업데이트
+  document.getElementById("sb-char-img").src = lv.img;
+  document.getElementById("panel-img").src = lv.img;
+  document.getElementById("center-img").src = lv.img;
+
+  // 사이드바 정보
+  document.getElementById("sb-char-name").textContent = userData.charName || "-";
   document.getElementById("sb-char-level").textContent = "Lv."+lv.level+" "+lv.name;
   document.getElementById("sb-score").textContent = score+" 점";
-  const next = getNextLevel(score);
-  const pct = next?((score-lv.minScore)/(next.minScore-lv.minScore))*100:100;
-  document.getElementById("sb-xp-bar").style.width=Math.min(100,pct)+"%";
+  const pct = next ? ((score-lv.minScore)/(next.minScore-lv.minScore))*100 : 100;
+  document.getElementById("sb-xp-bar").style.width = Math.min(100,pct)+"%";
+
+  // 퀘스트 목록
   document.getElementById("quest-list").innerHTML = QUESTS.map(q=>{
     const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-item ${q.id===8?'active':''} ${done?'done':''}">
+    return `<a href="quest${q.id}.html" class="quest-item ${q.id===7?'active':''} ${done?'done':''}">
       <div class="quest-check ${done?'done':''}"> ${done?'✓':''}</div>
       <span>${q.icon} ${q.title}</span></a>`;
   }).join("");
 });
+
 function toggleSidebar(){
   document.getElementById("sidebar").classList.toggle("open");
   document.getElementById("overlay").classList.toggle("open");
