@@ -4,85 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
   <title>퀘스트1 - 인공지능 세계의 법률</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;overflow:hidden;user-select:none;font-family:'Noto Sans KR',sans-serif; background: #000;}
-    .game-screen{position:fixed;inset:0;background:#000;}
-    .game-bg{position:absolute;inset:0;background:url('images/bgq1-1.png') center/cover no-repeat;}
-    .game-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(0,0,0,0.85) 100%);}
+    :root {
+      --primary: #63b3ed;
+      --accent: #f6ad55;
+      --bg: #0a0e1a;
+      --text: #e2e8f0;
+    }
 
-    .ai-notice{position:absolute;top:52px;left:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.6);z-index:25;backdrop-filter:blur(4px);}
-
-    /* 캐릭터 배치 */
-    .my-char{position:absolute;bottom:180px;left:5%;height:clamp(150px, 30vh, 300px);object-fit:contain;z-index:10;filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));animation:charFloat 3s ease-in-out infinite;}
-    .speaker-char{position:absolute;bottom:180px;right:5%;height:clamp(150px, 30vh, 300px);object-fit:contain;z-index:10;filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));animation:charFloat 3s ease-in-out infinite 0.5s;}
-    @keyframes charFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
-
-    /* 상단 HUD */
-    .game-hud{position:absolute;top:0;left:0;right:0;padding:12px;display:flex;align-items:center;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);z-index:30;}
-    .hud-back{background:rgba(255,255,255,0.2);padding:6px 12px;border-radius:8px;color:white;text-decoration:none;font-size:13px;}
-    .hud-title{margin-left:15px; font-family:'Jua',sans-serif; color:white; font-size:15px;}
-    .hud-right{margin-left:auto; display:flex; gap:10px;}
-    .hud-score{background:rgba(99,179,237,0.3); padding:4px 12px; border-radius:20px; color:#63b3ed; font-weight:700;}
-
-    /* 대화창 디자인 (이미지와 동일하게 수정) */
-    .dialog-box{position:absolute;bottom:0;left:0;right:0;z-index:40;padding:20px;}
-    .char-name-tag{display:inline-block;background:#f6ad55;color:#000;font-weight:700;padding:6px 20px;border-radius:10px 10px 0 0;font-family:'Jua',sans-serif;}
-    .char-name-tag.speaker2{background:#63b3ed;}
+    * { box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; user-select: none; font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); }
     
-    .dialog-text-box{background:rgba(10,15,30,0.95);border:2px solid #63b3ed;border-radius:0 15px 15px 15px;padding:25px 30px;min-height:130px;position:relative;box-shadow:0 0 30px rgba(0,0,0,0.5);}
-    .dialog-text{font-size:17px;line-height:1.7;color:#fff;white-space:pre-line;}
+    .game-screen { position: fixed; inset: 0; background: #000; }
+    .game-bg { position: absolute; inset: 0; background: url('images/bgq1-1.png') center/cover no-repeat; }
+    .game-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.85) 100%); }
 
-    /* 다음 버튼 - 대화창 안쪽 오른쪽 아래 */
-    .dialog-next-btn{position:absolute;bottom:15px;right:20px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);padding:6px 15px;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;}
-    .dialog-next-btn:hover{background:rgba(99,179,237,0.3);}
-    .btn-prev{position:absolute;bottom:15px;right:110px;background:rgba(255,255,255,0.05);border:none;color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;padding:6px 10px;}
+    /* 캐릭터 */
+    .char-img { position: absolute; bottom: 180px; height: clamp(180px, 35vh, 350px); object-fit: contain; z-index: 10; animation: charFloat 3s ease-in-out infinite; transition: opacity 0.5s, transform 0.5s; }
+    .my-char { left: 5%; }
+    .speaker-char { right: 5%; opacity: 0; }
+    @keyframes charFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-    /* 퀴즈 및 기타 스타일 생략 (기존과 동일하게 유지) */
-    /* ... (기존 퀴즈 스타일들) ... */
-    .quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
-    .quiz-box{background:#1a1a1a; border:1px solid #63b3ed; border-radius:20px; padding:30px; width:100%; max-width:500px;}
-    .quiz-opt{width:100%; padding:12px; margin-bottom:10px; background:#222; border:1px solid #444; color:white; border-radius:10px; text-align:left; cursor:pointer;}
-    .quiz-opt:hover{background:#333; border-color:#63b3ed;}
-    .quiz-check-btn{width:100%; padding:15px; background:#63b3ed; border:none; border-radius:10px; font-weight:700; cursor:pointer;}
+    /* HUD */
+    .game-hud { position: absolute; top: 0; left: 0; right: 0; padding: 15px; display: flex; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); z-index: 50; }
+    .hud-back { background: rgba(255,255,255,0.15); padding: 6px 15px; border-radius: 8px; color: #fff; text-decoration: none; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); }
+    .hud-title { margin-left: 15px; font-family: 'Jua', sans-serif; font-size: 16px; text-shadow: 0 2px 4px #000; }
+    .hud-score { margin-left: auto; background: rgba(99,179,237,0.2); padding: 5px 15px; border-radius: 20px; color: var(--primary); font-weight: 700; border: 1px solid var(--primary); }
+
+    /* 대화창 (수정됨) */
+    .dialog-box { position: absolute; bottom: 0; left: 0; right: 0; z-index: 40; padding: 0 20px 25px; }
+    .char-name-tag { display: inline-block; background: var(--primary); color: #000; font-weight: 700; padding: 6px 25px; border-radius: 12px 12px 0 0; font-family: 'Jua', sans-serif; font-size: 16px; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); }
+    .char-name-tag.speaker2 { background: var(--accent); }
+    
+    .dialog-text-box { background: rgba(10,15,30,0.92); border: 2px solid var(--primary); border-radius: 0 15px 15px 15px; padding: 25px 35px; min-height: 140px; position: relative; backdrop-filter: blur(10px); cursor: pointer; }
+    .dialog-text { font-size: 18px; line-height: 1.8; color: #fff; white-space: pre-line; pointer-events: none; }
+
+    /* 다음 버튼 화살표 */
+    .dialog-next { position: absolute; bottom: 15px; right: 20px; font-size: 12px; color: var(--primary); animation: bounce 1s infinite; display: none; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+    /* 퀴즈 팝업 (통합) */
+    .quiz-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+    .quiz-box { background: #1a1a1a; border: 1px solid var(--primary); border-radius: 25px; padding: 30px; width: 100%; max-width: 550px; text-align: center; }
+    .quiz-question { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #fff; }
+    .quiz-opt { width: 100%; padding: 15px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 12px; cursor: pointer; text-align: left; font-size: 15px; transition: 0.2s; }
+    .quiz-opt:hover { background: rgba(99,179,237,0.1); border-color: var(--primary); }
+    .quiz-check-btn { width: 100%; padding: 15px; background: var(--primary); color: #000; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-<div id="quiz-overlay" class="quiz-overlay">
-  <div class="quiz-box">
-    <div id="quiz-content"></div>
-  </div>
-</div>
-
 <div class="game-screen">
   <div class="game-bg"></div>
-  <div class="ai-notice">본 프로그램의 배경과 캐릭터는 AI로 생성되었습니다.</div>
-  
-  <img class="my-char" id="my-char" src="images/robot_1.png">
-  <img class="speaker-char" id="speaker-char" src="images/char1-1.png">
-
   <div class="game-hud">
     <a href="main.html" class="hud-back">← 메인</a>
     <div class="hud-title">⚖️ 퀘스트 1: 인공지능 세계의 법률</div>
-    <div class="hud-right">
-      <div id="hud-score" class="hud-score">0 점</div>
-    </div>
+    <div id="hud-score" class="hud-score">0 점</div>
   </div>
+
+  <img class="char-img my-char" id="my-char" src="images/robot_1.png">
+  <img class="char-img speaker-char" id="speaker-char" src="images/char1-1.png">
 
   <div class="dialog-box">
     <div class="char-name-tag" id="dialog-name">AI 가디언</div>
-    <div class="dialog-text-box" onclick="handleScreenClick()">
+    <div class="dialog-text-box" id="dialog-click-area">
       <div class="dialog-text" id="dialog-text"></div>
-      
-      <button class="btn-prev" id="btn-prev" onclick="event.stopPropagation(); prevMessage()">◀ 이전</button>
-      
-      <div class="dialog-next-btn" id="dialog-next" onclick="event.stopPropagation(); nextMessage()">
-        다음 ❯
-      </div>
+      <div class="dialog-next" id="dialog-next">▼ 다음 (클릭)</div>
     </div>
   </div>
+</div>
+
+<div id="quiz-overlay" class="quiz-overlay">
+  <div class="quiz-box" id="quiz-content"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -91,18 +85,18 @@
 <script src="firebase-config.js"></script>
 
 <script>
+// 대사 데이터 (요청하신 3대 원칙 포함)
 const MESSAGES = [
-  { speaker:1, name:"AI 가디언", text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️\n여기 세계의 법을 알려줄게!" },
-  { speaker:1, name:"AI 가디언", text:"나는 AI로 만들어진 캐릭터야 🤖\nAI로 생성된 사실을 알려줘야 해.\n대한민국에서 2026년 1월 22일부터 시행되었지! 📅" },
-  { speaker:1, name:"AI 가디언", text:"AI로 만들어진 광고를 보면 아래에\n\"본 광고는 AI로 만들어졌습니다.\"라고 표기되어 있지.\n이미지, 동영상, 오디오 콘텐츠 모두 포함이야! 🎬" },
-  { speaker:1, name:"AI 가디언", text:"개인정보 보호법에 대해 알아볼까? 🔒\nAI가 더 똑똑해지려면 많은 정보를 학습해야 해.\n자, 지금까지 배운 내용 퀴즈로 확인해보자!", type:"quiz_1" },
+  { speaker:1, name:"AI 가디언", text:"여기는 대한민국 인공지능 세계야 🌏\n여기에서 살아가려면 법을 알고 있어야겠지? ⚖️" },
+  { speaker:1, name:"AI 가디언", text:"나는 AI로 만들어진 캐릭터야 🤖\nAI로 생성된 콘텐츠는 그 사실을 알려줘야 해.\n대한민국에서 2026년부터 시행된 법이지! 📅" },
+  { speaker:1, name:"AI 가디언", text:"이미지, 동영상, 오디오 모두 포함이야! 🎬\n실제와 구분이 어렵다면 표기를 꼭 해야 하지.\n자, 퀴즈로 확인해볼까?", type:"quiz_1" },
   { speaker:2, name:"씨큐", text:"안녕! 나는 씨큐야 😊\n좋은 AI가 되기 위해서는 많은 정보가 필요해!\n하지만 아무 정보나 공부할 순 없지." },
-  { speaker:2, name:"씨큐", text:"인공지능은 마치 '엄청난 공부벌레'와 같아. 📚\n수많은 데이터를 읽고 학습해야 하는데,\n우리가 일상에서 남긴 기록들이 사용되지." },
-  { speaker:2, name:"씨큐", text:"학습 데이터는 AI가 배우는 교과서야. 📖\nSNS 게시글, 검색 기록 등도 포함되지.\n취향, 위치, 목소리, 얼굴 특징까지 모두 개인정보야!" },
+  { speaker:2, name:"씨큐", text:"인공지능은 마치 '엄청난 공부벌레'와 같아. 📚\n우리가 일상에서 남긴 기록들이 사용되지.\n취향, 위치, 목소리까지 모두 개인정보야!" },
   { speaker:2, name:"씨큐", text:"AI시대 개인정보 보호 3대 핵심 원칙을 알려줄게! ⚖️\n법은 AI가 무분별하게 정보를 가져가지 못하도록\n다음 규칙을 정하고 있어." },
-  { speaker:2, name:"씨큐", text:"[① 투명성] 내 정보를 어디에 쓰는지 알려줘!\n사용자에게 명확하게 알려줘야 해. 약관에 숨기면 안 돼!!" },
-  { speaker:2, name:"씨큐", text:"[② 목적 제한] 공부하라고 준 정보로 딴짓하지 마!\n[③ 안전성] 내 정보가 새나가지 않게 꽉 잠가줘! 🔒" },
-  { speaker:2, name:"씨큐", text:"자, 씨큐가 알려준 내용을 퀴즈로 확인해볼까? 🎮\n잘 들었으면 맞힐 수 있을 거야!", type:"quiz_2" },
+  { speaker:2, name:"씨큐", text:"[① 투명성] 내 정보를 어디에 쓰는지 알려줘! 📢\n정보를 어떻게 학습시키는지 사용자에게 명확하게 알려줘야 해. 약관에 숨기면 안 돼!!" },
+  { speaker:2, name:"씨큐", text:"[② 목적 제한] 공부하라고 준 정보로 딴짓하지 마! 🎯\n학습용 데이터로 광고를 하거나 다른 곳에 팔면 불법이야!" },
+  { speaker:2, name:"씨큐", text:"[③ 안전성] 내 정보가 새나가지 않게 꽉 잠가줘! 🔒\n나를 알아낼 수 없게 '익명화(비식별화)' 처리를\n철저히 해야 안전해." },
+  { speaker:2, name:"씨큐", text:"자, 씨큐가 알려준 내용을 퀴즈로 확인해볼까? 🎮\n잘 들었으면 맞힐 수 있을 거야!", type:"quiz_2" }
 ];
 
 let msgIdx = 0;
@@ -112,8 +106,7 @@ let userData = { score: 0 };
 
 // 초기화
 requireAuth(async (user) => {
-  // 실제 데이터 로드 로직 (생략 - 기존 코드 유지)
-  userData.score = 0; 
+  // 실제 연동 시 userData 가져오기 로직 추가
   updateHUD();
   showMessage(0);
 });
@@ -123,94 +116,118 @@ function updateHUD() {
 }
 
 function showMessage(idx) {
-  if (idx >= MESSAGES.length) return;
-  const msg = MESSAGES[idx];
+  if (idx >= MESSAGES.length) {
+    finishQuest();
+    return;
+  }
   
+  const msg = MESSAGES[idx];
   const nameTag = document.getElementById('dialog-name');
+  const speakerImg = document.getElementById('speaker-char');
+  
   nameTag.textContent = msg.name;
   
-  // 화자 변경에 따른 디자인 처리
+  // 화자 변경 및 이미지 업데이트
   if (msg.speaker === 2) {
     nameTag.classList.add('speaker2');
-    document.getElementById('speaker-char').style.opacity = "1";
-    document.getElementById('speaker-char').src = 'images/char1-2.png'; // 씨큐 이미지
+    speakerImg.src = 'images/char1-2.png'; // 씨큐 이미지
+    speakerImg.style.opacity = "1";
   } else {
     nameTag.classList.remove('speaker2');
-    document.getElementById('speaker-char').src = 'images/char1-1.png'; // 가디언 이미지
+    speakerImg.src = 'images/char1-1.png'; // 가디언 이미지
+    speakerImg.style.opacity = "1";
   }
 
-  const textEl = document.getElementById('dialog-text');
-  typeText(textEl, msg.text, () => {
-    // 퀴즈 타입이면 버튼 숨기고 퀴즈 실행
+  typeText(document.getElementById('dialog-text'), msg.text, () => {
+    // 퀴즈 타입이면 화살표 숨김, 아니면 표시
     if (msg.type) {
       document.getElementById('dialog-next').style.display = 'none';
-      setTimeout(() => startQuiz(msg.type === 'quiz_1' ? 1 : 2), 500);
+      setTimeout(() => startQuiz(msg.type), 800);
     } else {
-      document.getElementById('dialog-next').style.display = 'flex';
+      document.getElementById('dialog-next').style.display = 'block';
     }
   });
 }
 
 function typeText(el, text, cb) {
+  clearInterval(typingTimer);
   el.textContent = '';
   isTyping = true;
+  document.getElementById('dialog-next').style.display = 'none';
+
   let i = 0;
-  clearInterval(typingTimer);
   typingTimer = setInterval(() => {
     if (i < text.length) {
-      el.textContent += text[i];
+      el.textContent = text.slice(0, i + 1);
       i++;
     } else {
       clearInterval(typingTimer);
       isTyping = false;
       if (cb) cb();
     }
-  }, 30);
+  }, 25);
 }
 
-function handleScreenClick() {
+// 클릭 이벤트 핸들러 (통합)
+document.getElementById('dialog-click-area').onclick = function(e) {
   if (isTyping) {
-    // 타이핑 중 클릭하면 바로 전체 텍스트 표시
+    // 타이핑 중이면 즉시 완성
     clearInterval(typingTimer);
     isTyping = false;
     const msg = MESSAGES[msgIdx];
     document.getElementById('dialog-text').textContent = msg.text;
-    if (!msg.type) document.getElementById('dialog-next').style.display = 'flex';
-  }
-}
-
-function nextMessage() {
-  if (isTyping) return;
-  if (msgIdx < MESSAGES.length - 1) {
+    if (!msg.type) document.getElementById('dialog-next').style.display = 'block';
+  } else {
+    // 타이핑 끝났고 퀴즈가 아니라면 다음 대사로
+    if (MESSAGES[msgIdx].type) return;
     msgIdx++;
     showMessage(msgIdx);
+  }
+};
+
+// 퀴즈 로직
+function startQuiz(type) {
+  const overlay = document.getElementById('quiz-overlay');
+  const content = document.getElementById('quiz-content');
+  overlay.style.display = 'flex';
+
+  if (type === 'quiz_1') {
+    content.innerHTML = `
+      <div class="quiz-question">AI가 생성한 콘텐츠에는 반드시 무엇을 해야 하나요?</div>
+      <button class="quiz-opt" onclick="answerQuiz(true, 50)">AI 생성 사실 표기</button>
+      <button class="quiz-opt" onclick="answerQuiz(false)">비밀로 하기</button>
+      <button class="quiz-opt" onclick="answerQuiz(false)">그냥 배포하기</button>
+    `;
   } else {
-    // 마지막 메시지 처리
-    alert("모든 교육을 마쳤습니다!");
+    content.innerHTML = `
+      <div class="quiz-question">AI 개인정보 보호 원칙이 아닌 것은?</div>
+      <button class="quiz-opt" onclick="answerQuiz(false)">투명성</button>
+      <button class="quiz-opt" onclick="answerQuiz(false)">목적 제한</button>
+      <button class="quiz-opt" onclick="answerQuiz(true, 50)">무조건 수집</button>
+    `;
   }
 }
 
-function prevMessage() {
-  if (msgIdx > 0) {
-    msgIdx--;
-    showMessage(msgIdx);
+function answerQuiz(isCorrect, points = 0) {
+  if (isCorrect) {
+    alert("✅ 정답입니다! +" + points + " 점");
+    userData.score += points;
+    updateHUD();
+    closeQuiz();
+  } else {
+    alert("❌ 틀렸습니다. 다시 생각해보세요!");
   }
-}
-
-// 퀴즈 관련 함수 (시작 부분만 예시)
-function startQuiz(num) {
-  document.getElementById('quiz-overlay').style.display = 'flex';
-  document.getElementById('quiz-content').innerHTML = `
-    <h2 style="color:#63b3ed">미션: 지식 확인!</h2>
-    <p style="color:#fff">이곳에 퀴즈 로직을 구현하세요.</p>
-    <button class="quiz-check-btn" onclick="closeQuiz()">확인</button>
-  `;
 }
 
 function closeQuiz() {
   document.getElementById('quiz-overlay').style.display = 'none';
   msgIdx++;
   showMessage(msgIdx);
+}
+
+function finishQuest() {
+  document.getElementById('dialog-text').textContent = "🎉 모든 학습을 마쳤습니다!\n당신은 이제 진정한 데이터 가디언입니다.";
+  // 버튼 추가 로직 등...
 }
 </script>
 </body>
