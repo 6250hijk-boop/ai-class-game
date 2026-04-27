@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     *{box-sizing:border-box;}
+    /* 배경 */
+    body{background:url('images/bgmain.png') center/cover no-repeat fixed;background-color:var(--bg);}
+    body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:0;pointer-events:none;}
+    .page{position:relative;z-index:1;}
     /* 스토리 오프닝 */
     .story-overlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
     .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;}
@@ -169,7 +173,7 @@ requireAuth(async (user) => {
   currentUser=user;
 
   if (user.uid==='student') {
-    // 비회원: 로컬스토리지에서 데이터 불러오기
+    // 비회원: 매번 최신 로컬스토리지에서 불러오기
     const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
     document.getElementById('temp-reset-wrap').style.display='block';
@@ -177,8 +181,12 @@ requireAuth(async (user) => {
     userData={ charName:'관리자', score:0, quests:{}, name:'관리자' };
     initUI(); return;
   } else {
+    // 일반 회원: Firestore에서 최신 데이터 불러오기
     const snap=await db.collection('users').where('id','==',user.id).get();
-    if (!snap.empty){ userData=snap.docs[0].data(); currentUser.uid=snap.docs[0].id; }
+    if (!snap.empty){
+      userData=snap.docs[0].data();
+      currentUser.uid=snap.docs[0].id;
+    }
   }
 
   if (!userData.charName) {
@@ -259,18 +267,24 @@ function initUI(){
     const done=(userData.quests||{})[`q${q.id}_done`];
     return `<a href="quest${q.id}.html" class="quest-item ${done?'done':''}">
       <div class="quest-check ${done?'done':''}">${done?'✓':''}</div>
-      <span>${q.icon} ${q.title}</span></a>`;
+      <span>${q.icon} ${q.title}</span>
+      ${done?'<span style="margin-left:auto;font-size:11px;color:var(--green);">완료</span>':''}
+    </a>`;
   }).join('');
 
   // 퀘스트 카드 그리드
   document.getElementById('quest-cards').innerHTML=QUESTS.map(q=>{
     const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-card ${done?'done':''}">
+    return `<a href="quest${q.id}.html" class="quest-card ${done?'done':''}"
+      style="position:relative;overflow:hidden;">
+      ${done?`<div style="position:absolute;top:10px;right:10px;background:var(--green);
+        color:#0a0e1a;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;">
+        ✅ 완료</div>`:''}
       <div class="q-icon">${q.icon}</div>
-      <div class="q-num">퀘스트 ${q.id}</div>
-      <div class="q-title">${q.title}</div>
-      <div class="q-status" style="color:${done?'var(--green)':'var(--muted)'};">
-        ${done?'✅ 완료':'🔒 진행 중'}
+      <div class="q-num" style="color:var(--muted);font-size:12px;">퀘스트 ${q.id}</div>
+      <div class="q-title" style="font-weight:700;font-size:14px;margin-top:4px;">${q.title}</div>
+      <div class="q-status" style="margin-top:10px;font-size:12px;color:${done?'var(--green)':'rgba(255,255,255,0.35)'};">
+        ${done?'학습 완료 🎓':'🔒 미완료'}
       </div>
     </a>`;
   }).join('');
