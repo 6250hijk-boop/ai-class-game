@@ -518,74 +518,60 @@ async function submitPost(){
   const content=document.getElementById('board-content').value.trim();
   const link=document.getElementById('board-link').value.trim();
   const alertEl=document.getElementById('board-alert');
-  if(!content){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">⚠️ 내용을 입력해주세요.</div>`;return;}
-  if(link&&!link.startsWith('http')){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">⚠️ 링크는 http://로 시작해야 해요.</div>`;return;}
-  const authorId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-  try{
-    alertEl.innerHTML=`<div style="color:#63b3ed;font-size:12px;">게시 중...</div>`;
-    await db.collection('board_q2').add({
-      content, link:link||'', authorId,
-      authorName:userData.charName||userData.name||'익명',
-      isTemp:currentUser.uid==='student',
-      created_at:new Date().toISOString(),
-    });
-    document.getElementById('board-content').value='';
-    document.getElementById('board-link').value='';
-    alertEl.innerHTML=`<div style="color:#68d391;font-size:12px;">✅ 게시완료!</div>`;
-    setTimeout(()=>alertEl.innerHTML='',2000);
-    loadPosts();
-  }catch(e){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">❌ 오류: ${e.message}</div>`;}
+  alertEl.innerHTML=`<div style="color:#63b3ed;font-size:12px;">게시 중...</div>`;
+  const result=await submitBoardPost('board_q2',userData,currentUser,content,link);
+  if(!result.ok){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">⚠️ ${result.msg}</div>`;return;}
+  document.getElementById('board-content').value='';
+  document.getElementById('board-link').value='';
+  alertEl.innerHTML=`<div style="color:#68d391;font-size:12px;">✅ 게시완료! +${BOARD_DEFAULT_XP}점</div>`;
+  setTimeout(()=>alertEl.innerHTML='',2500);
+  showXPPopup('+'+BOARD_DEFAULT_XP+' 점');
+  loadPosts();
 }
 
 async function loadPosts(){
   const container=document.getElementById('board-posts');
   if(!container) return;
   try{
-    const snap=await db.collection('board_q2').orderBy('created_at','desc').limit(30).get();
-    if(snap.empty){
-      container.innerHTML=`<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:13px;">아직 게시글이 없어요. 첫 번째로 공유해보세요!</div>`;
-      return;
-    }
     const myId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-    container.innerHTML=snap.docs.map(doc=>{
-      const d=doc.data();
+    const posts=await loadBoardPosts('board_q2',myId);
+    if(!posts.length){container.innerHTML=`<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:13px;">아직 게시글이 없어요!</div>`;return;}
+    container.innerHTML=posts.map(d=>{
       const isMe=d.authorId===myId;
       const date=d.created_at?.slice(0,16).replace('T',' ')||'';
-      return `
-        <div id="post-${doc.id}"
-          style="background:rgba(255,255,255,0.04);border:1px solid ${isMe?'rgba(99,179,237,0.3)':'rgba(255,255,255,0.08)'};
-                 border-radius:12px;padding:14px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span style="font-size:13px;font-weight:700;color:${isMe?'#63b3ed':'#e2e8f0'};">
-              ${isMe?'👤 ':''}${d.authorName}${d.isTemp?'<span style="font-size:10px;color:rgba(255,255,255,0.3);"> (임시)</span>':''}
-            </span>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
-              ${isMe?`<button onclick="deletePost('${doc.id}')"
-                style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);
-                       border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;
-                       cursor:pointer;font-family:inherit;">🗑️ 삭제</button>`:''}
-            </div>
+      const xp=d.xp||BOARD_DEFAULT_XP;
+      return `<div id="post-${d.id}" style="background:rgba(255,255,255,0.04);border:1px solid ${isMe?'rgba(99,179,237,0.3)':'rgba(255,255,255,0.08)'};border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <span style="font-size:13px;font-weight:700;color:${isMe?'#63b3ed':'#e2e8f0'};">${isMe?'👤 ':''}${d.authorName}${d.isTemp?'<span style="font-size:10px;color:rgba(255,255,255,0.3);"> (임시)</span>':''}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.3);border-radius:6px;padding:2px 8px;font-size:11px;color:#f6ad55;">+${xp}점</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
+            ${isMe?`<button onclick="deleteMyPost('${d.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>`:''}
           </div>
-          <p style="font-size:14px;color:#e2e8f0;line-height:1.6;margin-bottom:${d.link?'8px':'0'};white-space:pre-wrap;">${d.content}</p>
-          ${d.link?`<a href="${d.link}" target="_blank" rel="noopener"
-            style="display:inline-flex;align-items:center;gap:4px;font-size:12px;
-                   color:#63b3ed;text-decoration:none;background:rgba(99,179,237,0.1);
-                   border:1px solid rgba(99,179,237,0.2);border-radius:6px;padding:4px 10px;">
-            🔗 링크 보기</a>`:''}
-        </div>`;
+        </div>
+        <p style="font-size:14px;color:#e2e8f0;line-height:1.6;margin-bottom:${d.link?'8px':'0'};white-space:pre-wrap;">${d.content}</p>
+        ${d.link?`<a href="${d.link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#63b3ed;text-decoration:none;background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.2);border-radius:6px;padding:4px 10px;">🔗 링크 보기</a>`:''}
+      </div>`;
     }).join('');
-  }catch(e){
-    container.innerHTML=`<div style="color:#fc8181;font-size:13px;padding:16px;">게시글을 불러오지 못했어요: ${e.message}</div>`;
-  }
+  }catch(e){container.innerHTML=`<div style="color:#fc8181;font-size:13px;padding:16px;">오류: ${e.message}</div>`;}
 }
 
-async function deletePost(docId){
+async function deleteMyPost(docId){
   if(!confirm('이 게시글을 삭제할까요?')) return;
   try{
-    await db.collection('board_q2').doc(docId).delete();
-    const el=document.getElementById('post-'+docId);
-    if(el) el.remove();
+    const snap=await db.collection('board_q2').doc(docId).get();
+    if(snap.exists){
+      const post=snap.data();
+      const xp=post.xp||BOARD_DEFAULT_XP;
+      await db.collection('board_q2').doc(docId).delete();
+      if(currentUser.uid==='student'){
+        userData.score=Math.max(0,(userData.score||0)-xp);
+        localStorage.setItem('tempUserData',JSON.stringify(userData));
+      } else {
+        await addScore(currentUser.uid,-xp,'게시글 삭제 (board_q2)');
+      }
+    }
+    document.getElementById('post-'+docId)?.remove();
   }catch(e){alert('삭제 실패: '+e.message);}
 }
 
