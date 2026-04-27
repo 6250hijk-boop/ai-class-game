@@ -210,8 +210,17 @@ requireAuth(async (user) => {
     const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
     document.getElementById('temp-reset-wrap').style.display='block';
 
+    // 퀘스트에서 돌아온 경우 → 이어하기 화면 스킵
+    const fromQuest = sessionStorage.getItem('from_quest');
+    if (fromQuest) {
+      sessionStorage.removeItem('from_quest');
+      userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
+      if (!userData.charName) showStory();
+      else initUI();
+      return;
+    }
+
     if (local && local.charName) {
-      // 이전 기록 있음 → 선택 화면 표시
       userData = local;
       const lv = getLevelByScore(local.score||0);
       const questDone = Object.keys(local.quests||{}).filter(k=>k.endsWith('_done')).length;
@@ -221,7 +230,6 @@ requireAuth(async (user) => {
         <div>🎯 완료 퀘스트: <strong>${questDone}개</strong></div>`;
       document.getElementById('temp-choice-screen').style.display='flex';
     } else {
-      // 처음 → 스토리 바로 시작
       userData = { charName:null, score:0, quests:{}, name:'임시학생' };
       showStory();
     }
