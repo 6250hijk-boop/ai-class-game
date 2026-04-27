@@ -2,9 +2,82 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
   <title>AI 가디언 - 메인</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    *{box-sizing:border-box;}
+    /* 스토리 오프닝 */
+    .story-overlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
+    .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;}
+    .story-text{max-width:600px;font-size:clamp(15px,3vw,18px);line-height:1.9;color:var(--text);opacity:0;animation:fadeIn 1s ease .5s forwards;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .story-btn{margin-top:28px;padding:12px 32px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;opacity:0;transition:opacity .5s;}
+    /* 이름 짓기 */
+    .name-overlay{position:fixed;inset:0;z-index:310;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;}
+    .name-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:400px;width:100%;text-align:center;}
+    .name-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;}
+    .name-box p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+    .name-input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;transition:border .2s;}
+    .name-input:focus{border-color:var(--primary);}
+    .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;}
+    .btn-primary{background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;}
+    .btn-primary:hover{transform:translateY(-2px);}
+    .btn-ghost{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.1);}
+    .btn-danger{background:linear-gradient(135deg,#fc8181,#f56565);color:white;}
+    .alert{padding:9px 12px;border-radius:9px;font-size:13px;margin-bottom:10px;}
+    .alert-error{background:rgba(252,129,129,0.15);border:1px solid var(--red);color:var(--red);}
+    .alert-success{background:rgba(104,211,145,0.15);border:1px solid var(--green);color:var(--green);}
+    /* 앱 레이아웃 */
+    .app-layout{display:flex;min-height:100vh;}
+    .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 14px;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:50;transition:transform .3s;}
+    .sidebar-logo{font-family:'Jua',sans-serif;font-size:17px;color:var(--primary);margin-bottom:16px;padding:0 6px;letter-spacing:1px;}
+    .char-widget{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;margin-bottom:14px;}
+    .char-widget img{width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,179,237,0.7));animation:float 3s ease-in-out infinite;}
+    .char-widget .char-emoji{font-size:50px;animation:float 3s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+    .char-name{font-weight:700;font-size:14px;margin:7px 0 2px;}
+    .char-level{font-size:12px;color:var(--accent);}
+    .char-score{font-family:'Jua',sans-serif;font-size:20px;color:var(--primary);margin:5px 0;}
+    .xp-bar-wrap{background:rgba(255,255,255,0.08);border-radius:20px;height:7px;overflow:hidden;}
+    .xp-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:20px;transition:width 1s ease;}
+    .xp-label{font-size:11px;color:var(--muted);text-align:right;margin-top:3px;}
+    .quest-section{margin-bottom:14px;}
+    .quest-section h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;}
+    .quest-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:13px;border:1px solid transparent;text-decoration:none;color:var(--text);}
+    .quest-item:hover{background:rgba(99,179,237,0.08);border-color:var(--border);}
+    .quest-item.active{background:rgba(99,179,237,0.12);border-color:var(--primary);color:var(--primary);}
+    .quest-check{width:15px;height:15px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;}
+    .quest-check.done{background:var(--green);border-color:var(--green);color:#0a0e1a;}
+    .ref-link{display:block;padding:7px 10px;font-size:12px;color:var(--muted);text-decoration:none;border-radius:7px;transition:color .2s;}
+    .ref-link:hover{color:var(--primary);}
+    .main-content{margin-left:260px;flex:1;padding:clamp(20px,4vw,32px);}
+    .ai-notice-main{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:16px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:8px;display:inline-block;}
+    /* 퀘스트 카드 */
+    .quest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+    .quest-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;text-decoration:none;display:block;}
+    .quest-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(99,179,237,0.12);}
+    .quest-card.done{border-color:var(--green);opacity:.75;}
+    .quest-card .q-icon{font-size:32px;margin-bottom:8px;}
+    .quest-card .q-num{font-weight:700;font-size:13px;margin-bottom:3px;}
+    .quest-card .q-title{font-size:13px;color:var(--muted);}
+    .quest-card .q-status{margin-top:10px;font-size:12px;}
+    /* 비회원 초기화 버튼 */
+    .temp-reset{background:rgba(252,129,129,0.1);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--red);cursor:pointer;font-family:inherit;width:100%;margin-top:8px;transition:all .2s;}
+    .temp-reset:hover{background:rgba(252,129,129,0.2);}
+    /* 모바일 */
+    .hamburger{display:none;position:fixed;top:14px;left:14px;z-index:100;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;font-size:17px;}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .sidebar-overlay.open{display:block;}
+      .hamburger{display:block;}
+      .main-content{margin-left:0;padding:20px;padding-top:56px;}
+      .quest-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+    }
+  </style>
 </head>
 <body class="page">
 
@@ -12,32 +85,21 @@
 <div id="story-screen" class="story-overlay" style="display:none;">
   <div class="story-robot">🤖</div>
   <div class="story-text" id="story-text"></div>
-  <button class="btn btn-primary" id="story-btn" onclick="nextStory()"
-    style="max-width:200px;margin-top:32px;opacity:0;transition:opacity .5s;">
-    계속하기 →
-  </button>
+  <button class="story-btn" id="story-btn" onclick="nextStory()">계속하기 →</button>
 </div>
 
 <!-- 캐릭터 이름 짓기 -->
-<div id="name-screen" class="story-overlay" style="display:none;">
+<div id="name-screen" class="name-overlay" style="display:none;">
   <div class="name-box">
-    <div style="font-size:60px;margin-bottom:16px;">🤖</div>
+    <div style="font-size:clamp(40px,10vw,60px);margin-bottom:12px;">🤖</div>
     <h2>AI에게 이름을 지어주세요!</h2>
-    <p>당신의 AI 캐릭터 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
+    <p>당신의 AI 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
     <div id="name-alert"></div>
-    <div class="field" style="margin-top:16px;">
-      <input id="char-name-input" class="field input" placeholder="예: 스타봇, 루나AI ..."
-        style="background:rgba(255,255,255,0.06);border:1px solid var(--border);
-               border-radius:10px;padding:12px 14px;color:var(--text);
-               font-size:15px;width:100%;outline:none;">
-    </div>
-    <button class="btn btn-primary" onclick="saveName()" style="margin-top:8px;">
-      이름 확정하기 ✨
-    </button>
+    <input class="name-input" id="char-name-input" placeholder="예: 스타봇, 루나AI ...">
+    <button class="btn btn-primary" onclick="saveName()">이름 확정하기 ✨</button>
   </div>
 </div>
 
-<!-- 앱 레이아웃 -->
 <button class="hamburger" onclick="toggleSidebar()">☰</button>
 <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
@@ -45,13 +107,9 @@
   <!-- 사이드바 -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">🤖 AI 가디언</div>
-
-    <!-- 캐릭터 위젯 -->
     <div class="char-widget">
       <img id="sb-char-img" src="images/robot_1.png"
-        style="width:80px;height:80px;object-fit:contain;
-               filter:drop-shadow(0 0 12px rgba(99,179,237,0.8));
-               animation:float 3s ease-in-out infinite;"
+        style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,179,237,0.7));animation:float 3s ease-in-out infinite;"
         onerror="this.style.display='none';document.getElementById('sb-char-emoji').style.display='block'">
       <div id="sb-char-emoji" class="char-emoji" style="display:none;">🤖</div>
       <div class="char-name" id="sb-char-name">-</div>
@@ -61,39 +119,32 @@
       <div class="xp-label" id="sb-xp-label">다음 레벨까지 50점</div>
     </div>
 
-    <!-- 퀘스트 목록 -->
     <div class="quest-section">
       <h4>📋 퀘스트</h4>
       <div id="quest-list"></div>
     </div>
 
-    <!-- 참고 사이트 -->
-    <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border);">
-      <h4 style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 8px;margin-bottom:8px;">참고 사이트</h4>
+    <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--border);">
+      <h4 style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;">참고 사이트</h4>
       <a href="https://www.msit.go.kr" target="_blank" class="ref-link">🏛️ 과학기술정보통신부</a>
       <a href="https://www.kisa.or.kr" target="_blank" class="ref-link">🔒 한국인터넷진흥원</a>
       <a href="https://ai-hub.kr" target="_blank" class="ref-link">🤖 AI 허브</a>
     </div>
 
-    <!-- 로그아웃 -->
-    <button class="btn btn-ghost" onclick="logout()"
-      style="margin-top:12px;padding:10px;font-size:13px;">🚪 로그아웃</button>
+    <div id="temp-reset-wrap" style="display:none;">
+      <button class="temp-reset" onclick="confirmReset()">🗑️ 비회원 진행상황 초기화</button>
+    </div>
+    <button class="btn btn-ghost" onclick="logout()" style="margin-top:10px;padding:9px;font-size:13px;">🚪 로그아웃</button>
   </aside>
 
   <!-- 메인 -->
   <main class="main-content">
-    <div id="page-home">
-      <h2 style="font-family:'Jua',sans-serif;font-size:26px;margin-bottom:8px;">
-        안녕하세요! <span id="greeting-name"></span> 👋
-      </h2>
-      <p style="color:var(--muted);margin-bottom:32px;">오늘도 AI를 학습시켜볼까요?</p>
-
-      <!-- 퀘스트 카드 그리드 -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
-        <!-- 퀘스트 카드들은 JS로 생성 -->
-        <div id="quest-cards"></div>
-      </div>
-    </div>
+    <div class="ai-notice-main">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
+    <h2 style="font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);margin-bottom:6px;">
+      안녕하세요, <span id="greeting-name"></span> 👋
+    </h2>
+    <p style="color:var(--muted);margin-bottom:24px;font-size:14px;">오늘도 AI를 학습시켜볼까요?</p>
+    <div class="quest-grid" id="quest-cards"></div>
   </main>
 </div>
 
@@ -102,37 +153,34 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-let currentUser = null;
-let userData = null;
-let storyStep = 0;
+let currentUser=null, userData=null, storyStep=0;
 
-const STORY = [
+const STORY=[
   "안녕하세요! 저는 AI 가디언 시스템입니다. 🌟",
   "인류의 문제를 해결하기 위해 갓 태어난 초보 AI(아기 로봇)가 당신에게 배달되었습니다! 🤖",
   "당신은 이제 'AI 멘토'가 되어야 합니다.",
   "현실 세계의 데이터를 수집하고 라벨링하여...",
   "이 AI를 최종 형태인 '미래형 가디언'으로 진화시켜야 합니다! ⚡",
   "퀘스트를 완료할수록 AI가 점점 강해집니다.",
-  "자, 이제 시작해볼까요? 먼저 AI에게 이름을 지어주세요! 💫"
+  "자, 먼저 AI에게 이름을 지어주세요! 💫"
 ];
 
 requireAuth(async (user) => {
-  currentUser = user;
+  currentUser=user;
 
-  if (user.uid === 'student' || user.uid === 'admin') {
-    userData = { id: user.id, name: user.name, score: 0, level: 1, charName: '임시봇', quests: {} };
-    initUI();
-    return;
+  if (user.uid==='student') {
+    // 비회원: 로컬스토리지에서 데이터 불러오기
+    const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
+    userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
+    document.getElementById('temp-reset-wrap').style.display='block';
+  } else if (user.uid==='admin') {
+    userData={ charName:'관리자', score:0, quests:{}, name:'관리자' };
+    initUI(); return;
+  } else {
+    const snap=await db.collection('users').where('id','==',user.id).get();
+    if (!snap.empty){ userData=snap.docs[0].data(); currentUser.uid=snap.docs[0].id; }
   }
 
-  const snap = await db.collection('users').where('id','==',user.id).get();
-  if (!snap.empty) {
-    userData = snap.docs[0].data();
-    userData._docId = snap.docs[0].id;
-    currentUser.uid = snap.docs[0].id;
-  }
-
-  // 첫 로그인 체크
   if (!userData.charName) {
     showStory();
   } else {
@@ -140,114 +188,109 @@ requireAuth(async (user) => {
   }
 });
 
-function showStory() {
-  document.getElementById('story-screen').style.display = 'flex';
-  document.getElementById('story-text').textContent = STORY[storyStep];
-  setTimeout(() => {
-    document.getElementById('story-btn').style.opacity = '1';
-  }, 1000);
+function showStory(){
+  document.getElementById('story-screen').style.display='flex';
+  document.getElementById('story-text').textContent=STORY[storyStep];
+  setTimeout(()=>{ document.getElementById('story-btn').style.opacity='1'; },1200);
 }
 
-function nextStory() {
+function nextStory(){
   storyStep++;
-  if (storyStep >= STORY.length) {
-    document.getElementById('story-screen').style.display = 'none';
-    document.getElementById('name-screen').style.display = 'flex';
+  if (storyStep>=STORY.length){
+    document.getElementById('story-screen').style.display='none';
+    document.getElementById('name-screen').style.display='flex';
     return;
   }
-  document.getElementById('story-btn').style.opacity = '0';
-  document.getElementById('story-text').style.opacity = '0';
-  setTimeout(() => {
-    document.getElementById('story-text').textContent = STORY[storyStep];
-    document.getElementById('story-text').style.opacity = '1';
-    setTimeout(() => document.getElementById('story-btn').style.opacity = '1', 600);
-  }, 400);
+  const btn=document.getElementById('story-btn');
+  const txt=document.getElementById('story-text');
+  btn.style.opacity='0'; txt.style.opacity='0';
+  setTimeout(()=>{
+    txt.textContent=STORY[storyStep];
+    txt.style.opacity='1';
+    txt.style.transition='opacity .5s';
+    setTimeout(()=>btn.style.opacity='1',600);
+  },400);
 }
 
-async function saveName() {
-  const name = document.getElementById('char-name-input').value.trim();
+async function saveName(){
+  const name=document.getElementById('char-name-input').value.trim();
   if (!name) return showNameAlert('이름을 입력하세요.');
-  if (name.length < 2 || name.length > 10) return showNameAlert('2~10자 사이로 입력하세요.');
+  if (name.length<2||name.length>10) return showNameAlert('2~10자 사이로 입력하세요.');
   if (filterName(name)) return showNameAlert('⚠️ 사용할 수 없는 이름입니다.');
 
-  if (currentUser.uid !== 'student') {
-    await db.collection('users').doc(currentUser.uid).update({ charName: name });
+  if (currentUser.uid==='student'){
+    userData.charName=name;
+    localStorage.setItem('tempUserData', JSON.stringify(userData));
+  } else {
+    await db.collection('users').doc(currentUser.uid).update({charName:name});
+    userData.charName=name;
   }
-  userData.charName = name;
-  currentUser.charName = name;
-  sessionStorage.setItem('gameUser', JSON.stringify(currentUser));
-  document.getElementById('name-screen').style.display = 'none';
+  currentUser.charName=name;
+  sessionStorage.setItem('gameUser',JSON.stringify(currentUser));
+  document.getElementById('name-screen').style.display='none';
   initUI();
 }
 
-function showNameAlert(msg) {
-  document.getElementById('name-alert').innerHTML = `<div class="alert alert-error">${msg}</div>`;
+function showNameAlert(msg){
+  document.getElementById('name-alert').innerHTML=`<div class="alert alert-error">${msg}</div>`;
 }
 
-function initUI() {
-  const score = userData.score || 0;
-  const lv = getLevelByScore(score);
-  const next = getNextLevel(score);
+function initUI(){
+  const score=userData.score||0;
+  const lv=getLevelByScore(score);
+  const next=getNextLevel(score);
 
-  // 사이드바
-  const imgEl = document.getElementById('sb-char-img');
-  if (imgEl) imgEl.src = lv.img;
-  document.getElementById('sb-char-emoji').textContent = lv.emoji;
-  document.getElementById('sb-char-name').textContent = userData.charName || '이름 없음';
-  document.getElementById('sb-char-level').textContent = `Lv.${lv.level} ${lv.name}`;
-  document.getElementById('sb-score').textContent = `${score} 점`;
-
-  const pct = next
-    ? ((score - lv.minScore) / (next.minScore - lv.minScore)) * 100
-    : 100;
-  document.getElementById('sb-xp-bar').style.width = Math.min(100,pct) + '%';
-  document.getElementById('sb-xp-label').textContent =
-    next ? `다음 레벨까지 ${next.minScore - score}점` : '🌟 최고 레벨!';
+  // 사이드바 캐릭터
+  const imgEl=document.getElementById('sb-char-img');
+  if(imgEl) imgEl.src=lv.img;
+  document.getElementById('sb-char-name').textContent=userData.charName||'-';
+  document.getElementById('sb-char-level').textContent=`Lv.${lv.level} ${lv.name}`;
+  document.getElementById('sb-score').textContent=score+' 점';
+  const pct=next?((score-lv.minScore)/(next.minScore-lv.minScore))*100:100;
+  document.getElementById('sb-xp-bar').style.width=Math.min(100,pct)+'%';
+  document.getElementById('sb-xp-label').textContent=next?`다음 레벨까지 ${next.minScore-score}점`:'🌟 최고 레벨!';
 
   // 인사
-  document.getElementById('greeting-name').textContent =
-    `${userData.name}님 (${userData.charName || ''})`;
+  const greet=userData.charName?`${userData.name}님 (${userData.charName})`:`${userData.name||''}님`;
+  document.getElementById('greeting-name').textContent=greet;
 
   // 퀘스트 사이드바
-  const ql = document.getElementById('quest-list');
-  ql.innerHTML = QUESTS.map(q => {
-    const done = (userData.quests||{})[`q${q.id}_done`];
+  document.getElementById('quest-list').innerHTML=QUESTS.map(q=>{
+    const done=(userData.quests||{})[`q${q.id}_done`];
     return `<a href="quest${q.id}.html" class="quest-item ${done?'done':''}">
       <div class="quest-check ${done?'done':''}">${done?'✓':''}</div>
-      <span>${q.icon} ${q.title}</span>
-    </a>`;
+      <span>${q.icon} ${q.title}</span></a>`;
   }).join('');
 
   // 퀘스트 카드 그리드
-  document.getElementById('quest-cards').parentElement.innerHTML =
-    QUESTS.map(q => {
-      const done = (userData.quests||{})[`q${q.id}_done`];
-      return `
-      <a href="quest${q.id}.html" style="text-decoration:none;">
-        <div style="background:var(--card);border:1px solid ${done?'var(--green)':'var(--border)'};
-             border-radius:16px;padding:20px;cursor:pointer;transition:all .2s;
-             ${done ? 'opacity:.7' : ''}"
-             onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 30px rgba(99,179,237,0.15)'"
-             onmouseout="this.style.transform='';this.style.boxShadow=''">
-          <div style="font-size:36px;margin-bottom:10px;">${q.icon}</div>
-          <div style="font-weight:700;margin-bottom:4px;">퀘스트 ${q.id}</div>
-          <div style="font-size:14px;color:var(--muted);">${q.title}</div>
-          <div style="margin-top:12px;font-size:12px;color:${done?'var(--green)':'var(--muted)'};">
-            ${done ? '✅ 완료' : '🔒 진행 중'}
-          </div>
-        </div>
-      </a>`;
-    }).join('');
+  document.getElementById('quest-cards').innerHTML=QUESTS.map(q=>{
+    const done=(userData.quests||{})[`q${q.id}_done`];
+    return `<a href="quest${q.id}.html" class="quest-card ${done?'done':''}">
+      <div class="q-icon">${q.icon}</div>
+      <div class="q-num">퀘스트 ${q.id}</div>
+      <div class="q-title">${q.title}</div>
+      <div class="q-status" style="color:${done?'var(--green)':'var(--muted)'};">
+        ${done?'✅ 완료':'🔒 진행 중'}
+      </div>
+    </a>`;
+  }).join('');
 }
 
-function toggleSidebar() {
+function confirmReset(){
+  if (confirm('비회원 진행상황을 초기화할까요?\n점수, 퀘스트, 캐릭터 이름이 모두 삭제됩니다.')){
+    localStorage.removeItem('tempUserData');
+    userData={ charName:null, score:0, quests:{}, name:'임시학생' };
+    showStory();
+  }
+}
+
+function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('open');
 }
-
-function logout() {
+function logout(){
   sessionStorage.removeItem('gameUser');
-  window.location.href = 'index.html';
+  window.location.href='index.html';
 }
 </script>
 </body>
