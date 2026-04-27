@@ -2,18 +2,50 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
   <title>AI 가디언 🤖</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);}
+    .login-wrap{width:100%;max-width:420px;}
+    .login-box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:clamp(24px,5vw,40px) clamp(20px,5vw,36px);box-shadow:0 0 60px rgba(99,179,237,0.1);}
+    .login-logo{text-align:center;margin-bottom:28px;}
+    .login-logo .logo-img{width:clamp(50px,12vw,70px);height:clamp(50px,12vw,70px);object-fit:contain;filter:drop-shadow(0 0 12px rgba(99,179,237,0.6));margin-bottom:8px;}
+    .login-logo h1{font-family:'Jua',sans-serif;font-size:clamp(22px,5vw,28px);color:var(--primary);letter-spacing:2px;}
+    .login-logo p{font-size:13px;color:var(--muted);margin-top:4px;}
+    .ai-notice-login{font-size:11px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:16px;padding:6px;background:rgba(255,255,255,0.03);border-radius:8px;}
+    .tab-bar{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px;margin-bottom:20px;flex-wrap:wrap;}
+    .tab-btn{flex:1;min-width:60px;padding:8px 4px;border:none;background:transparent;color:var(--muted);font-size:clamp(11px,2.5vw,13px);border-radius:9px;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap;}
+    .tab-btn.active{background:var(--primary);color:#0a0e1a;font-weight:700;}
+    .field{margin-bottom:12px;}
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+    .field input{width:100%;padding:11px 13px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border .2s;}
+    .field input:focus{border-color:var(--primary);}
+    .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;}
+    .btn-primary{background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;box-shadow:0 4px 16px rgba(99,179,237,0.3);}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,179,237,0.4);}
+    .btn-accent{background:linear-gradient(135deg,#f6ad55,#ed8936);color:#0a0e1a;}
+    .btn-ghost{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);}
+    .btn-ghost:hover{background:rgba(255,255,255,0.1);}
+    .alert{padding:10px 13px;border-radius:9px;font-size:13px;margin-bottom:12px;line-height:1.5;}
+    .alert-error{background:rgba(252,129,129,0.15);border:1px solid var(--red);color:var(--red);}
+    .alert-success{background:rgba(104,211,145,0.15);border:1px solid var(--green);color:var(--green);}
+    .alert-info{background:rgba(99,179,237,0.12);border:1px solid var(--primary);color:var(--primary);}
+    .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#0a0e1a;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @media(max-width:480px){body{padding:12px;align-items:flex-start;padding-top:20px;}.login-box{border-radius:18px;}}
+  </style>
 </head>
-<body class="page">
+<body>
 <div class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
-      <div style="font-size:52px;margin-bottom:8px;">🤖</div>
+      <img class="logo-img" src="images/robot_1.png" onerror="this.style.display='none'">
       <h1>AI 가디언</h1>
       <p>AI를 학습시키며 함께 성장하는 게임</p>
     </div>
+    <div class="ai-notice-login">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
 
     <div class="tab-bar">
       <button class="tab-btn active" onclick="showTab('login')">🔑 로그인</button>
@@ -25,46 +57,36 @@
     <!-- 로그인 -->
     <div id="tab-login">
       <div id="login-alert"></div>
-      <div class="field"><label>아이디</label><input id="li-id" placeholder="아이디 입력"></div>
-      <div class="field"><label>비밀번호</label><input id="li-pw" type="password" placeholder="비밀번호 입력"></div>
-      <button class="btn btn-primary" onclick="doLogin()">로그인 →</button>
+      <div class="field"><label>아이디</label><input id="li-id" placeholder="아이디 입력" autocomplete="username"></div>
+      <div class="field"><label>비밀번호</label><input id="li-pw" type="password" placeholder="비밀번호 입력" autocomplete="current-password"></div>
+      <button class="btn btn-primary" id="login-btn" onclick="doLogin()">로그인 →</button>
     </div>
 
     <!-- 회원가입 -->
     <div id="tab-signup" style="display:none;">
       <div id="signup-alert"></div>
-      <div class="field"><label>아이디 (영문/숫자 4~20자)</label><input id="su-id" placeholder="아이디"></div>
-      <div class="field"><label>이름</label><input id="su-name" placeholder="홍길동"></div>
-      <div class="field"><label>학번</label><input id="su-stunum" placeholder="예: 10101"></div>
-      <div class="field"><label>이메일</label><input id="su-email" type="email" placeholder="example@gmail.com"></div>
-      <div class="field"><label>비밀번호 (6자 이상)</label><input id="su-pw" type="password" placeholder="비밀번호"></div>
-      <div class="field"><label>비밀번호 확인</label><input id="su-pw2" type="password" placeholder="비밀번호 확인"></div>
-      <button class="btn btn-primary" onclick="doSignup()">가입하기 →</button>
+      <div class="field"><label>아이디 (영문/숫자 4~20자)</label><input id="su-id" placeholder="아이디" autocomplete="off"></div>
+      <div class="field"><label>이름</label><input id="su-name" placeholder="홍길동" autocomplete="off"></div>
+      <div class="field"><label>학번</label><input id="su-stunum" placeholder="예: 10101" autocomplete="off"></div>
+      <div class="field"><label>이메일</label><input id="su-email" type="email" placeholder="example@gmail.com" autocomplete="off"></div>
+      <div class="field"><label>비밀번호 (6자 이상)</label><input id="su-pw" type="password" placeholder="비밀번호" autocomplete="new-password"></div>
+      <div class="field"><label>비밀번호 확인</label><input id="su-pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password"></div>
+      <button class="btn btn-primary" id="signup-btn" onclick="doSignup()">가입하기 →</button>
     </div>
 
     <!-- 찾기 -->
     <div id="tab-find" style="display:none;">
       <div id="find-alert"></div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-        가입 시 등록한 이메일로 아이디와 임시 비밀번호를 보내드려요.
-      </p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">가입 시 등록한 이메일로 아이디를 알려드려요.</p>
       <div class="field"><label>이메일</label><input id="find-email" type="email" placeholder="가입 이메일"></div>
       <button class="btn btn-primary" onclick="doFind()">찾기 →</button>
     </div>
 
     <!-- 임시 로그인 -->
     <div id="tab-temp" style="display:none;">
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="alert alert-info">
-          임시 계정으로 체험해볼 수 있어요.<br>진행상황은 저장되지 않습니다.
-        </div>
-        <button class="btn btn-accent" onclick="tempLogin('student')">
-          🎓 임시 학생으로 입장
-        </button>
-        <button class="btn btn-ghost" onclick="tempLogin('admin')">
-          👑 관리자로 입장
-        </button>
-      </div>
+      <div class="alert alert-info">임시 계정으로 체험해볼 수 있어요.<br>진행상황은 기기에 저장됩니다.</div>
+      <button class="btn btn-accent" onclick="tempLogin('student')">🎓 임시 학생으로 입장</button>
+      <button class="btn btn-ghost" onclick="tempLogin('admin')">👑 관리자로 입장</button>
     </div>
   </div>
 </div>
@@ -74,7 +96,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-// 이미 로그인 상태
+// 이미 로그인 상태면 이동
 const saved = sessionStorage.getItem('gameUser');
 if (saved) {
   const u = JSON.parse(saved);
@@ -83,7 +105,7 @@ if (saved) {
 
 function showTab(t) {
   ['login','signup','find','temp'].forEach(id => {
-    document.getElementById('tab-'+id).style.display = id===t?'block':'none';
+    document.getElementById('tab-'+id).style.display = id===t ? 'block' : 'none';
   });
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active', ['login','signup','find','temp'][i]===t);
@@ -94,83 +116,118 @@ function alert2(id, msg, type='error') {
   document.getElementById(id).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
 
+function setLoading(btnId, loading, text='') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? `<span class="spinner-inline"></span>처리 중...`
+    : text;
+}
+
+async function hashPW(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 async function doLogin() {
   const id = document.getElementById('li-id').value.trim();
   const pw = document.getElementById('li-pw').value;
   if (!id||!pw) return alert2('login-alert','아이디와 비밀번호를 입력하세요.');
+  setLoading('login-btn', true);
 
-  // 관리자
   if (id===ADMIN_ID && pw===ADMIN_PW) {
     sessionStorage.setItem('gameUser', JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
     window.location.href='admin.html'; return;
   }
-
-  // 임시 학생
   if (id===STUDENT_ID && pw===STUDENT_PW) {
     sessionStorage.setItem('gameUser', JSON.stringify({uid:'student',id:'student',isAdmin:false,name:'임시학생',isTemp:true}));
     window.location.href='main.html'; return;
   }
-
-  // 일반 유저
   try {
     const snap = await db.collection('users').where('id','==',id).get();
-    if (snap.empty) return alert2('login-alert','❌ 아이디가 존재하지 않습니다.');
-    const doc = snap.docs[0];
-    const data = doc.data();
-    const hashed = await hashPW(pw);
-    if (data.password !== hashed) return alert2('login-alert','❌ 비밀번호가 틀렸습니다.');
-    sessionStorage.setItem('gameUser', JSON.stringify({
-      uid: doc.id, id, isAdmin:false,
-      name: data.name, charName: data.charName
-    }));
+    if (snap.empty) { setLoading('login-btn',false,'로그인 →'); return alert2('login-alert','❌ 존재하지 않는 아이디입니다.'); }
+    const doc = snap.docs[0]; const data = doc.data();
+    if (data.password !== await hashPW(pw)) { setLoading('login-btn',false,'로그인 →'); return alert2('login-alert','❌ 비밀번호가 틀렸습니다.'); }
+    sessionStorage.setItem('gameUser', JSON.stringify({uid:doc.id, id, isAdmin:false, name:data.name, charName:data.charName}));
     window.location.href='main.html';
-  } catch(e) { alert2('login-alert','오류: '+e.message); }
+  } catch(e) {
+    setLoading('login-btn',false,'로그인 →');
+    alert2('login-alert','❌ 오류가 발생했습니다: '+e.message);
+  }
 }
 
 async function doSignup() {
-  const id      = document.getElementById('su-id').value.trim();
-  const name    = document.getElementById('su-name').value.trim();
-  const stunum  = document.getElementById('su-stunum').value.trim();
-  const email   = document.getElementById('su-email').value.trim();
-  const pw      = document.getElementById('su-pw').value;
-  const pw2     = document.getElementById('su-pw2').value;
+  const id     = document.getElementById('su-id').value.trim();
+  const name   = document.getElementById('su-name').value.trim();
+  const stunum = document.getElementById('su-stunum').value.trim();
+  const email  = document.getElementById('su-email').value.trim();
+  const pw     = document.getElementById('su-pw').value;
+  const pw2    = document.getElementById('su-pw2').value;
 
+  // 입력 검증
   if (!id||!name||!stunum||!email||!pw||!pw2)
-    return alert2('signup-alert','모든 항목을 입력하세요.');
+    return alert2('signup-alert','⚠️ 모든 항목을 입력해주세요.');
   if (!/^[a-zA-Z0-9]{4,20}$/.test(id))
-    return alert2('signup-alert','아이디는 영문/숫자 4~20자로 입력하세요.');
+    return alert2('signup-alert','⚠️ 아이디는 영문/숫자 4~20자로 입력하세요.');
+  if (!/^\d+$/.test(stunum))
+    return alert2('signup-alert','⚠️ 학번은 숫자만 입력하세요.');
+  if (!/^[\w\.-]+@[\w\.-]+\.\w+$/.test(email))
+    return alert2('signup-alert','⚠️ 올바른 이메일 주소를 입력하세요.');
   if (pw.length < 6)
-    return alert2('signup-alert','비밀번호는 6자 이상이어야 합니다.');
+    return alert2('signup-alert','⚠️ 비밀번호는 6자 이상이어야 합니다.');
   if (pw !== pw2)
-    return alert2('signup-alert','비밀번호가 일치하지 않습니다.');
+    return alert2('signup-alert','⚠️ 비밀번호가 일치하지 않습니다.');
 
-  // 중복 확인
-  const dup = await db.collection('users').where('id','==',id).get();
-  if (!dup.empty) return alert2('signup-alert','❌ 이미 사용 중인 아이디입니다.');
+  setLoading('signup-btn', true);
+  alert2('signup-alert','⏳ 가입 처리 중입니다...','info');
 
-  const emailDup = await db.collection('users').where('email','==',email).get();
-  if (!emailDup.empty) return alert2('signup-alert','❌ 이미 사용 중인 이메일입니다.');
+  try {
+    // 아이디 중복 확인
+    const idSnap = await db.collection('users').where('id','==',id).get();
+    if (!idSnap.empty) { setLoading('signup-btn',false,'가입하기 →'); return alert2('signup-alert','❌ 이미 사용 중인 아이디입니다.'); }
 
-  const hashed = await hashPW(pw);
-  await db.collection('users').add({
-    id, name, stunum, email,
-    password: hashed,
-    score: 0, level: 1,
-    quests: {}, charName: null,
-    created_at: new Date().toISOString()
-  });
-  alert2('signup-alert','✅ 가입 완료! 로그인하세요.','success');
-  setTimeout(() => showTab('login'), 1500);
+    // 이메일 중복 확인
+    const emailSnap = await db.collection('users').where('email','==',email).get();
+    if (!emailSnap.empty) { setLoading('signup-btn',false,'가입하기 →'); return alert2('signup-alert','❌ 이미 사용 중인 이메일입니다.'); }
+
+    // 학번 중복 확인
+    const stunumSnap = await db.collection('users').where('stunum','==',stunum).get();
+    if (!stunumSnap.empty) { setLoading('signup-btn',false,'가입하기 →'); return alert2('signup-alert','❌ 이미 등록된 학번입니다.'); }
+
+    const hashed = await hashPW(pw);
+    await db.collection('users').add({
+      id, name, stunum, email,
+      password: hashed,
+      score: 0, level: 1,
+      quests: {}, charName: null,
+      created_at: new Date().toISOString()
+    });
+
+    setLoading('signup-btn',false,'가입하기 →');
+    alert2('signup-alert','✅ 회원가입이 완료되었습니다! 로그인하세요.','success');
+    document.getElementById('su-id').value='';
+    document.getElementById('su-pw').value='';
+    document.getElementById('su-pw2').value='';
+    setTimeout(()=>showTab('login'), 1800);
+  } catch(e) {
+    setLoading('signup-btn',false,'가입하기 →');
+    if (e.code==='permission-denied')
+      alert2('signup-alert','❌ 저장 권한이 없습니다. Firestore 규칙을 확인하세요.');
+    else
+      alert2('signup-alert','❌ 가입 실패: '+e.message);
+  }
 }
 
 async function doFind() {
   const email = document.getElementById('find-email').value.trim();
   if (!email) return alert2('find-alert','이메일을 입력하세요.');
-  const snap = await db.collection('users').where('email','==',email).get();
-  if (snap.empty) return alert2('find-alert','❌ 해당 이메일로 가입된 계정이 없습니다.');
-  // 실제 이메일 발송은 서버 함수 필요 - 아이디만 표시
-  const data = snap.docs[0].data();
-  alert2('find-alert',`✅ 아이디: <strong>${data.id}</strong><br>비밀번호는 관리자에게 문의하세요.`,'success');
+  try {
+    const snap = await db.collection('users').where('email','==',email).get();
+    if (snap.empty) return alert2('find-alert','❌ 해당 이메일로 가입된 계정이 없습니다.');
+    const data = snap.docs[0].data();
+    alert2('find-alert',`✅ 아이디: <strong>${data.id}</strong><br>비밀번호는 관리자에게 문의하세요.`,'success');
+  } catch(e) { alert2('find-alert','❌ 오류: '+e.message); }
 }
 
 function tempLogin(type) {
@@ -183,11 +240,14 @@ function tempLogin(type) {
   }
 }
 
-// SHA-256 해시
-async function hashPW(pw) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+// 엔터키 로그인
+document.addEventListener('keydown', e => {
+  if (e.key==='Enter') {
+    const tab = document.querySelector('.tab-btn.active')?.textContent;
+    if (tab?.includes('로그인')) doLogin();
+    else if (tab?.includes('회원가입')) doSignup();
+  }
+});
 </script>
 </body>
 </html>
