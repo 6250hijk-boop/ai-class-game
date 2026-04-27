@@ -559,7 +559,12 @@ function showComplete(){
             onmouseout="this.style.transform=''">
             다음 퀘스트 → 아버지를 찾아서 🔍
           </button>
-          <button onclick="window.location.href='main.html'"
+          <button onclick="replayQuest1()"
+            style="padding:12px;background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.4);
+                   border-radius:12px;color:#f6ad55;font-size:14px;cursor:pointer;font-family:inherit;">
+            🔄 퀘스트 다시 하기
+          </button>
+          <button onclick="goMain()"
             style="padding:12px;background:rgba(255,255,255,0.08);
                    border:1px solid rgba(255,255,255,0.2);border-radius:12px;
                    color:rgba(255,255,255,0.7);font-size:14px;
@@ -570,6 +575,23 @@ function showComplete(){
       </div>`;
     document.body.appendChild(overlay);
   });
+}
+
+function replayQuest1(){
+  if(currentUser.uid==='student'){
+    userData.quests=userData.quests||{};
+    userData.quests.q1_msgIdx=0;
+    userData.quests.q1_done=false;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+  } else {
+    db.collection('users').doc(currentUser.uid).update({'quests.q1_msgIdx':0,'quests.q1_done':false});
+  }
+  window.location.reload();
+}
+
+function goMain(){
+  sessionStorage.setItem('from_quest','1');
+  window.location.href='main.html';
 }
 
 function checkLevelUp(before,after){
