@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -241,10 +241,11 @@ function showMessage(idx){
   typeText(textEl, msg.text, ()=>{
     if(msg.type==='quiz_1'){
       document.getElementById('dialog-next').style.display='none';
-      // 자동으로 퀴즈 팝업
+      quizShowing=true;
       setTimeout(()=>startQuiz(1), 600);
     } else if(msg.type==='quiz_2'){
       document.getElementById('dialog-next').style.display='none';
+      quizShowing=true;
       setTimeout(()=>startQuiz(2), 600);
     }
   });
@@ -265,36 +266,55 @@ function typeText(el,text,cb){
   },22);
 }
 
+let quizShowing = false;
+
 function nextMessage(){
+  if(quizShowing) return; // 퀴즈 중엔 무시
   if(isTyping){
     clearInterval(typingTimer);
     const msg=MESSAGES[msgIdx];
     document.getElementById('dialog-text').textContent=msg.text;
     isTyping=false;
     document.getElementById('dialog-next').style.opacity='1';
-    if(msg.type==='quiz_1'){document.getElementById('dialog-next').style.display='none';setTimeout(()=>startQuiz(1),400);}
-    else if(msg.type==='quiz_2'){document.getElementById('dialog-next').style.display='none';setTimeout(()=>startQuiz(2),400);}
+    if(msg.type==='quiz_1'){
+      document.getElementById('dialog-next').style.display='none';
+      quizShowing=true;
+      setTimeout(()=>startQuiz(1),400);
+    } else if(msg.type==='quiz_2'){
+      document.getElementById('dialog-next').style.display='none';
+      quizShowing=true;
+      setTimeout(()=>startQuiz(2),400);
+    }
     return;
   }
   msgIdx++; autoSave(); showMessage(msgIdx);
 }
 
 function prevMessage(){
+  if(quizShowing) return;
   if(isTyping){clearInterval(typingTimer);isTyping=false;}
   if(msgIdx>0){msgIdx--;showMessage(msgIdx);}
 }
 
 async function autoSave(){
-  if(currentUser.uid==='student') return;
+  if(currentUser.uid==='student'){
+    // 비회원도 진행 저장
+    userData.quests=userData.quests||{};
+    userData.quests.q1_msgIdx=msgIdx;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+    return;
+  }
   await db.collection('users').doc(currentUser.uid).update({'quests.q1_msgIdx':msgIdx});
 }
 
 document.addEventListener('click',(e)=>{
+  if(quizShowing) return; // 퀴즈 중 클릭 완전 차단
   if(e.target.closest('.quiz-overlay')||e.target.closest('.dialog-next')||
      e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
   nextMessage();
 });
 document.addEventListener('keydown',(e)=>{
+  if(quizShowing) return;
   if(e.code==='Space'||e.code==='Enter') nextMessage();
   if(e.code==='ArrowLeft') prevMessage();
 });
@@ -481,6 +501,7 @@ async function finishQuiz(){
 }
 
 function closeQuiz(){
+  quizShowing=false; // 퀴즈 종료 → 클릭 다시 활성화
   document.getElementById('quiz-overlay').style.display='none';
   if(currentQuizSet===QUIZZES_2){
     if(currentUser.uid==='student'){
