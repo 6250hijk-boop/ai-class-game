@@ -101,3 +101,58 @@ async function saveProgress(uid, key, value) {
   if (uid === 'admin' || uid === 'student') return;
   await db.collection('users').doc(uid).update({ [key]: value });
 }
+
+// ── 게시판 공통 함수 ──
+const BOARD_DEFAULT_XP = 5; // 게시글 작성 기본 점수
+
+async function submitBoardPost(collectionName, userData, currentUser, content, link) {
+  if (!content.trim()) return { ok:false, msg:'내용을 입력해주세요.' };
+  if (link && !link.startsWith('http')) return { ok:false, msg:'링크는 http://로 시작해야 해요.' };
+
+  const isTemp = currentUser.uid === 'student';
+  const authorId = isTemp ? ('temp_'+(userData.charName||'익명')) : currentUser.uid;
+
+  const docRef = await db.collection(collectionName).add({
+    content: content.trim(),
+    link: link||'',
+    authorId,
+    authorName: userData.charName||userData.name||'익명',
+    isTemp,
+    xp: BOARD_DEFAULT_XP,
+    created_at: new Date().toISOString(),
+  });
+
+  // 점수 지급
+  if (!isTemp) {
+    await addScore(currentUser.uid, BOARD_DEFAULT_XP, `게시글 작성 (${collectionName})`);
+  } else {
+    userData.score = (userData.score||0) + BOARD_DEFAULT_XP;
+    localStorage.setItem('tempUserData', JSON.stringify(userData));
+  }
+  return { ok:true, docId:docRef.id };
+}
+
+async function loadBoardPosts(collectionName, myAuthorId) {
+  const snap = await db.collection(collectionName)
+    .orderBy('created_at','desc').limit(50).get();
+  return snap.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+}
+
+async function deleteBoardPost(collectionName, docId, post, targetUid) {
+  // 글 삭제
+  await db.collection(collectionName).doc(docId).delete();
+  // 점수 회수
+  const xp = post.xp || BOARD_DEFAULT_XP;
+  if (!post.isTemp && targetUid && targetUid !== 'student') {
+    await addScore(targetUid, -xp, `게시글 삭제 (${collectionName})`);
+  }
+}
+
+async function updateBoardPostXP(collectionName, docId, post, newXp, targetUid) {
+  const oldXp = post.xp || BOARD_DEFAULT_XP;
+  const diff = newXp - oldXp;
+  await db.collection(collectionName).doc(docId).update({ xp: newXp });
+  if (!post.isTemp && targetUid && diff !== 0) {
+    await addScore(targetUid, diff, `게시글 점수 조정 (${collectionName})`);
+  }
+}
