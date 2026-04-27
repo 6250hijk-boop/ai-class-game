@@ -8,11 +8,14 @@
   <style>
     *{box-sizing:border-box;}
     /* 배경 */
-    body{background:url('images/bgmain.png') center/cover no-repeat fixed;background-color:var(--bg);}
+    body{background:url('images/bgmain2.png') center/cover no-repeat fixed;background-color:var(--bg);}
     body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:0;pointer-events:none;}
     .page{position:relative;z-index:1;}
     /* 스토리 오프닝 */
-    .story-overlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
+    .story-overlay{position:fixed;inset:0;z-index:300;
+      background:url('images/bgmain.png') center/cover no-repeat;
+      display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
+    .story-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.6);}
     .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;}
     .story-text{max-width:600px;font-size:clamp(15px,3vw,18px);line-height:1.9;color:var(--text);opacity:0;animation:fadeIn 1s ease .5s forwards;white-space:pre-line;text-align:center;}
     @keyframes fadeIn{to{opacity:1;}}
