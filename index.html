@@ -84,9 +84,24 @@
 
     <!-- 임시 로그인 -->
     <div id="tab-temp" style="display:none;">
-      <div class="alert alert-info">임시 계정으로 체험해볼 수 있어요.<br>진행상황은 기기에 저장됩니다.</div>
-      <button class="btn btn-accent" onclick="tempLogin('student')">🎓 임시 학생으로 입장</button>
-      <button class="btn btn-ghost" onclick="tempLogin('admin')">👑 관리자로 입장</button>
+      <div class="alert alert-info" style="margin-bottom:16px;">
+        임시 계정으로 체험해볼 수 있어요.<br>진행상황은 이 기기에 저장됩니다.
+      </div>
+
+      <!-- 임시 학생 -->
+      <div style="background:rgba(99,179,237,0.06);border:1px solid rgba(99,179,237,0.2);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">🎓 임시 학생</div>
+        <div id="temp-saved-info" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
+        <div id="temp-btns-continue" style="display:none;flex-direction:column;gap:8px;">
+          <button class="btn btn-primary" onclick="tempLogin('student','continue')" style="padding:10px;font-size:14px;margin:0;">▶ 이어하기</button>
+          <button class="btn btn-ghost" onclick="tempLogin('student','new')" style="padding:10px;font-size:13px;margin:0;">🔄 새로 시작하기</button>
+        </div>
+        <div id="temp-btns-new" style="display:none;">
+          <button class="btn btn-accent" onclick="tempLogin('student','new')" style="padding:11px;font-size:14px;margin:0;">🚀 시작하기</button>
+        </div>
+      </div>
+
+      <button class="btn btn-ghost" onclick="tempLogin('admin')" style="padding:10px;font-size:13px;">👑 관리자로 입장</button>
     </div>
   </div>
 </div>
@@ -110,9 +125,51 @@ function showTab(t) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active', ['login','signup','find','temp'][i]===t);
   });
+  // 임시 탭 열릴 때 저장 데이터 확인
+  if (t === 'temp') checkTempSaved();
 }
 
-function alert2(id, msg, type='error') {
+function checkTempSaved() {
+  const local = JSON.parse(localStorage.getItem('tempUserData') || 'null');
+  const infoEl = document.getElementById('temp-saved-info');
+  const contEl = document.getElementById('temp-btns-continue');
+  const newEl  = document.getElementById('temp-btns-new');
+
+  if (local && local.charName) {
+    const questDone = Object.keys(local.quests||{}).filter(k=>k.endsWith('_done')).length;
+    infoEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <span>👤 캐릭터: <strong style="color:#63b3ed;">${local.charName}</strong></span>
+        <span>⭐ 점수: <strong style="color:#f6ad55;">${local.score||0}점</strong></span>
+        <span>🎯 완료 퀘스트: <strong>${questDone}개</strong></span>
+      </div>`;
+    contEl.style.display = 'flex';
+    newEl.style.display  = 'none';
+  } else {
+    infoEl.innerHTML = '<span style="color:rgba(255,255,255,0.4);">저장된 기록이 없습니다.</span>';
+    contEl.style.display = 'none';
+    newEl.style.display  = 'block';
+  }
+}
+
+function tempLogin(type, mode='continue') {
+  if (type === 'admin') {
+    sessionStorage.setItem('gameUser', JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
+    window.location.href = 'admin.html';
+    return;
+  }
+  // 학생
+  if (mode === 'new') {
+    if (localStorage.getItem('tempUserData')) {
+      if (!confirm('기존 진행상황이 삭제됩니다. 새로 시작할까요?')) return;
+    }
+    localStorage.removeItem('tempUserData');
+  }
+  sessionStorage.setItem('gameUser', JSON.stringify({
+    uid:'student', id:'student', isAdmin:false, name:'임시학생', isTemp:true
+  }));
+  window.location.href = 'main.html';
+}
   document.getElementById(id).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
 
