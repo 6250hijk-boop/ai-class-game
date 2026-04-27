@@ -480,20 +480,29 @@ async function finishQuiz(){
 
 function closeQuiz(){
   document.getElementById('quiz-overlay').style.display='none';
-  if(currentQuizSet===QUIZZES_2&&currentUser.uid!=='student'){
-    db.collection('users').doc(currentUser.uid).update({'quests.q1_done':true,'quests.q1_msgIdx':MESSAGES.length});
+  if(currentQuizSet===QUIZZES_2){
+    if(currentUser.uid!=='student'){
+      db.collection('users').doc(currentUser.uid).update({'quests.q1_done':true,'quests.q1_msgIdx':MESSAGES.length});
+    }
     showComplete(); return;
   }
   msgIdx++; autoSave(); showMessage(msgIdx);
 }
 
+let completeShown = false;
 function showComplete(){
+  if(completeShown) return;
+  completeShown = true;
   document.getElementById('dialog-next').style.display='none';
   document.getElementById('speaker-char').src='images/char1-2.png';
+  // 기존 버튼 제거
+  const old = document.getElementById('complete-btns');
+  if(old) old.remove();
   typeText(document.getElementById('dialog-text'),
     '🎉 퀘스트 1 완료!\n법률에 대해 잘 배웠어!\n다음 퀘스트로 넘어가볼까?',()=>{
     document.getElementById('dialog-next').style.display='none';
     const div=document.createElement('div');
+    div.id='complete-btns';
     div.style.cssText='display:flex;flex-direction:column;gap:7px;margin-top:8px;';
     div.innerHTML=`
       <button class="choice-btn" onclick="window.location.href='quest2.html'">다음 퀘스트 →</button>
