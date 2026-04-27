@@ -4,49 +4,115 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
   <title>AI 가디언 🤖</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);}
-    .login-wrap{width:100%;max-width:420px;}
-    .login-box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:clamp(24px,5vw,40px) clamp(20px,5vw,36px);box-shadow:0 0 60px rgba(99,179,237,0.1);}
-    .login-logo{text-align:center;margin-bottom:28px;}
-    .login-logo .logo-img{width:clamp(50px,12vw,70px);height:clamp(50px,12vw,70px);object-fit:contain;filter:drop-shadow(0 0 12px rgba(99,179,237,0.6));margin-bottom:8px;}
+    :root{
+      --bg:#0a0e1a; --surface:#111827; --card:#1a2235;
+      --border:rgba(99,179,237,0.15); --primary:#63b3ed;
+      --accent:#f6ad55; --green:#68d391; --red:#fc8181;
+      --text:#e2e8f0; --muted:#718096;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Noto Sans KR',sans-serif;
+      background:var(--bg);
+      min-height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      padding:16px;
+      position:relative;
+    }
+    /* 배경 */
+    body::before{
+      content:'';position:fixed;inset:0;
+      background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(99,179,237,0.08) 0%,transparent 60%),
+                 radial-gradient(ellipse 60% 40% at 80% 80%,rgba(246,173,85,0.06) 0%,transparent 60%);
+      pointer-events:none;z-index:0;
+    }
+    .login-wrap{width:100%;max-width:420px;position:relative;z-index:1;}
+    .login-box{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:24px;
+      padding:clamp(24px,5vw,40px) clamp(20px,5vw,36px);
+      box-shadow:0 0 60px rgba(99,179,237,0.1);
+      position:relative;z-index:1;
+    }
+    .login-logo{text-align:center;margin-bottom:24px;}
+    .login-logo img{width:clamp(50px,12vw,68px);height:clamp(50px,12vw,68px);object-fit:contain;filter:drop-shadow(0 0 12px rgba(99,179,237,0.6));margin-bottom:8px;display:block;margin-left:auto;margin-right:auto;}
     .login-logo h1{font-family:'Jua',sans-serif;font-size:clamp(22px,5vw,28px);color:var(--primary);letter-spacing:2px;}
     .login-logo p{font-size:13px;color:var(--muted);margin-top:4px;}
-    .ai-notice-login{font-size:11px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:16px;padding:6px;background:rgba(255,255,255,0.03);border-radius:8px;}
-    .tab-bar{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px;margin-bottom:20px;flex-wrap:wrap;}
-    .tab-btn{flex:1;min-width:60px;padding:8px 4px;border:none;background:transparent;color:var(--muted);font-size:clamp(11px,2.5vw,13px);border-radius:9px;cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap;}
+    .ai-notice{font-size:11px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:16px;padding:6px;background:rgba(255,255,255,0.03);border-radius:8px;}
+
+    /* 탭 */
+    .tab-bar{display:flex;gap:3px;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px;margin-bottom:20px;}
+    .tab-btn{
+      flex:1;padding:8px 4px;border:none;background:transparent;
+      color:var(--muted);font-size:clamp(11px,2.5vw,12px);
+      border-radius:9px;cursor:pointer;transition:all .2s;
+      font-family:inherit;white-space:nowrap;
+      position:relative;z-index:2;
+    }
+    .tab-btn:hover{color:var(--text);background:rgba(255,255,255,0.06);}
     .tab-btn.active{background:var(--primary);color:#0a0e1a;font-weight:700;}
+
+    /* 입력 */
     .field{margin-bottom:12px;}
     .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
-    .field input{width:100%;padding:11px 13px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border .2s;}
+    .field input{
+      width:100%;padding:11px 13px;
+      background:rgba(255,255,255,0.06);border:1px solid var(--border);
+      border-radius:10px;color:var(--text);font-size:14px;
+      font-family:inherit;outline:none;transition:border .2s;
+    }
     .field input:focus{border-color:var(--primary);}
-    .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;}
+
+    /* 버튼 */
+    .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;display:block;}
+    .btn:last-child{margin-bottom:0;}
     .btn-primary{background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;box-shadow:0 4px 16px rgba(99,179,237,0.3);}
     .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,179,237,0.4);}
     .btn-accent{background:linear-gradient(135deg,#f6ad55,#ed8936);color:#0a0e1a;}
+    .btn-accent:hover{transform:translateY(-1px);}
     .btn-ghost{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);}
     .btn-ghost:hover{background:rgba(255,255,255,0.1);}
+    .btn-sm{padding:9px;font-size:13px;}
+
+    /* 알림 */
     .alert{padding:10px 13px;border-radius:9px;font-size:13px;margin-bottom:12px;line-height:1.5;}
     .alert-error{background:rgba(252,129,129,0.15);border:1px solid var(--red);color:var(--red);}
     .alert-success{background:rgba(104,211,145,0.15);border:1px solid var(--green);color:var(--green);}
     .alert-info{background:rgba(99,179,237,0.12);border:1px solid var(--primary);color:var(--primary);}
-    .spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#0a0e1a;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+
+    /* 임시 탭 저장 정보 박스 */
+    .saved-box{background:rgba(99,179,237,0.06);border:1px solid rgba(99,179,237,0.2);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;}
+    .saved-box .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .saved-box .row:last-child{border-bottom:none;}
+    .saved-box .val{color:var(--primary);font-weight:700;}
+
+    /* 구분선 */
+    .divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+
+    /* 스피너 */
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#0a0e1a;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
     @keyframes spin{to{transform:rotate(360deg);}}
-    @media(max-width:480px){body{padding:12px;align-items:flex-start;padding-top:20px;}.login-box{border-radius:18px;}}
+
+    @media(max-width:480px){
+      body{align-items:flex-start;padding-top:20px;}
+      .login-box{border-radius:18px;}
+    }
   </style>
 </head>
 <body>
 <div class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
-      <img class="logo-img" src="images/robot_1.png" onerror="this.style.display='none'">
+      <img src="images/robot_1.png" onerror="this.style.display='none'">
       <h1>AI 가디언</h1>
       <p>AI를 학습시키며 함께 성장하는 게임</p>
     </div>
-    <div class="ai-notice-login">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
+    <div class="ai-notice">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
 
+    <!-- 탭 바 -->
     <div class="tab-bar">
       <button class="tab-btn active" onclick="showTab('login')">🔑 로그인</button>
       <button class="tab-btn" onclick="showTab('signup')">📝 회원가입</button>
@@ -54,7 +120,7 @@
       <button class="tab-btn" onclick="showTab('temp')">⚡ 임시</button>
     </div>
 
-    <!-- 로그인 -->
+    <!-- ── 로그인 ── -->
     <div id="tab-login">
       <div id="login-alert"></div>
       <div class="field"><label>아이디</label><input id="li-id" placeholder="아이디 입력" autocomplete="username"></div>
@@ -62,7 +128,7 @@
       <button class="btn btn-primary" id="login-btn" onclick="doLogin()">로그인 →</button>
     </div>
 
-    <!-- 회원가입 -->
+    <!-- ── 회원가입 ── -->
     <div id="tab-signup" style="display:none;">
       <div id="signup-alert"></div>
       <div class="field"><label>아이디 (영문/숫자 4~20자)</label><input id="su-id" placeholder="아이디" autocomplete="off"></div>
@@ -74,35 +140,42 @@
       <button class="btn btn-primary" id="signup-btn" onclick="doSignup()">가입하기 →</button>
     </div>
 
-    <!-- 찾기 -->
+    <!-- ── 아이디/비밀번호 찾기 ── -->
     <div id="tab-find" style="display:none;">
       <div id="find-alert"></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">가입 시 등록한 이메일로 아이디를 알려드려요.</p>
       <div class="field"><label>이메일</label><input id="find-email" type="email" placeholder="가입 이메일"></div>
-      <button class="btn btn-primary" onclick="doFind()">찾기 →</button>
+      <button class="btn btn-primary" onclick="doFind()">아이디 찾기 →</button>
     </div>
 
-    <!-- 임시 로그인 -->
+    <!-- ── 임시 로그인 ── -->
     <div id="tab-temp" style="display:none;">
-      <div class="alert alert-info" style="margin-bottom:16px;">
-        임시 계정으로 체험해볼 수 있어요.<br>진행상황은 이 기기에 저장됩니다.
+
+      <!-- 임시 학생 섹션 -->
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">🎓 임시 학생으로 체험할 수 있어요. 진행상황은 이 기기에 저장됩니다.</p>
+
+      <!-- 저장 데이터 있을 때 -->
+      <div id="temp-has-data" style="display:none;">
+        <div class="saved-box">
+          <div class="row"><span>👤 캐릭터</span><span class="val" id="sv-char">-</span></div>
+          <div class="row"><span>⭐ 점수</span><span class="val" id="sv-score">-</span></div>
+          <div class="row"><span>🎯 완료 퀘스트</span><span class="val" id="sv-quest">-</span></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="tempLogin('student','continue')">▶ 이어하기</button>
+        <button class="btn btn-ghost btn-sm" onclick="tempLogin('student','new')">🔄 새로 시작하기</button>
       </div>
 
-      <!-- 임시 학생 -->
-      <div style="background:rgba(99,179,237,0.06);border:1px solid rgba(99,179,237,0.2);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">🎓 임시 학생</div>
-        <div id="temp-saved-info" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
-        <div id="temp-btns-continue" style="display:none;flex-direction:column;gap:8px;">
-          <button class="btn btn-primary" onclick="tempLogin('student','continue')" style="padding:10px;font-size:14px;margin:0;">▶ 이어하기</button>
-          <button class="btn btn-ghost" onclick="tempLogin('student','new')" style="padding:10px;font-size:13px;margin:0;">🔄 새로 시작하기</button>
-        </div>
-        <div id="temp-btns-new" style="display:none;">
-          <button class="btn btn-accent" onclick="tempLogin('student','new')" style="padding:11px;font-size:14px;margin:0;">🚀 시작하기</button>
-        </div>
+      <!-- 저장 데이터 없을 때 -->
+      <div id="temp-no-data">
+        <button class="btn btn-accent" onclick="tempLogin('student','new')">🚀 임시 학생으로 시작하기</button>
       </div>
 
-      <button class="btn btn-ghost" onclick="tempLogin('admin')" style="padding:10px;font-size:13px;">👑 관리자로 입장</button>
+      <hr class="divider">
+
+      <!-- 관리자 -->
+      <button class="btn btn-ghost btn-sm" onclick="tempLogin('admin')">👑 관리자로 입장</button>
     </div>
+
   </div>
 </div>
 
@@ -125,63 +198,33 @@ function showTab(t) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active', ['login','signup','find','temp'][i]===t);
   });
-  // 임시 탭 열릴 때 저장 데이터 확인
-  if (t === 'temp') checkTempSaved();
+  if (t==='temp') loadTempInfo();
 }
 
-function checkTempSaved() {
-  const local = JSON.parse(localStorage.getItem('tempUserData') || 'null');
-  const infoEl = document.getElementById('temp-saved-info');
-  const contEl = document.getElementById('temp-btns-continue');
-  const newEl  = document.getElementById('temp-btns-new');
-
+function loadTempInfo() {
+  const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
   if (local && local.charName) {
     const questDone = Object.keys(local.quests||{}).filter(k=>k.endsWith('_done')).length;
-    infoEl.innerHTML = `
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <span>👤 캐릭터: <strong style="color:#63b3ed;">${local.charName}</strong></span>
-        <span>⭐ 점수: <strong style="color:#f6ad55;">${local.score||0}점</strong></span>
-        <span>🎯 완료 퀘스트: <strong>${questDone}개</strong></span>
-      </div>`;
-    contEl.style.display = 'flex';
-    newEl.style.display  = 'none';
+    document.getElementById('sv-char').textContent  = local.charName;
+    document.getElementById('sv-score').textContent = (local.score||0)+'점';
+    document.getElementById('sv-quest').textContent = questDone+'개';
+    document.getElementById('temp-has-data').style.display = 'block';
+    document.getElementById('temp-no-data').style.display  = 'none';
   } else {
-    infoEl.innerHTML = '<span style="color:rgba(255,255,255,0.4);">저장된 기록이 없습니다.</span>';
-    contEl.style.display = 'none';
-    newEl.style.display  = 'block';
+    document.getElementById('temp-has-data').style.display = 'none';
+    document.getElementById('temp-no-data').style.display  = 'block';
   }
 }
 
-function tempLogin(type, mode='continue') {
-  if (type === 'admin') {
-    sessionStorage.setItem('gameUser', JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
-    window.location.href = 'admin.html';
-    return;
-  }
-  // 학생
-  if (mode === 'new') {
-    if (localStorage.getItem('tempUserData')) {
-      if (!confirm('기존 진행상황이 삭제됩니다. 새로 시작할까요?')) return;
-    }
-    localStorage.removeItem('tempUserData');
-  }
-  sessionStorage.setItem('gameUser', JSON.stringify({
-    uid:'student', id:'student', isAdmin:false, name:'임시학생', isTemp:true
-  }));
-  window.location.href = 'main.html';
-}
+function alert2(id, msg, type='error') {
   document.getElementById(id).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
 }
-
 function setLoading(btnId, loading, text='') {
   const btn = document.getElementById(btnId);
   if (!btn) return;
   btn.disabled = loading;
-  btn.innerHTML = loading
-    ? `<span class="spinner-inline"></span>처리 중...`
-    : text;
+  btn.innerHTML = loading ? `<span class="spinner"></span>처리 중...` : text;
 }
-
 async function hashPW(pw) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -191,14 +234,13 @@ async function doLogin() {
   const id = document.getElementById('li-id').value.trim();
   const pw = document.getElementById('li-pw').value;
   if (!id||!pw) return alert2('login-alert','아이디와 비밀번호를 입력하세요.');
-  setLoading('login-btn', true);
-
+  setLoading('login-btn',true);
   if (id===ADMIN_ID && pw===ADMIN_PW) {
-    sessionStorage.setItem('gameUser', JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
+    sessionStorage.setItem('gameUser',JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
     window.location.href='admin.html'; return;
   }
   if (id===STUDENT_ID && pw===STUDENT_PW) {
-    sessionStorage.setItem('gameUser', JSON.stringify({uid:'student',id:'student',isAdmin:false,name:'임시학생',isTemp:true}));
+    sessionStorage.setItem('gameUser',JSON.stringify({uid:'student',id:'student',isAdmin:false,name:'임시학생',isTemp:true}));
     window.location.href='main.html'; return;
   }
   try {
@@ -206,103 +248,75 @@ async function doLogin() {
     if (snap.empty) { setLoading('login-btn',false,'로그인 →'); return alert2('login-alert','❌ 존재하지 않는 아이디입니다.'); }
     const doc = snap.docs[0]; const data = doc.data();
     if (data.password !== await hashPW(pw)) { setLoading('login-btn',false,'로그인 →'); return alert2('login-alert','❌ 비밀번호가 틀렸습니다.'); }
-    sessionStorage.setItem('gameUser', JSON.stringify({uid:doc.id, id, isAdmin:false, name:data.name, charName:data.charName}));
+    sessionStorage.setItem('gameUser',JSON.stringify({uid:doc.id,id,isAdmin:false,name:data.name,charName:data.charName}));
     window.location.href='main.html';
   } catch(e) {
     setLoading('login-btn',false,'로그인 →');
-    alert2('login-alert','❌ 오류가 발생했습니다: '+e.message);
+    alert2('login-alert','❌ 오류: '+e.message);
   }
 }
 
 async function doSignup() {
-  const id     = document.getElementById('su-id').value.trim();
-  const name   = document.getElementById('su-name').value.trim();
-  const stunum = document.getElementById('su-stunum').value.trim();
-  const email  = document.getElementById('su-email').value.trim();
-  const pw     = document.getElementById('su-pw').value;
-  const pw2    = document.getElementById('su-pw2').value;
-
-  // 입력 검증
-  if (!id||!name||!stunum||!email||!pw||!pw2)
-    return alert2('signup-alert','⚠️ 모든 항목을 입력해주세요.');
-  if (!/^[a-zA-Z0-9]{4,20}$/.test(id))
-    return alert2('signup-alert','⚠️ 아이디는 영문/숫자 4~20자로 입력하세요.');
-  if (!/^\d+$/.test(stunum))
-    return alert2('signup-alert','⚠️ 학번은 숫자만 입력하세요.');
-  if (!/^[\w\.-]+@[\w\.-]+\.\w+$/.test(email))
-    return alert2('signup-alert','⚠️ 올바른 이메일 주소를 입력하세요.');
-  if (pw.length < 6)
-    return alert2('signup-alert','⚠️ 비밀번호는 6자 이상이어야 합니다.');
-  if (pw !== pw2)
-    return alert2('signup-alert','⚠️ 비밀번호가 일치하지 않습니다.');
-
-  setLoading('signup-btn', true);
-  alert2('signup-alert','⏳ 가입 처리 중입니다...','info');
-
+  const id=document.getElementById('su-id').value.trim();
+  const name=document.getElementById('su-name').value.trim();
+  const stunum=document.getElementById('su-stunum').value.trim();
+  const email=document.getElementById('su-email').value.trim();
+  const pw=document.getElementById('su-pw').value;
+  const pw2=document.getElementById('su-pw2').value;
+  if (!id||!name||!stunum||!email||!pw||!pw2) return alert2('signup-alert','⚠️ 모든 항목을 입력해주세요.');
+  if (!/^[a-zA-Z0-9]{4,20}$/.test(id)) return alert2('signup-alert','⚠️ 아이디는 영문/숫자 4~20자로 입력하세요.');
+  if (!/^\d+$/.test(stunum)) return alert2('signup-alert','⚠️ 학번은 숫자만 입력하세요.');
+  if (!/^[\w\.-]+@[\w\.-]+\.\w+$/.test(email)) return alert2('signup-alert','⚠️ 올바른 이메일 주소를 입력하세요.');
+  if (pw.length<6) return alert2('signup-alert','⚠️ 비밀번호는 6자 이상이어야 합니다.');
+  if (pw!==pw2) return alert2('signup-alert','⚠️ 비밀번호가 일치하지 않습니다.');
+  setLoading('signup-btn',true);
+  alert2('signup-alert','⏳ 가입 처리 중...','info');
   try {
-    // 아이디 중복 확인
-    const idSnap = await db.collection('users').where('id','==',id).get();
+    const idSnap=await db.collection('users').where('id','==',id).get();
     if (!idSnap.empty) { setLoading('signup-btn',false,'가입하기 →'); return alert2('signup-alert','❌ 이미 사용 중인 아이디입니다.'); }
-
-    // 이메일 중복 확인
-    const emailSnap = await db.collection('users').where('email','==',email).get();
+    const emailSnap=await db.collection('users').where('email','==',email).get();
     if (!emailSnap.empty) { setLoading('signup-btn',false,'가입하기 →'); return alert2('signup-alert','❌ 이미 사용 중인 이메일입니다.'); }
-
-    // 학번 중복 확인
-    const stunumSnap = await db.collection('users').where('stunum','==',stunum).get();
-    if (!stunumSnap.empty) { setLoading('signup-btn',false,'가입하기 →'); return alert2('signup-alert','❌ 이미 등록된 학번입니다.'); }
-
-    const hashed = await hashPW(pw);
-    await db.collection('users').add({
-      id, name, stunum, email,
-      password: hashed,
-      score: 0, level: 1,
-      quests: {}, charName: null,
-      created_at: new Date().toISOString()
-    });
-
+    const hashed=await hashPW(pw);
+    await db.collection('users').add({id,name,stunum,email,password:hashed,score:0,level:1,quests:{},charName:null,created_at:new Date().toISOString()});
     setLoading('signup-btn',false,'가입하기 →');
-    alert2('signup-alert','✅ 회원가입이 완료되었습니다! 로그인하세요.','success');
-    document.getElementById('su-id').value='';
-    document.getElementById('su-pw').value='';
-    document.getElementById('su-pw2').value='';
-    setTimeout(()=>showTab('login'), 1800);
+    alert2('signup-alert','✅ 회원가입 완료! 로그인하세요.','success');
+    setTimeout(()=>showTab('login'),1800);
   } catch(e) {
     setLoading('signup-btn',false,'가입하기 →');
-    if (e.code==='permission-denied')
-      alert2('signup-alert','❌ 저장 권한이 없습니다. Firestore 규칙을 확인하세요.');
-    else
-      alert2('signup-alert','❌ 가입 실패: '+e.message);
+    alert2('signup-alert','❌ 가입 실패: '+e.message);
   }
 }
 
 async function doFind() {
-  const email = document.getElementById('find-email').value.trim();
+  const email=document.getElementById('find-email').value.trim();
   if (!email) return alert2('find-alert','이메일을 입력하세요.');
   try {
-    const snap = await db.collection('users').where('email','==',email).get();
+    const snap=await db.collection('users').where('email','==',email).get();
     if (snap.empty) return alert2('find-alert','❌ 해당 이메일로 가입된 계정이 없습니다.');
-    const data = snap.docs[0].data();
-    alert2('find-alert',`✅ 아이디: <strong>${data.id}</strong><br>비밀번호는 관리자에게 문의하세요.`,'success');
+    alert2('find-alert',`✅ 아이디: <strong>${snap.docs[0].data().id}</strong>`,'success');
   } catch(e) { alert2('find-alert','❌ 오류: '+e.message); }
 }
 
-function tempLogin(type) {
+function tempLogin(type, mode='continue') {
   if (type==='admin') {
-    sessionStorage.setItem('gameUser', JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
-    window.location.href='admin.html';
-  } else {
-    sessionStorage.setItem('gameUser', JSON.stringify({uid:'student',id:'student',isAdmin:false,name:'임시학생',isTemp:true}));
-    window.location.href='main.html';
+    sessionStorage.setItem('gameUser',JSON.stringify({uid:'admin',id:'admin',isAdmin:true,name:'관리자'}));
+    window.location.href='admin.html'; return;
   }
+  if (mode==='new') {
+    if (localStorage.getItem('tempUserData')) {
+      if (!confirm('기존 진행상황이 삭제됩니다.\n새로 시작할까요?')) return;
+    }
+    localStorage.removeItem('tempUserData');
+  }
+  sessionStorage.setItem('gameUser',JSON.stringify({uid:'student',id:'student',isAdmin:false,name:'임시학생',isTemp:true}));
+  window.location.href='main.html';
 }
 
-// 엔터키 로그인
 document.addEventListener('keydown', e => {
   if (e.key==='Enter') {
-    const tab = document.querySelector('.tab-btn.active')?.textContent;
-    if (tab?.includes('로그인')) doLogin();
-    else if (tab?.includes('회원가입')) doSignup();
+    const active = document.querySelector('.tab-btn.active')?.textContent||'';
+    if (active.includes('로그인')) doLogin();
+    else if (active.includes('회원가입')) doSignup();
   }
 });
 </script>
