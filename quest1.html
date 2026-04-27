@@ -440,10 +440,15 @@ async function finishQuiz(){
   const xp=quizScore*12+(quizScore===total?20:0);
   const quizName=currentQuizSet===QUIZZES_1?'q1_AI가디언퀴즈':'q1_씨큐퀴즈';
 
-  if(currentUser.uid!=='student'){
+  if(currentUser.uid==='student'){
+    // 비회원 - 로컬스토리지에 저장
+    userData.score=(userData.score||0)+xp;
+    userData.quests=userData.quests||{};
+    userData.quests[quizName+'_done']=true;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+    updateHUD(); updateCharImages();
+  } else {
     await addScore(currentUser.uid,xp,'퀘스트1 퀴즈');
-
-    // 퀴즈 결과 저장 (문제 푼 횟수, 정답 수, 정답률)
     const resultData={
       quizName, score:quizScore, total,
       attempts:quizAttempts,
@@ -453,14 +458,11 @@ async function finishQuiz(){
     await db.collection('quiz_results').doc(currentUser.uid).set({
       [quizName]:firebase.firestore.FieldValue.arrayUnion(resultData)
     },{merge:true});
-
-    // 유저 통계 업데이트
     await db.collection('users').doc(currentUser.uid).update({
       [`quests.${quizName}_done`]:true,
       'stats.total_quiz_attempts':firebase.firestore.FieldValue.increment(1),
       'stats.total_correct':firebase.firestore.FieldValue.increment(quizScore),
     });
-
     userData.score=(userData.score||0)+xp;
     updateHUD(); updateCharImages();
     checkLevelUp(userData.score-xp,userData.score);
@@ -481,7 +483,12 @@ async function finishQuiz(){
 function closeQuiz(){
   document.getElementById('quiz-overlay').style.display='none';
   if(currentQuizSet===QUIZZES_2){
-    if(currentUser.uid!=='student'){
+    if(currentUser.uid==='student'){
+      userData.quests=userData.quests||{};
+      userData.quests.q1_done=true;
+      userData.quests.q1_msgIdx=MESSAGES.length;
+      localStorage.setItem('tempUserData',JSON.stringify(userData));
+    } else {
       db.collection('users').doc(currentUser.uid).update({'quests.q1_done':true,'quests.q1_msgIdx':MESSAGES.length});
     }
     showComplete(); return;
@@ -489,25 +496,58 @@ function closeQuiz(){
   msgIdx++; autoSave(); showMessage(msgIdx);
 }
 
-let completeShown = false;
+let completeShown=false;
 function showComplete(){
   if(completeShown) return;
-  completeShown = true;
+  completeShown=true;
   document.getElementById('dialog-next').style.display='none';
   document.getElementById('speaker-char').src='images/char1-2.png';
-  // 기존 버튼 제거
-  const old = document.getElementById('complete-btns');
+  const old=document.getElementById('complete-btns');
   if(old) old.remove();
   typeText(document.getElementById('dialog-text'),
     '🎉 퀘스트 1 완료!\n법률에 대해 잘 배웠어!\n다음 퀘스트로 넘어가볼까?',()=>{
     document.getElementById('dialog-next').style.display='none';
-    const div=document.createElement('div');
-    div.id='complete-btns';
-    div.style.cssText='display:flex;flex-direction:column;gap:7px;margin-top:8px;';
-    div.innerHTML=`
-      <button class="choice-btn" onclick="window.location.href='quest2.html'">다음 퀘스트 →</button>
-      <button class="choice-btn" onclick="window.location.href='main.html'">🏠 메인으로</button>`;
-    document.querySelector('.dialog-box').appendChild(div);
+    // 기존 버튼 있으면 제거
+    const old2=document.getElementById('complete-btns');
+    if(old2) old2.remove();
+    // 게임 스타일 완료 UI 오버레이
+    const overlay=document.createElement('div');
+    overlay.id='complete-btns';
+    overlay.style.cssText=`
+      position:fixed;inset:0;z-index:150;
+      background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);
+      display:flex;align-items:center;justify-content:center;
+    `;
+    overlay.innerHTML=`
+      <div style="background:#111827;border:2px solid rgba(99,179,237,0.4);border-radius:24px;
+           padding:36px 32px;text-align:center;max-width:360px;width:90%;
+           box-shadow:0 0 60px rgba(99,179,237,0.2);animation:slideUp .4s ease;">
+        <div style="font-size:56px;margin-bottom:12px;">🏅</div>
+        <h2 style="font-family:'Jua',sans-serif;font-size:22px;color:#63b3ed;margin-bottom:6px;">
+          퀘스트 1 완료!
+        </h2>
+        <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;">
+          인공지능 세계의 법률을<br>성공적으로 배웠어요! ⚖️
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button onclick="window.location.href='quest2.html'"
+            style="padding:14px;background:linear-gradient(135deg,#63b3ed,#4299e1);
+                   border:none;border-radius:12px;color:#0a0e1a;font-size:15px;
+                   font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;"
+            onmouseover="this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.transform=''">
+            다음 퀘스트 → 아버지를 찾아서 🔍
+          </button>
+          <button onclick="window.location.href='main.html'"
+            style="padding:12px;background:rgba(255,255,255,0.08);
+                   border:1px solid rgba(255,255,255,0.2);border-radius:12px;
+                   color:rgba(255,255,255,0.7);font-size:14px;
+                   cursor:pointer;font-family:inherit;">
+            🏠 메인으로 돌아가기
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
   });
 }
 
