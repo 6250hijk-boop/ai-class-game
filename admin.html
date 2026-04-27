@@ -20,6 +20,7 @@
       </div>
       <a href="#tab-students" class="quest-item active" onclick="showTab('students')">👥 학생 현황</a>
       <a href="#tab-quiz" class="quest-item" onclick="showTab('quiz')">📝 퀴즈 결과</a>
+      <a href="#tab-board" class="quest-item" onclick="showTab('board')">📋 게시판 관리</a>
       <a href="#tab-stats" class="quest-item" onclick="showTab('stats')">📊 전체 통계</a>
     </div>
     <button class="btn btn-ghost" onclick="logout()"
@@ -86,6 +87,29 @@
               </td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 게시판 관리 탭 -->
+    <div id="tab-board" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <h3>📋 게시판 관리</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick="loadBoardAdmin('board_q1')" id="btn-q1" style="font-size:12px;padding:6px 12px;">
+              ⚖️ 퀘스트1 게시판
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="loadBoardAdmin('board_q2')" id="btn-q2" style="font-size:12px;padding:6px 12px;">
+              🔍 퀘스트2 게시판
+            </button>
+          </div>
+        </div>
+        <div style="padding:16px 20px;">
+          <div id="board-admin-title" style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+            퀘스트를 선택해주세요.
+          </div>
+          <div id="board-admin-list"></div>
         </div>
       </div>
     </div>
@@ -212,12 +236,122 @@ async function loadData() {
 }
 
 function showTab(t) {
-  ['students','quiz','stats'].forEach(id => {
+  ['students','quiz','board','stats'].forEach(id => {
     document.getElementById('tab-'+id).style.display = id===t?'block':'none';
   });
   document.querySelectorAll('.sidebar .quest-item').forEach((el,i) => {
-    el.classList.toggle('active', ['students','quiz','stats'][i]===t);
+    el.classList.toggle('active', ['students','quiz','board','stats'][i]===t);
   });
+  if(t==='board') loadBoardAdmin('board_q1');
+}
+
+let currentBoardCollection = 'board_q1';
+async function loadBoardAdmin(col){
+  currentBoardCollection = col;
+  // 버튼 활성화
+  document.getElementById('btn-q1').style.background = col==='board_q1'?'rgba(99,179,237,0.2)':'';
+  document.getElementById('btn-q2').style.background = col==='board_q2'?'rgba(99,179,237,0.2)':'';
+
+  const titles = { board_q1:'퀘스트1 - 인공지능시대 법률/윤리', board_q2:'퀘스트2 - 인공지능 관련 인물 업적' };
+  document.getElementById('board-admin-title').innerHTML =
+    `<strong style="color:var(--primary);">${titles[col]||col}</strong> 게시글 목록`;
+
+  const list = document.getElementById('board-admin-list');
+  list.innerHTML = `<div style="text-align:center;padding:30px;"><div class="spinner" style="margin:0 auto;"></div></div>`;
+
+  try {
+    const snap = await db.collection(col).orderBy('created_at','desc').limit(50).get();
+    if (snap.empty) {
+      list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);">게시글이 없습니다.</div>`;
+      return;
+    }
+
+    // 유저 목록 (점수 업데이트용)
+    const usersSnap = await db.collection('users').get();
+    const userMap = {};
+    usersSnap.docs.forEach(d => { userMap[d.id] = {...d.data(), _id:d.id}; });
+
+    list.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      const date = d.created_at?.slice(0,16).replace('T',' ')||'';
+      const xp = d.xp || BOARD_DEFAULT_XP;
+      // 실명 찾기
+      const user = d.isTemp ? null : userMap[d.authorId];
+      const nameLabel = user
+        ? `${user.name} (${user.id})`
+        : `${d.authorName}${d.isTemp?' [임시]':''}`;
+
+      return `
+        <div id="apost-${doc.id}" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div>
+              <span style="font-size:13px;font-weight:700;color:var(--text);">${nameLabel}</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px;">${date}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <!-- 점수 조정 -->
+              <div style="display:flex;align-items:center;gap:4px;">
+                <label style="font-size:12px;color:var(--muted);">점수:</label>
+                <input type="number" id="xp-${doc.id}" value="${xp}" min="-2" max="10"
+                  style="width:55px;background:rgba(255,255,255,0.08);border:1px solid var(--border);
+                         border-radius:6px;padding:4px 6px;color:var(--text);font-size:13px;text-align:center;">
+                <button onclick="applyXP('${doc.id}','${d.authorId}',${d.isTemp||false})"
+                  style="background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3);
+                         border-radius:6px;padding:4px 10px;color:var(--primary);font-size:12px;cursor:pointer;font-family:inherit;">
+                  적용
+                </button>
+              </div>
+              <!-- 삭제 -->
+              <button onclick="adminDeletePost('${doc.id}','${d.authorId}',${d.isTemp||false},${xp})"
+                style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);
+                       border-radius:6px;padding:4px 10px;color:var(--red);font-size:12px;cursor:pointer;font-family:inherit;">
+                🗑️ 삭제
+              </button>
+            </div>
+          </div>
+          <p style="font-size:13px;color:var(--text);line-height:1.6;margin:0;white-space:pre-wrap;">${d.content}</p>
+          ${d.link?`<a href="${d.link}" target="_blank" style="font-size:12px;color:var(--primary);margin-top:6px;display:inline-block;">🔗 ${d.link}</a>`:''}
+          <div style="margin-top:8px;">
+            <span style="background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.3);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--accent);" id="xp-badge-${doc.id}">현재 +${xp}점</span>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = `<div style="color:var(--red);padding:16px;">오류: ${e.message}</div>`;
+  }
+}
+
+async function applyXP(docId, authorId, isTemp){
+  const input = document.getElementById('xp-'+docId);
+  const newXp = parseInt(input.value);
+  if (isNaN(newXp)||newXp<-2||newXp>10) { alert('-2 ~ 10 범위로 입력해주세요.'); return; }
+  try {
+    const snap = await db.collection(currentBoardCollection).doc(docId).get();
+    if (!snap.exists) { alert('게시글을 찾을 수 없습니다.'); return; }
+    const post = snap.data();
+    const oldXp = post.xp || BOARD_DEFAULT_XP;
+    const diff = newXp - oldXp;
+    await db.collection(currentBoardCollection).doc(docId).update({ xp: newXp });
+    // 회원이면 점수 조정
+    if (!isTemp && authorId && diff !== 0) {
+      await addScore(authorId, diff, `관리자 게시글 점수 조정 (${currentBoardCollection})`);
+    }
+    document.getElementById('xp-badge-'+docId).textContent = `현재 +${newXp}점`;
+    alert(`✅ 점수가 ${newXp}점으로 변경되었습니다.${!isTemp&&diff!==0?` (${diff>0?'+':''}${diff}점 반영)`:''}`);
+  } catch(e) { alert('오류: '+e.message); }
+}
+
+async function adminDeletePost(docId, authorId, isTemp, xp){
+  if (!confirm('이 게시글을 삭제할까요?\n작성자의 점수가 회수됩니다.')) return;
+  try {
+    await db.collection(currentBoardCollection).doc(docId).delete();
+    // 회원이면 점수 회수
+    if (!isTemp && authorId) {
+      await addScore(authorId, -(xp||BOARD_DEFAULT_XP), `관리자 게시글 삭제 (${currentBoardCollection})`);
+    }
+    document.getElementById('apost-'+docId)?.remove();
+    alert('✅ 삭제되었습니다.');
+  } catch(e) { alert('삭제 실패: '+e.message); }
 }
 
 function toggleSidebar() {
