@@ -29,10 +29,13 @@
     .temp-choice-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;}
     .temp-choice-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
     /* 이름 짓기 */
-    .name-overlay{position:fixed;inset:0;z-index:310;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;}
-    .name-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:400px;width:100%;text-align:center;}
-    .name-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;}
-    .name-box p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+    .name-overlay{position:fixed;inset:0;z-index:310;
+      background:url('images/bgmain.png') center/cover no-repeat;
+      display:flex;align-items:center;justify-content:center;padding:20px;}
+    .name-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.75);z-index:0;}
+    .name-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:400px;width:100%;text-align:center;position:relative;z-index:1;}
+    .name-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;position:relative;z-index:1;}
+    .name-box p{font-size:13px;color:var(--muted);margin-bottom:20px;position:relative;z-index:1;}
     .name-input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;transition:border .2s;}
     .name-input:focus{border-color:var(--primary);}
     .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;}
