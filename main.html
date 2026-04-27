@@ -15,11 +15,19 @@
     .story-overlay{position:fixed;inset:0;z-index:300;
       background:url('images/bgmain.png') center/cover no-repeat;
       display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
-    .story-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.6);}
-    .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;}
-    .story-text{max-width:600px;font-size:clamp(15px,3vw,18px);line-height:1.9;color:var(--text);opacity:0;animation:fadeIn 1s ease .5s forwards;white-space:pre-line;text-align:center;}
+    .story-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.65);z-index:0;}
+    .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;position:relative;z-index:1;}
+    .story-text{max-width:600px;font-size:clamp(15px,3vw,18px);line-height:1.9;color:var(--text);opacity:0;animation:fadeIn 1s ease .5s forwards;white-space:pre-line;text-align:center;position:relative;z-index:1;}
     @keyframes fadeIn{to{opacity:1;}}
-    .story-btn{margin-top:28px;padding:12px 32px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;opacity:0;transition:opacity .5s;}
+    .story-btn{margin-top:28px;padding:12px 32px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;opacity:0;transition:opacity .5s;position:relative;z-index:1;}
+    /* 비회원 선택 화면 */
+    .temp-choice-overlay{position:fixed;inset:0;z-index:310;
+      background:url('images/bgmain.png') center/cover no-repeat;
+      display:flex;align-items:center;justify-content:center;padding:20px;}
+    .temp-choice-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.75);z-index:0;}
+    .temp-choice-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:380px;width:100%;text-align:center;position:relative;z-index:1;}
+    .temp-choice-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;}
+    .temp-choice-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
     /* 이름 짓기 */
     .name-overlay{position:fixed;inset:0;z-index:310;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;}
     .name-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:400px;width:100%;text-align:center;}
@@ -87,6 +95,26 @@
   </style>
 </head>
 <body class="page">
+
+<!-- 비회원 이어하기/새로 시작 선택 -->
+<div id="temp-choice-screen" class="temp-choice-overlay" style="display:none;">
+  <div class="temp-choice-box">
+    <div style="font-size:clamp(36px,8vw,52px);margin-bottom:12px;">🤖</div>
+    <h2>임시 학생으로 입장</h2>
+    <p>이전에 진행한 기록이 있어요!<br>이어서 하시겠어요?</p>
+    <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;color:rgba(255,255,255,0.6);text-align:left;">
+      <div id="saved-info"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary" onclick="tempContinue()">
+        ▶ 이어하기
+      </button>
+      <button class="btn btn-ghost" onclick="tempNewStart()">
+        🔄 새로 시작하기
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- 스토리 오프닝 -->
 <div id="story-screen" class="story-overlay" style="display:none;">
@@ -176,20 +204,31 @@ requireAuth(async (user) => {
   currentUser=user;
 
   if (user.uid==='student') {
-    // 비회원: 매번 최신 로컬스토리지에서 불러오기
     const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
     document.getElementById('temp-reset-wrap').style.display='block';
+
+    if (local && local.charName) {
+      // 이전 기록 있음 → 선택 화면 표시
+      userData = local;
+      const lv = getLevelByScore(local.score||0);
+      const questDone = Object.keys(local.quests||{}).filter(k=>k.endsWith('_done')).length;
+      document.getElementById('saved-info').innerHTML=`
+        <div style="margin-bottom:6px;">👤 캐릭터: <strong style="color:#63b3ed;">${local.charName}</strong></div>
+        <div style="margin-bottom:6px;">⭐ 점수: <strong style="color:#f6ad55;">${local.score||0} 점</strong></div>
+        <div>🎯 완료 퀘스트: <strong>${questDone}개</strong></div>`;
+      document.getElementById('temp-choice-screen').style.display='flex';
+    } else {
+      // 처음 → 스토리 바로 시작
+      userData = { charName:null, score:0, quests:{}, name:'임시학생' };
+      showStory();
+    }
+    return;
   } else if (user.uid==='admin') {
     userData={ charName:'관리자', score:0, quests:{}, name:'관리자' };
     initUI(); return;
   } else {
-    // 일반 회원: Firestore에서 최신 데이터 불러오기
     const snap=await db.collection('users').where('id','==',user.id).get();
-    if (!snap.empty){
-      userData=snap.docs[0].data();
-      currentUser.uid=snap.docs[0].id;
-    }
+    if (!snap.empty){ userData=snap.docs[0].data(); currentUser.uid=snap.docs[0].id; }
   }
 
   if (!userData.charName) {
@@ -198,6 +237,22 @@ requireAuth(async (user) => {
     initUI();
   }
 });
+
+function tempContinue(){
+  // 이어하기
+  document.getElementById('temp-choice-screen').style.display='none';
+  initUI();
+}
+
+function tempNewStart(){
+  // 새로 시작 - 데이터 초기화 후 스토리
+  if(!confirm('정말 새로 시작할까요?\n기존 점수와 퀘스트 진행이 모두 사라집니다.')) return;
+  localStorage.removeItem('tempUserData');
+  userData = { charName:null, score:0, quests:{}, name:'임시학생' };
+  document.getElementById('temp-choice-screen').style.display='none';
+  storyStep=0;
+  showStory();
+}
 
 function showStory(){
   document.getElementById('story-screen').style.display='flex';
@@ -297,6 +352,7 @@ function confirmReset(){
   if (confirm('비회원 진행상황을 초기화할까요?\n점수, 퀘스트, 캐릭터 이름이 모두 삭제됩니다.')){
     localStorage.removeItem('tempUserData');
     userData={ charName:null, score:0, quests:{}, name:'임시학생' };
+    storyStep=0;
     showStory();
   }
 }
