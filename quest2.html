@@ -144,19 +144,13 @@ const MESSAGES = [
   { speaker:0, name:"내레이터", cls:"",
     text:"나의 아버지를 소개할께.\n음악의 아버지가 바흐라면\n인공지능의 아버지는 앨런 튜링(Alan Turing)과\n제프리 힌턴(Geoffrey Hinton)이야." },
   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"나를 소개하지.\n나는 영국의 수학자야.\n나는 1912년에 태어났지.\n그래서 나 때에는 우리가 아는 컴퓨터가 없었어." },
-   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"그냥 내 생각으로만 무엇이든 계산할 수 있는\n상상속의 기계를 설계했지.\n이게 바로 튜링 기계야." },
+    text:"나를 소개하지.\n나는 영국의 수학자야.\n나는 1912년에 태어났지.\n그래서 나 때에는 우리가 아는 컴퓨터가 없었지.\n그냥 내 생각으로만 무엇이든 계산할 수 있는\n상상속의 기계를 설계했지.\n이게 바로 튜링 기계야." },
   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"기계가 생각하는지 어떻게 알까?\n그래서 난 기계가 생각할 수 있는지 알 수 있는\n시험방법을 생각해냈지." },
-   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"먼저 벽 뒤에 있는 사람과 기계에게 채팅으로 질문을 하는거야.\n만약 {{name}}이 그 둘하고 대화해서 누가 사람이고 기계인지 구분할 수 없다면\n그 기계는 지능을 가졌다고 볼 수 있는거야." },
+    text:"기계가 생각하는지 어떻게 알까?\n그래서 난 기계가 생각할 수 있는지 알 수 있는\n시험방법을 생각해냈지.\n먼저 벽 뒤에 있는 사람과 기계에게 채팅으로 질문을 하는거야.\n만약 {{name}}이 그 둘하고 대화해서\n누가 사람이고 기계인지 구분할 수 없다면\n그 기계는 지능을 가졌다고 볼 수 있는거야." },
   { speaker:1, name:"앨런 튜링", cls:"turing",
     text:"이걸 튜링 테스트라고 해. 🧪\n오늘날 ChatGPT 같은 AI들이 바로 이 테스트를\n통과할 수 있는 수준이야!" },
   { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"나를 소개하지.\n나는 영국에서 태어나 캐나다 국적도 가지고 있어.\n나는 1947년에 태어난 컴퓨터 과학자 겸 심리학자야." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"앞에 나온 앨런 튜링 이후 인공지능은 긴 침체기였어.\n그 동안에는 기계에게 인간이 모든 규칙을 가르쳐야 했지." },
+    text:"나를 소개하지.\n나는 영국에서 태어나 캐나다 국적도 가지고 있지.\n나는 1947년에 태어난 컴퓨터 과학자 겸 심리학자야.\n앞에 나온 앨런 튜링 이후 인공지능은 긴 침체기였어.\n그 동안에는 기계에게 인간이 모든 규칙을 가르쳐야 했지." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton",
     text:"그래서 나는 인공신경망 방식을 주장했지.\n인간의 뇌가 수많은 뉴런으로 연결되서 학습하는 것처럼\n뉴런처럼 생긴 수학적 노드를 엄청 많이 쌓아 올리는 방법이지. 🧠" },
   { speaker:2, name:"제프리 힌턴", cls:"hinton",
@@ -433,6 +427,171 @@ async function finishQuiz(correct, total){
 function closeQuiz(){
   quizShowing=false;
   document.getElementById('quiz-overlay').style.display='none';
+  showBoard();
+}
+
+// ══════════════════════════════════════════
+//  게시판
+// ══════════════════════════════════════════
+function showBoard(){
+  const old=document.getElementById('board-overlay');
+  if(old) old.remove();
+  const overlay=document.createElement('div');
+  overlay.id='board-overlay';
+  overlay.style.cssText=`position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;`;
+  overlay.innerHTML=`
+    <div style="background:#111827;border:1px solid rgba(99,179,237,0.3);border-radius:20px;
+         width:100%;max-width:600px;padding:clamp(18px,3vw,28px);
+         max-height:90vh;overflow-y:auto;animation:slideUp .4s ease;">
+
+      <!-- 헤더 -->
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;">
+        <div style="flex:1;">
+          <h2 style="font-family:'Jua',sans-serif;font-size:clamp(15px,3vw,18px);color:#63b3ed;margin-bottom:4px;">
+            📋 인공지능과 관련 있는 사람들의<br>업적을 조사해볼까?
+          </h2>
+          <p style="font-size:12px;color:rgba(255,255,255,0.4);">찾은 내용이나 링크를 공유해보세요!</p>
+        </div>
+        <button onclick="skipBoard()"
+          style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+                 border-radius:8px;padding:6px 12px;color:rgba(255,255,255,0.5);
+                 font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">
+          건너뛰기 →
+        </button>
+      </div>
+
+      <!-- 글 작성 -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(99,179,237,0.2);
+           border-radius:14px;padding:16px;margin-bottom:20px;">
+        <h4 style="font-size:13px;color:#63b3ed;margin-bottom:12px;">✏️ 글 쓰기</h4>
+        <textarea id="board-content" placeholder="조사한 인물이나 업적을 써보세요..."
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+                 border-radius:10px;padding:12px;color:#e2e8f0;font-size:14px;
+                 font-family:inherit;resize:vertical;min-height:80px;outline:none;
+                 transition:border .2s;"
+          onfocus="this.style.borderColor='#63b3ed'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'"></textarea>
+        <input id="board-link" placeholder="🔗 관련 링크 (선택사항, https://...)"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+                 border-radius:10px;padding:10px 12px;color:#e2e8f0;font-size:13px;
+                 font-family:inherit;outline:none;margin-top:8px;transition:border .2s;"
+          onfocus="this.style.borderColor='#63b3ed'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span style="font-size:12px;color:rgba(255,255,255,0.35);">
+            작성자: ${userData.charName||userData.name||'익명'}
+          </span>
+          <button onclick="submitPost()"
+            style="background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;
+                   border-radius:9px;padding:8px 18px;color:#0a0e1a;font-size:13px;
+                   font-weight:700;cursor:pointer;font-family:inherit;">
+            게시하기 📤
+          </button>
+        </div>
+        <div id="board-alert" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- 글 목록 -->
+      <div>
+        <h4 style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:12px;">📌 모든 게시글</h4>
+        <div id="board-posts">
+          <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3);font-size:13px;">
+            <div style="width:30px;height:30px;border:2px solid rgba(255,255,255,0.2);border-top-color:#63b3ed;border-radius:50%;animation:sp .6s linear infinite;margin:0 auto 10px;"></div>
+            불러오는 중...
+          </div>
+        </div>
+      </div>
+
+      <!-- 완료 버튼 -->
+      <button onclick="skipBoard()"
+        style="width:100%;padding:13px;margin-top:16px;
+               background:linear-gradient(135deg,#63b3ed,#4299e1);
+               border:none;border-radius:12px;color:#0a0e1a;
+               font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
+        퀘스트 완료하기 →
+      </button>
+    </div>
+    <style>@keyframes sp{to{transform:rotate(360deg);}}</style>`;
+  document.body.appendChild(overlay);
+  loadPosts();
+}
+
+async function submitPost(){
+  const content=document.getElementById('board-content').value.trim();
+  const link=document.getElementById('board-link').value.trim();
+  const alertEl=document.getElementById('board-alert');
+  if(!content){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">⚠️ 내용을 입력해주세요.</div>`;return;}
+  if(link&&!link.startsWith('http')){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">⚠️ 링크는 http://로 시작해야 해요.</div>`;return;}
+  const authorId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
+  try{
+    alertEl.innerHTML=`<div style="color:#63b3ed;font-size:12px;">게시 중...</div>`;
+    await db.collection('board_q2').add({
+      content, link:link||'', authorId,
+      authorName:userData.charName||userData.name||'익명',
+      isTemp:currentUser.uid==='student',
+      created_at:new Date().toISOString(),
+    });
+    document.getElementById('board-content').value='';
+    document.getElementById('board-link').value='';
+    alertEl.innerHTML=`<div style="color:#68d391;font-size:12px;">✅ 게시완료!</div>`;
+    setTimeout(()=>alertEl.innerHTML='',2000);
+    loadPosts();
+  }catch(e){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">❌ 오류: ${e.message}</div>`;}
+}
+
+async function loadPosts(){
+  const container=document.getElementById('board-posts');
+  if(!container) return;
+  try{
+    const snap=await db.collection('board_q2').orderBy('created_at','desc').limit(30).get();
+    if(snap.empty){
+      container.innerHTML=`<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:13px;">아직 게시글이 없어요. 첫 번째로 공유해보세요!</div>`;
+      return;
+    }
+    const myId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
+    container.innerHTML=snap.docs.map(doc=>{
+      const d=doc.data();
+      const isMe=d.authorId===myId;
+      const date=d.created_at?.slice(0,16).replace('T',' ')||'';
+      return `
+        <div id="post-${doc.id}"
+          style="background:rgba(255,255,255,0.04);border:1px solid ${isMe?'rgba(99,179,237,0.3)':'rgba(255,255,255,0.08)'};
+                 border-radius:12px;padding:14px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:700;color:${isMe?'#63b3ed':'#e2e8f0'};">
+              ${isMe?'👤 ':''}${d.authorName}${d.isTemp?'<span style="font-size:10px;color:rgba(255,255,255,0.3);"> (임시)</span>':''}
+            </span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
+              ${isMe?`<button onclick="deletePost('${doc.id}')"
+                style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);
+                       border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;
+                       cursor:pointer;font-family:inherit;">🗑️ 삭제</button>`:''}
+            </div>
+          </div>
+          <p style="font-size:14px;color:#e2e8f0;line-height:1.6;margin-bottom:${d.link?'8px':'0'};white-space:pre-wrap;">${d.content}</p>
+          ${d.link?`<a href="${d.link}" target="_blank" rel="noopener"
+            style="display:inline-flex;align-items:center;gap:4px;font-size:12px;
+                   color:#63b3ed;text-decoration:none;background:rgba(99,179,237,0.1);
+                   border:1px solid rgba(99,179,237,0.2);border-radius:6px;padding:4px 10px;">
+            🔗 링크 보기</a>`:''}
+        </div>`;
+    }).join('');
+  }catch(e){
+    container.innerHTML=`<div style="color:#fc8181;font-size:13px;padding:16px;">게시글을 불러오지 못했어요: ${e.message}</div>`;
+  }
+}
+
+async function deletePost(docId){
+  if(!confirm('이 게시글을 삭제할까요?')) return;
+  try{
+    await db.collection('board_q2').doc(docId).delete();
+    const el=document.getElementById('post-'+docId);
+    if(el) el.remove();
+  }catch(e){alert('삭제 실패: '+e.message);}
+}
+
+function skipBoard(){
+  const el=document.getElementById('board-overlay');
+  if(el) el.remove();
   showComplete();
 }
 
