@@ -2,150 +2,130 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-  <title>AI 가디언 - 메인</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>퀘스트2 - 아버지를 찾아서</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     *{box-sizing:border-box;}
-    /* 스토리 오프닝 */
-    .story-overlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
-    .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;}
-    .story-text{max-width:600px;font-size:clamp(15px,3vw,18px);line-height:1.9;color:var(--text);opacity:0;animation:fadeIn 1s ease .5s forwards;}
-    @keyframes fadeIn{to{opacity:1;}}
-    .story-btn{margin-top:28px;padding:12px 32px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;opacity:0;transition:opacity .5s;}
-    /* 이름 짓기 */
-    .name-overlay{position:fixed;inset:0;z-index:310;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;}
-    .name-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:400px;width:100%;text-align:center;}
-    .name-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;}
-    .name-box p{font-size:13px;color:var(--muted);margin-bottom:20px;}
-    .name-input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;transition:border .2s;}
-    .name-input:focus{border-color:var(--primary);}
-    .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;}
-    .btn-primary{background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;}
-    .btn-primary:hover{transform:translateY(-2px);}
-    .btn-ghost{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);}
-    .btn-ghost:hover{background:rgba(255,255,255,0.1);}
-    .btn-danger{background:linear-gradient(135deg,#fc8181,#f56565);color:white;}
-    .alert{padding:9px 12px;border-radius:9px;font-size:13px;margin-bottom:10px;}
-    .alert-error{background:rgba(252,129,129,0.15);border:1px solid var(--red);color:var(--red);}
-    .alert-success{background:rgba(104,211,145,0.15);border:1px solid var(--green);color:var(--green);}
-    /* 앱 레이아웃 */
-    .app-layout{display:flex;min-height:100vh;}
-    .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 14px;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:50;transition:transform .3s;}
-    .sidebar-logo{font-family:'Jua',sans-serif;font-size:17px;color:var(--primary);margin-bottom:16px;padding:0 6px;letter-spacing:1px;}
-    .char-widget{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;margin-bottom:14px;}
-    .char-widget img{width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,179,237,0.7));animation:float 3s ease-in-out infinite;}
-    .char-widget .char-emoji{font-size:50px;animation:float 3s ease-in-out infinite;}
-    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
-    .char-name{font-weight:700;font-size:14px;margin:7px 0 2px;}
-    .char-level{font-size:12px;color:var(--accent);}
-    .char-score{font-family:'Jua',sans-serif;font-size:20px;color:var(--primary);margin:5px 0;}
-    .xp-bar-wrap{background:rgba(255,255,255,0.08);border-radius:20px;height:7px;overflow:hidden;}
-    .xp-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:20px;transition:width 1s ease;}
-    .xp-label{font-size:11px;color:var(--muted);text-align:right;margin-top:3px;}
-    .quest-section{margin-bottom:14px;}
-    .quest-section h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;}
-    .quest-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:13px;border:1px solid transparent;text-decoration:none;color:var(--text);}
-    .quest-item:hover{background:rgba(99,179,237,0.08);border-color:var(--border);}
-    .quest-item.active{background:rgba(99,179,237,0.12);border-color:var(--primary);color:var(--primary);}
-    .quest-check{width:15px;height:15px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;}
-    .quest-check.done{background:var(--green);border-color:var(--green);color:#0a0e1a;}
-    .ref-link{display:block;padding:7px 10px;font-size:12px;color:var(--muted);text-decoration:none;border-radius:7px;transition:color .2s;}
-    .ref-link:hover{color:var(--primary);}
-    .main-content{margin-left:260px;flex:1;padding:clamp(20px,4vw,32px);}
-    .ai-notice-main{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:16px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:8px;display:inline-block;}
-    /* 퀘스트 카드 */
-    .quest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
-    .quest-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;text-decoration:none;display:block;}
-    .quest-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(99,179,237,0.12);}
-    .quest-card.done{border-color:var(--green);opacity:.75;}
-    .quest-card .q-icon{font-size:32px;margin-bottom:8px;}
-    .quest-card .q-num{font-weight:700;font-size:13px;margin-bottom:3px;}
-    .quest-card .q-title{font-size:13px;color:var(--muted);}
-    .quest-card .q-status{margin-top:10px;font-size:12px;}
-    /* 비회원 초기화 버튼 */
-    .temp-reset{background:rgba(252,129,129,0.1);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--red);cursor:pointer;font-family:inherit;width:100%;margin-top:8px;transition:all .2s;}
-    .temp-reset:hover{background:rgba(252,129,129,0.2);}
-    /* 모바일 */
-    .hamburger{display:none;position:fixed;top:14px;left:14px;z-index:100;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;font-size:17px;}
-    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
-    @media(max-width:768px){
-      .sidebar{transform:translateX(-100%);}
-      .sidebar.open{transform:translateX(0);}
-      .sidebar-overlay.open{display:block;}
-      .hamburger{display:block;}
-      .main-content{margin-left:0;padding:20px;padding-top:56px;}
-      .quest-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
-    }
+    body{margin:0;overflow:hidden;user-select:none;font-family:'Noto Sans KR',sans-serif;}
+    .game-screen{position:fixed;inset:0;background:#000;}
+    .game-bg{position:absolute;inset:0;background:url('images/bgq2-1.png') center/cover no-repeat;}
+    .game-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(0,0,0,0.82) 100%);}
+    .ai-notice{position:absolute;top:52px;left:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.6);z-index:25;backdrop-filter:blur(4px);}
+
+    /* 캐릭터 */
+    .my-char{position:absolute;bottom:clamp(155px,21vw,210px);left:3%;height:clamp(110px,33vh,320px);object-fit:contain;filter:drop-shadow(4px 4px 10px rgba(0,0,0,0.9)) brightness(0.85);animation:charFloat 3s ease-in-out infinite .5s;z-index:10;transition:all .4s;}
+    .speaker-char{position:absolute;bottom:clamp(155px,21vw,210px);right:3%;height:clamp(110px,33vh,320px);object-fit:contain;filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9));animation:charFloat 3s ease-in-out infinite;z-index:10;transition:all .5s;}
+    /* 두 캐릭터 동시 표시 */
+    .speaker-char2{position:absolute;bottom:clamp(155px,21vw,210px);right:clamp(120px,20vw,260px);height:clamp(90px,26vh,260px);object-fit:contain;filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9));animation:charFloat 3s ease-in-out infinite .8s;z-index:9;transition:all .5s;display:none;}
+    @keyframes charFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+    /* HUD */
+    .game-hud{position:absolute;top:0;left:0;right:0;padding:10px 14px;display:flex;align-items:center;gap:8px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);z-index:20;}
+    .hud-back{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:white;font-size:12px;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;}
+    .hud-title{font-family:'Jua',sans-serif;font-size:clamp(11px,2.2vw,14px);color:white;text-shadow:0 2px 4px rgba(0,0,0,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hud-right{display:flex;gap:6px;margin-left:auto;flex-shrink:0;}
+    .hud-score{background:rgba(99,179,237,0.25);border:1px solid rgba(99,179,237,0.4);border-radius:20px;padding:4px 10px;font-size:12px;color:#63b3ed;font-weight:700;white-space:nowrap;}
+    .hud-progress{background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;}
+
+    /* 대화창 */
+    .dialog-box{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:0 clamp(8px,3vw,20px) clamp(10px,2vh,16px);}
+    .dialog-top-bar{display:flex;align-items:center;gap:8px;margin-bottom:0;}
+    .char-name-tag{display:inline-block;background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;font-weight:700;font-family:'Jua',sans-serif;padding:5px 16px;border-radius:10px 10px 0 0;font-size:clamp(12px,3vw,15px);box-shadow:0 -2px 10px rgba(99,179,237,0.3);transition:background .4s;}
+    .char-name-tag.turing{background:linear-gradient(135deg,#68d391,#38a169);}
+    .char-name-tag.hinton{background:linear-gradient(135deg,#f6ad55,#ed8936);}
+    .char-name-tag.both{background:linear-gradient(135deg,#b794f4,#805ad5);}
+    .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;transition:all .2s;}
+    .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(99,179,237,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(90px,13vh,125px);max-height:clamp(150px,26vh,220px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
+    .dialog-text{font-size:clamp(14px,2.4vw,17px);line-height:1.85;color:#e2e8f0;text-shadow:0 1px 3px rgba(0,0,0,0.5);white-space:pre-line;}
+    .dialog-next{position:absolute;bottom:12px;right:12px;width:26px;height:26px;background:rgba(99,179,237,0.2);border:2px solid rgba(99,179,237,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:arrowBounce 1s ease-in-out infinite;}
+    .dialog-next::after{content:'▼';font-size:10px;color:#63b3ed;}
+    @keyframes arrowBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
+
+    /* 퀴즈 팝업 */
+    .quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
+    .quiz-box{background:#111827;border:1px solid rgba(99,179,237,0.3);border-radius:20px;width:100%;max-width:580px;padding:clamp(18px,3vw,28px);animation:slideUp .4s ease;box-shadow:0 0 80px rgba(99,179,237,0.15);max-height:92vh;overflow-y:auto;}
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+    .quiz-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .quiz-header h2{font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#63b3ed;}
+    .quiz-step{font-size:12px;color:rgba(255,255,255,0.4);margin-left:auto;}
+    .quiz-question{font-size:clamp(14px,2.5vw,16px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;}
+
+    /* 드래그앤드롭 - 두 사람 특징 배열 */
+    .dnd-two-col{display:flex;gap:12px;flex-wrap:wrap;}
+    .dnd-person{flex:1;min-width:140px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px;}
+    .dnd-person h4{font-size:13px;font-weight:700;margin-bottom:10px;text-align:center;padding:6px;border-radius:8px;}
+    .dnd-person.turing h4{background:rgba(104,211,145,0.2);color:#68d391;}
+    .dnd-person.hinton h4{background:rgba(246,173,85,0.2);color:#f6ad55;}
+    .dnd-item{background:rgba(99,179,237,0.1);border:2px solid rgba(99,179,237,0.25);border-radius:9px;padding:9px 12px;margin-bottom:7px;cursor:grab;font-size:clamp(12px,2vw,13px);color:#e2e8f0;transition:all .2s;display:flex;align-items:center;gap:7px;}
+    .dnd-item:hover{background:rgba(99,179,237,0.2);border-color:rgba(99,179,237,0.5);}
+    .dnd-item.dragging{opacity:0.35;}
+    .drag-handle{color:rgba(255,255,255,0.3);font-size:14px;}
+    .dnd-slot{background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.15);border-radius:9px;padding:9px 12px;margin-bottom:7px;min-height:42px;font-size:clamp(12px,2vw,13px);color:rgba(255,255,255,0.3);transition:all .2s;display:flex;align-items:center;}
+    .dnd-slot.over{background:rgba(99,179,237,0.1);border-color:rgba(99,179,237,0.4);}
+    .dnd-slot.filled{background:rgba(99,179,237,0.08);border:2px solid rgba(99,179,237,0.3);color:#e2e8f0;}
+    .dnd-slot.correct{background:rgba(104,211,145,0.15);border:2px solid #68d391;color:#68d391;}
+    .dnd-slot.wrong{background:rgba(252,129,129,0.15);border:2px solid #fc8181;color:#fc8181;}
+    .source-pool{background:rgba(255,255,255,0.03);border-radius:12px;padding:12px;margin-bottom:14px;}
+    .source-pool h4{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;}
+    .quiz-check-btn{width:100%;padding:12px;margin-top:12px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:11px;color:#0a0e1a;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
+    .quiz-check-btn:hover{transform:translateY(-2px);}
+    .quiz-feedback{margin-top:10px;padding:10px 14px;border-radius:9px;font-size:clamp(12px,2vw,13px);line-height:1.5;}
+    .quiz-feedback.correct{background:rgba(104,211,145,0.15);border:1px solid #68d391;color:#68d391;}
+    .quiz-feedback.wrong{background:rgba(252,129,129,0.15);border:1px solid #fc8181;color:#fc8181;}
+    .quiz-result{text-align:center;padding:16px 0;}
+    .quiz-result .big-emoji{font-size:clamp(48px,8vw,64px);margin-bottom:12px;}
+    .quiz-result h3{font-size:clamp(18px,3.5vw,22px);margin-bottom:6px;}
+    .quiz-result .xp-gain{color:#f6ad55;font-size:clamp(16px,3vw,20px);margin-bottom:16px;}
+
+    .levelup-screen{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+    .levelup-screen h1{font-family:'Jua',sans-serif;font-size:clamp(32px,6vw,48px);color:#f6ad55;}
+    .levelup-screen p{font-size:clamp(16px,3vw,20px);color:#63b3ed;}
+    .xp-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#63b3ed,#f6ad55);color:#0a0e1a;font-weight:700;font-size:clamp(18px,4vw,24px);padding:14px 36px;border-radius:18px;z-index:500;animation:popIn .4s ease,fadeOutUp .5s ease 1.5s forwards;pointer-events:none;}
+    @keyframes popIn{from{transform:translate(-50%,-50%) scale(.5);opacity:0;}to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+    @keyframes fadeOutUp{to{opacity:0;transform:translate(-50%,-70%);}}
+    @media(max-width:480px){.my-char,.speaker-char{height:clamp(90px,25vh,180px);}.speaker-char2{height:clamp(70px,18vh,140px);}.dnd-two-col{flex-direction:column;}}
   </style>
 </head>
-<body class="page">
+<body>
 
-<!-- 스토리 오프닝 -->
-<div id="story-screen" class="story-overlay" style="display:none;">
-  <div class="story-robot">🤖</div>
-  <div class="story-text" id="story-text"></div>
-  <button class="story-btn" id="story-btn" onclick="nextStory()">계속하기 →</button>
-</div>
-
-<!-- 캐릭터 이름 짓기 -->
-<div id="name-screen" class="name-overlay" style="display:none;">
-  <div class="name-box">
-    <div style="font-size:clamp(40px,10vw,60px);margin-bottom:12px;">🤖</div>
-    <h2>AI에게 이름을 지어주세요!</h2>
-    <p>당신의 AI 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
-    <div id="name-alert"></div>
-    <input class="name-input" id="char-name-input" placeholder="예: 스타봇, 루나AI ...">
-    <button class="btn btn-primary" onclick="saveName()">이름 확정하기 ✨</button>
+<div id="quiz-overlay" class="quiz-overlay" style="display:none;">
+  <div class="quiz-box">
+    <div class="quiz-header">
+      <h2 id="quiz-title">🔍 퀴즈!</h2>
+      <span class="quiz-step" id="quiz-step"></span>
+    </div>
+    <div id="quiz-content"></div>
   </div>
 </div>
 
-<button class="hamburger" onclick="toggleSidebar()">☰</button>
-<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="game-screen">
+  <div class="game-bg"></div>
+  <div class="ai-notice">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
 
-<div class="app-layout">
-  <!-- 사이드바 -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">🤖 AI 가디언</div>
-    <div class="char-widget">
-      <img id="sb-char-img" src="images/robot_1.png"
-        style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,179,237,0.7));animation:float 3s ease-in-out infinite;"
-        onerror="this.style.display='none';document.getElementById('sb-char-emoji').style.display='block'">
-      <div id="sb-char-emoji" class="char-emoji" style="display:none;">🤖</div>
-      <div class="char-name" id="sb-char-name">-</div>
-      <div class="char-level" id="sb-char-level">Lv.1 아기 로봇</div>
-      <div class="char-score" id="sb-score">0 점</div>
-      <div class="xp-bar-wrap"><div class="xp-bar" id="sb-xp-bar" style="width:0%"></div></div>
-      <div class="xp-label" id="sb-xp-label">다음 레벨까지 50점</div>
+  <img class="my-char" id="my-char" src="images/robot_1.png" alt="내캐릭터">
+  <img class="speaker-char2" id="speaker-char2" src="images/char2-1.png" alt="앨런튜링">
+  <img class="speaker-char" id="speaker-char" src="images/char2-1.png" alt="캐릭터">
+
+  <div class="game-hud">
+    <a href="main.html" class="hud-back">← 메인</a>
+    <div class="hud-title">🔍 퀘스트 2: 아버지를 찾아서</div>
+    <div class="hud-right">
+      <div class="hud-progress" id="hud-progress">1 / 10</div>
+      <div class="hud-score" id="hud-score">0 점</div>
     </div>
+  </div>
 
-    <div class="quest-section">
-      <h4>📋 퀘스트</h4>
-      <div id="quest-list"></div>
+  <div class="dialog-box">
+    <div class="dialog-top-bar">
+      <div class="char-name-tag" id="dialog-name">내레이터</div>
+      <button class="btn-prev" id="btn-prev" onclick="prevMessage()">◀ 이전</button>
     </div>
-
-    <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--border);">
-      <h4 style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;">참고 사이트</h4>
-      <a href="https://www.msit.go.kr" target="_blank" class="ref-link">🏛️ 과학기술정보통신부</a>
-      <a href="https://www.kisa.or.kr" target="_blank" class="ref-link">🔒 한국인터넷진흥원</a>
-      <a href="https://ai-hub.kr" target="_blank" class="ref-link">🤖 AI 허브</a>
+    <div class="dialog-text-box">
+      <div class="dialog-text" id="dialog-text"></div>
+      <div class="dialog-next" id="dialog-next" onclick="nextMessage()"></div>
     </div>
-
-    <div id="temp-reset-wrap" style="display:none;">
-      <button class="temp-reset" onclick="confirmReset()">🗑️ 비회원 진행상황 초기화</button>
-    </div>
-    <button class="btn btn-ghost" onclick="logout()" style="margin-top:10px;padding:9px;font-size:13px;">🚪 로그아웃</button>
-  </aside>
-
-  <!-- 메인 -->
-  <main class="main-content">
-    <div class="ai-notice-main">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
-    <h2 style="font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);margin-bottom:6px;">
-      안녕하세요, <span id="greeting-name"></span> 👋
-    </h2>
-    <p style="color:var(--muted);margin-bottom:24px;font-size:14px;">오늘도 AI를 학습시켜볼까요?</p>
-    <div class="quest-grid" id="quest-cards"></div>
-  </main>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -153,144 +133,341 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-let currentUser=null, userData=null, storyStep=0;
-
-const STORY=[
-  "안녕하세요! 저는 AI 가디언 시스템입니다. 🌟",
-  "인류의 문제를 해결하기 위해 갓 태어난 초보 AI(아기 로봇)가 당신에게 배달되었습니다! 🤖",
-  "당신은 이제 'AI 멘토'가 되어야 합니다.",
-  "현실 세계의 데이터를 수집하고 라벨링하여...",
-  "이 AI를 최종 형태인 '미래형 가디언'으로 진화시켜야 합니다! ⚡",
-  "퀘스트를 완료할수록 AI가 점점 강해집니다.",
-  "자, 먼저 AI에게 이름을 지어주세요! 💫"
+// speaker: 0=내레이터, 1=앨런튜링(char2-1), 2=제프리힌턴(char2-2), 3=둘다
+const MESSAGES = [
+  { speaker:0, name:"내레이터", charClass:"",
+    text:"나의 아버지를 소개할께.\n음악의 아버지가 바흐라면\n인공지능의 아버지는 앨런 튜링(Alan Turing)과 제프리 힌턴(Geoffrey Hinton)이야." },
+  { speaker:1, name:"앨런 튜링", charClass:"turing",
+    text:"나를 소개하지.\n나는 영국의 수학자야.\n나는 1912년에 태어났지. 그래서 나 때에는 우리가 아는 컴퓨터가 없었지.\n그냥 내 생각으로만 무엇이든 계산할 수 있는 상상속의 기계를 설계했지.\n이게 바로 튜링 기계야." },
+  { speaker:1, name:"앨런 튜링", charClass:"turing",
+    text:"기계가 생각하는지 어떻게 알까?\n그래서 난 기계가 생각할 수 있는지 알 수 있는 시험방법을 생각해냈지.\n먼저 벽 뒤에 있는 사람과 기계에게 채팅으로 질문을 하는거야.\n만약 누가 사람이고 기계인지 구분할 수 없다면\n그 기계는 지능을 가졌다고 볼 수 있는거야." },
+  { speaker:1, name:"앨런 튜링", charClass:"turing",
+    text:"이걸 튜링 테스트라고 해. 🧪\n오늘날 ChatGPT 같은 AI들이 바로 이 테스트를 통과한 수준의 AI야!" },
+  { speaker:2, name:"제프리 힌턴", charClass:"hinton",
+    text:"나를 소개하지.\n나는 영국에서 태어나 캐나다 국적도 가지고 있지.\n나는 1947년에 태어난 컴퓨터 과학자 겸 심리학자야.\n앞에 나온 앨런 튜링 이후 인공지능은 긴 침체기였어.\n그 동안에는 기계에게 인간이 모든 규칙을 가르쳐야 했지." },
+  { speaker:2, name:"제프리 힌턴", charClass:"hinton",
+    text:"그래서 나는 인공신경망 방식을 주장했지.\n인간의 뇌가 수많은 뉴런으로 연결되서 학습하는 것처럼\n뉴런처럼 생긴 수학적 노드를 엄청 많이 쌓아 올리는 방법이지. 🧠" },
+  { speaker:2, name:"제프리 힌턴", charClass:"hinton",
+    text:"나는 결국 이 방법으로 효율적으로 학습시키는 방법을 찾았고\n이걸 딥러닝이라고 불렀어.\n덕분에 2024년 노벨 물리학상을 수상했지! 🏆" },
+  { speaker:3, name:"앨런 튜링 & 제프리 힌턴", charClass:"both",
+    text:"앨런 튜링이 AI라는 꿈을 꾸었다면,\n제프리 힌턴은 그 꿈을 현실로 만드는 딥러닝을 만들었지.\n둘 다 인공지능의 역사에서 빠질 수 없는 아버지들이야! 👨‍👨‍👦" },
+  { speaker:3, name:"앨런 튜링 & 제프리 힌턴", charClass:"both",
+    text:"자, 우리 두 사람에 대해 잘 배웠지?\n이제 두 사람의 특징을 구분하는 퀴즈를 풀어볼까? 🎮",
+    type:"quiz_trigger" },
 ];
+
+// 드래그앤드롭 - 두 사람 특징 배열 퀴즈
+const QUIZZES = [
+  { type:"classify",
+    title:"앨런 튜링 vs 제프리 힌턴 특징 분류하기",
+    desc:"각 특징을 올바른 인물에게 드래그하세요!",
+    items:[
+      { id:"a", text:"🇬🇧 1912년 영국 출생" },
+      { id:"b", text:"🧮 튜링 기계 설계" },
+      { id:"c", text:"🧪 튜링 테스트 고안" },
+      { id:"d", text:"🧠 인공신경망 주장" },
+      { id:"e", text:"🔬 딥러닝 개발" },
+      { id:"f", text:"🏆 노벨 물리학상 수상" },
+    ],
+    answer:{ a:"turing", b:"turing", c:"turing", d:"hinton", e:"hinton", f:"hinton" },
+    exp:"튜링: 1912년생, 튜링기계, 튜링테스트 / 힌턴: 인공신경망, 딥러닝, 노벨상" },
+];
+
+let currentUser=null, userData=null;
+let msgIdx=0, isTyping=false, typingTimer=null;
+let quizScore=0, matchMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
 requireAuth(async (user) => {
   currentUser=user;
-
-  if (user.uid==='student') {
-    // 비회원: 로컬스토리지에서 데이터 불러오기
-    const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
-    document.getElementById('temp-reset-wrap').style.display='block';
-  } else if (user.uid==='admin') {
-    userData={ charName:'관리자', score:0, quests:{}, name:'관리자' };
-    initUI(); return;
+  if (user.uid==='student'){
+    const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
+    userData=local||{charName:'AI',score:0,quests:{}};
   } else {
     const snap=await db.collection('users').where('id','==',user.id).get();
-    if (!snap.empty){ userData=snap.docs[0].data(); currentUser.uid=snap.docs[0].id; }
+    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
+  updateHUD(); updateCharImages();
+  const saved=(userData.quests||{}).q2_msgIdx||0;
+  msgIdx=Math.min(saved,MESSAGES.length-1);
 
-  if (!userData.charName) {
-    showStory();
-  } else {
-    initUI();
-  }
+  // 사용자 이름 메시지에 반영
+  MESSAGES[2].text = MESSAGES[2].text.replace('누가 사람이고 기계인지', `${userData.name||'여러분'}이 누가 사람이고 기계인지`);
+
+  setTimeout(()=>showMessage(msgIdx),500);
 });
 
-function showStory(){
-  document.getElementById('story-screen').style.display='flex';
-  document.getElementById('story-text').textContent=STORY[storyStep];
-  setTimeout(()=>{ document.getElementById('story-btn').style.opacity='1'; },1200);
+function updateCharImages(){
+  const lv=getLevelByScore(userData.score||0);
+  document.getElementById('my-char').src=lv.img;
+}
+function updateHUD(){
+  document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
+  document.getElementById('hud-progress').textContent=`${msgIdx+1} / ${MESSAGES.length}`;
 }
 
-function nextStory(){
-  storyStep++;
-  if (storyStep>=STORY.length){
-    document.getElementById('story-screen').style.display='none';
-    document.getElementById('name-screen').style.display='flex';
+function showMessage(idx){
+  if(idx>=MESSAGES.length){showComplete();return;}
+  const msg=MESSAGES[idx];
+  document.getElementById('hud-progress').textContent=`${idx+1} / ${MESSAGES.length}`;
+  document.getElementById('btn-prev').style.display=idx>0?'flex':'none';
+
+  // 화자별 캐릭터/이름태그 변경
+  const nameTag=document.getElementById('dialog-name');
+  const speakerImg=document.getElementById('speaker-char');
+  const speakerImg2=document.getElementById('speaker-char2');
+  nameTag.className='char-name-tag '+msg.charClass;
+  nameTag.textContent=msg.name;
+
+  if(msg.speaker===1){
+    speakerImg.src='images/char2-1.png'; speakerImg.style.display='block';
+    speakerImg2.style.display='none';
+  } else if(msg.speaker===2){
+    speakerImg.src='images/char2-2.png'; speakerImg.style.display='block';
+    speakerImg2.style.display='none';
+  } else if(msg.speaker===3){
+    // 두 캐릭터 동시 표시
+    speakerImg.src='images/char2-2.png'; speakerImg.style.display='block';
+    speakerImg2.src='images/char2-1.png'; speakerImg2.style.display='block';
+  } else {
+    speakerImg.src='images/char2-1.png'; speakerImg.style.display='block';
+    speakerImg2.style.display='none';
+  }
+
+  const textEl=document.getElementById('dialog-text');
+  document.getElementById('dialog-next').style.display='flex';
+
+  typeText(textEl, msg.text, ()=>{
+    if(msg.type==='quiz_trigger'){
+      document.getElementById('dialog-next').style.display='none';
+      setTimeout(()=>startQuiz(), 600);
+    }
+  });
+}
+
+function typeText(el,text,cb){
+  el.textContent=''; isTyping=true;
+  document.getElementById('dialog-next').style.opacity='0.3';
+  let i=0;
+  typingTimer=setInterval(()=>{
+    if(i<text.length){el.textContent=text.slice(0,i+1);i++;}
+    else{
+      clearInterval(typingTimer); el.textContent=text; isTyping=false;
+      document.getElementById('dialog-next').style.opacity='1';
+      if(cb) cb();
+    }
+  },22);
+}
+
+function nextMessage(){
+  if(isTyping){
+    clearInterval(typingTimer);
+    const msg=MESSAGES[msgIdx];
+    document.getElementById('dialog-text').textContent=msg.text;
+    isTyping=false;
+    document.getElementById('dialog-next').style.opacity='1';
+    if(msg.type==='quiz_trigger'){document.getElementById('dialog-next').style.display='none';setTimeout(()=>startQuiz(),400);}
     return;
   }
-  const btn=document.getElementById('story-btn');
-  const txt=document.getElementById('story-text');
-  btn.style.opacity='0'; txt.style.opacity='0';
-  setTimeout(()=>{
-    txt.textContent=STORY[storyStep];
-    txt.style.opacity='1';
-    txt.style.transition='opacity .5s';
-    setTimeout(()=>btn.style.opacity='1',600);
-  },400);
+  msgIdx++; autoSave(); showMessage(msgIdx);
 }
-
-async function saveName(){
-  const name=document.getElementById('char-name-input').value.trim();
-  if (!name) return showNameAlert('이름을 입력하세요.');
-  if (name.length<2||name.length>10) return showNameAlert('2~10자 사이로 입력하세요.');
-  if (filterName(name)) return showNameAlert('⚠️ 사용할 수 없는 이름입니다.');
-
-  if (currentUser.uid==='student'){
-    userData.charName=name;
-    localStorage.setItem('tempUserData', JSON.stringify(userData));
-  } else {
-    await db.collection('users').doc(currentUser.uid).update({charName:name});
-    userData.charName=name;
+function prevMessage(){
+  if(isTyping){clearInterval(typingTimer);isTyping=false;}
+  if(msgIdx>0){msgIdx--;showMessage(msgIdx);}
+}
+async function autoSave(){
+  if(currentUser.uid==='student'){
+    userData.quests=userData.quests||{};
+    userData.quests.q2_msgIdx=msgIdx;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+    return;
   }
-  currentUser.charName=name;
-  sessionStorage.setItem('gameUser',JSON.stringify(currentUser));
-  document.getElementById('name-screen').style.display='none';
-  initUI();
+  await db.collection('users').doc(currentUser.uid).update({'quests.q2_msgIdx':msgIdx});
 }
 
-function showNameAlert(msg){
-  document.getElementById('name-alert').innerHTML=`<div class="alert alert-error">${msg}</div>`;
+document.addEventListener('click',(e)=>{
+  if(e.target.closest('.quiz-overlay')||e.target.closest('.dialog-next')||
+     e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
+  nextMessage();
+});
+document.addEventListener('keydown',(e)=>{
+  if(e.code==='Space'||e.code==='Enter') nextMessage();
+  if(e.code==='ArrowLeft') prevMessage();
+});
+
+// ══ 퀴즈 - 두 사람 특징 분류 ══
+function startQuiz(){
+  quizScore=0; matchMap={};
+  document.getElementById('quiz-title').textContent='🔍 인공지능 아버지 퀴즈!';
+  document.getElementById('quiz-overlay').style.display='flex';
+  renderClassifyQuiz();
 }
 
-function initUI(){
-  const score=userData.score||0;
-  const lv=getLevelByScore(score);
-  const next=getNextLevel(score);
+function renderClassifyQuiz(){
+  const q=QUIZZES[0];
+  const shuffled=[...q.items].sort(()=>Math.random()-.5);
+  document.getElementById('quiz-step').textContent='1 / 1';
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-question">${q.title}</div>
+    <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:14px;">${q.desc}</p>
 
-  // 사이드바 캐릭터
-  const imgEl=document.getElementById('sb-char-img');
-  if(imgEl) imgEl.src=lv.img;
-  document.getElementById('sb-char-name').textContent=userData.charName||'-';
-  document.getElementById('sb-char-level').textContent=`Lv.${lv.level} ${lv.name}`;
-  document.getElementById('sb-score').textContent=score+' 점';
-  const pct=next?((score-lv.minScore)/(next.minScore-lv.minScore))*100:100;
-  document.getElementById('sb-xp-bar').style.width=Math.min(100,pct)+'%';
-  document.getElementById('sb-xp-label').textContent=next?`다음 레벨까지 ${next.minScore-score}점`:'🌟 최고 레벨!';
-
-  // 인사
-  const greet=userData.charName?`${userData.name}님 (${userData.charName})`:`${userData.name||''}님`;
-  document.getElementById('greeting-name').textContent=greet;
-
-  // 퀘스트 사이드바
-  document.getElementById('quest-list').innerHTML=QUESTS.map(q=>{
-    const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-item ${done?'done':''}">
-      <div class="quest-check ${done?'done':''}">${done?'✓':''}</div>
-      <span>${q.icon} ${q.title}</span></a>`;
-  }).join('');
-
-  // 퀘스트 카드 그리드
-  document.getElementById('quest-cards').innerHTML=QUESTS.map(q=>{
-    const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-card ${done?'done':''}">
-      <div class="q-icon">${q.icon}</div>
-      <div class="q-num">퀘스트 ${q.id}</div>
-      <div class="q-title">${q.title}</div>
-      <div class="q-status" style="color:${done?'var(--green)':'var(--muted)'};">
-        ${done?'✅ 완료':'🔒 진행 중'}
+    <!-- 항목 풀 -->
+    <div class="source-pool">
+      <h4>📦 특징 목록 (드래그하세요)</h4>
+      <div id="item-pool" style="display:flex;flex-wrap:wrap;gap:7px;">
+        ${shuffled.map(item=>`
+          <div class="dnd-item" id="item-${item.id}" draggable="true"
+            ondragstart="dragStart(event,'${item.id}')" ondragend="dragEnd(event)"
+            ontouchstart="touchStart(event,'${item.id}')" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)"
+            style="margin-bottom:0;">
+            <span class="drag-handle">⠿</span>${item.text}</div>`).join('')}
       </div>
-    </a>`;
-  }).join('');
+    </div>
+
+    <!-- 두 사람 슬롯 -->
+    <div class="dnd-two-col">
+      <div class="dnd-person turing">
+        <h4>🇬🇧 앨런 튜링</h4>
+        ${['t1','t2','t3'].map(sid=>`
+          <div class="dnd-slot" id="slot-${sid}" data-person="turing" data-sid="${sid}"
+            ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropClassify(event,'${sid}','turing')">
+            여기에 드래그</div>`).join('')}
+      </div>
+      <div class="dnd-person hinton">
+        <h4>🍁 제프리 힌턴</h4>
+        ${['h1','h2','h3'].map(sid=>`
+          <div class="dnd-slot" id="slot-${sid}" data-person="hinton" data-sid="${sid}"
+            ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropClassify(event,'${sid}','hinton')">
+            여기에 드래그</div>`).join('')}
+      </div>
+    </div>
+    <div id="quiz-feedback"></div>
+    <button class="quiz-check-btn" id="check-btn" onclick="checkClassify()">✅ 정답 확인</button>`;
 }
 
-function confirmReset(){
-  if (confirm('비회원 진행상황을 초기화할까요?\n점수, 퀘스트, 캐릭터 이름이 모두 삭제됩니다.')){
-    localStorage.removeItem('tempUserData');
-    userData={ charName:null, score:0, quests:{}, name:'임시학생' };
-    showStory();
+let slotMap={}; // {slotId: itemId}
+function dropClassify(e,sid,person){
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  const itemId=e.dataTransfer.getData('text')||currentDragId;
+  const item=QUIZZES[0].items.find(i=>i.id===itemId); if(!item)return;
+  // 이미 슬롯에 있는 경우 이전 슬롯 비우기
+  Object.keys(slotMap).forEach(k=>{if(slotMap[k]===itemId){document.getElementById('slot-'+k).textContent='여기에 드래그';document.getElementById('slot-'+k).classList.remove('filled');delete slotMap[k];}});
+  slotMap[sid]=itemId;
+  matchMap[itemId]=person;
+  const slot=document.getElementById('slot-'+sid);
+  slot.textContent=item.text; slot.classList.add('filled');
+}
+
+function checkClassify(){
+  const q=QUIZZES[0]; let correct=0;
+  q.items.forEach(item=>{
+    const assigned=matchMap[item.id];
+    const expected=q.answer[item.id];
+    // 아이템이 어느 슬롯에 있나 찾기
+    const sid=Object.keys(slotMap).find(k=>slotMap[k]===item.id);
+    if(sid){
+      const slot=document.getElementById('slot-'+sid);
+      if(assigned===expected){slot.classList.add('correct');correct++;}
+      else slot.classList.add('wrong');
+    }
+  });
+  quizScore=correct;
+  const total=q.items.length;
+  const ok=correct===total;
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div class="quiz-feedback ${ok?'correct':'wrong'}" style="margin-top:10px;">
+      ${ok?'🎉 완벽해요!':'❌ 아쉬워요!'} ${correct}/${total}개 정답! ${q.exp}
+    </div>
+    <button class="quiz-check-btn" onclick="finishQuiz()">결과 보기 →</button>`;
+  document.getElementById('check-btn').style.display='none';
+}
+
+async function finishQuiz(){
+  const xp=quizScore*8+(quizScore===6?20:0);
+  if(currentUser.uid==='student'){
+    userData.score=(userData.score||0)+xp;
+    userData.quests=userData.quests||{};
+    userData.quests.q2_quiz_done=true;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+  } else {
+    await addScore(currentUser.uid,xp,'퀘스트2 퀴즈');
+    await db.collection('users').doc(currentUser.uid).update({'quests.q2_quiz_done':true});
+    await db.collection('quiz_results').doc(currentUser.uid).set({
+      q2:firebase.firestore.FieldValue.arrayUnion({
+        score:quizScore,total:6,xp,
+        accuracy:Math.round(quizScore/6*100),
+        date:new Date().toISOString()
+      })
+    },{merge:true});
+    userData.score=(userData.score||0)+xp;
+    updateHUD(); updateCharImages();
+    checkLevelUp(userData.score-xp,userData.score);
+  }
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-result">
+      <div class="big-emoji">${quizScore===6?'🏆':quizScore>=4?'👍':'💪'}</div>
+      <h3>${quizScore} / 6 정답</h3>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(quizScore/6*100)}%</div>
+      <div class="xp-gain">+${xp} 점 획득!</div>
+      <button class="quiz-check-btn" onclick="closeQuiz()">계속하기 →</button>
+    </div>`;
+  showXPPopup('+'+xp+' 점');
+}
+
+function closeQuiz(){
+  document.getElementById('quiz-overlay').style.display='none';
+  if(currentUser.uid!=='student'){
+    db.collection('users').doc(currentUser.uid).update({'quests.q2_done':true,'quests.q2_msgIdx':MESSAGES.length});
+  }
+  showComplete();
+}
+
+function showComplete(){
+  document.getElementById('dialog-next').style.display='none';
+  typeText(document.getElementById('dialog-text'),
+    '🎉 퀘스트 2 완료!\n인공지능의 아버지들을 잘 배웠어!\n다음 퀘스트로 넘어가볼까?',()=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;flex-direction:column;gap:7px;margin-top:8px;';
+    div.innerHTML=`
+      <button class="choice-btn" onclick="window.location.href='quest3.html'">다음 퀘스트 →</button>
+      <button class="choice-btn" onclick="window.location.href='main.html'">🏠 메인으로</button>`;
+    document.querySelector('.dialog-box').appendChild(div);
+  });
+}
+
+function checkLevelUp(before,after){
+  const lvB=getLevelByScore(before),lvA=getLevelByScore(after);
+  if(lvA.level>lvB.level){
+    const el=document.createElement('div');
+    el.className='levelup-screen';
+    el.innerHTML=`<img src="${lvA.img}" style="height:130px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));">
+      <h1>레벨 업! 🎉</h1><p>Lv.${lvA.level} ${lvA.name}</p>
+      <button class="quiz-check-btn" style="max-width:200px;margin-top:14px;" onclick="this.parentElement.remove()">확인</button>`;
+    document.body.appendChild(el);
   }
 }
 
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
-}
-function logout(){
-  sessionStorage.removeItem('gameUser');
-  window.location.href='index.html';
+// 드래그
+function dragStart(e,id){currentDragId=id;e.dataTransfer.setData('text',id);setTimeout(()=>document.getElementById('item-'+id)?.classList.add('dragging'),0);}
+function dragEnd(){document.querySelectorAll('.dnd-item').forEach(el=>el.classList.remove('dragging'));}
+function dragOver(e){e.preventDefault();e.currentTarget.classList.add('over');}
+function dragLeave(e){e.currentTarget.classList.remove('over');}
+// 터치
+function touchStart(e,id){touchDragId=id;const el=document.getElementById('item-'+id);touchClone=el.cloneNode(true);touchClone.style.cssText=`position:fixed;opacity:0.8;pointer-events:none;z-index:999;width:${el.offsetWidth}px;background:#1a2235;border-radius:9px;padding:9px 12px;font-size:13px;color:#e2e8f0;`;document.body.appendChild(touchClone);}
+function touchMove(e){e.preventDefault();const t=e.touches[0];if(touchClone){touchClone.style.left=(t.clientX-60)+'px';touchClone.style.top=(t.clientY-20)+'px';}document.querySelectorAll('.dnd-slot').forEach(s=>s.classList.remove('over'));document.elementFromPoint(t.clientX,t.clientY)?.closest('.dnd-slot')?.classList.add('over');}
+function touchEnd(e){
+  if(touchClone){touchClone.remove();touchClone=null;}
+  document.querySelectorAll('.dnd-slot').forEach(s=>s.classList.remove('over'));
+  const t=e.changedTouches[0];
+  const el=document.elementFromPoint(t.clientX,t.clientY)?.closest('.dnd-slot');
+  if(!el||!touchDragId)return;
+  const sid=el.dataset.sid; const person=el.dataset.person;
+  const item=QUIZZES[0].items.find(i=>i.id===touchDragId);
+  if(item&&sid){
+    Object.keys(slotMap).forEach(k=>{if(slotMap[k]===touchDragId){document.getElementById('slot-'+k).textContent='여기에 드래그';document.getElementById('slot-'+k).classList.remove('filled');delete slotMap[k];}});
+    slotMap[sid]=touchDragId; matchMap[touchDragId]=person;
+    el.textContent=item.text; el.classList.add('filled');
+  }
+  touchDragId=null;
 }
 </script>
 </body>
