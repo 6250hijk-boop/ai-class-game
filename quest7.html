@@ -2,107 +2,432 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>퀘스트7 - 라벨링하기</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>퀘스트 7: 라벨링하기</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:var(--bg);height:100vh;overflow:hidden;}
+
+    /* 레이아웃 */
+    .labeler-layout{display:flex;height:100vh;flex-direction:column;}
+    .top-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+    .top-bar .title{font-family:'Jua',sans-serif;font-size:clamp(13px,2.5vw,16px);color:#a78bfa;}
+    .content-area{display:flex;flex:1;overflow:hidden;}
+
+    /* 사이드바 (이미지 목록) */
+    .img-sidebar{width:clamp(100px,18vw,160px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+    .img-thumb{cursor:pointer;border-bottom:1px solid var(--border);position:relative;}
+    .img-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+    .img-thumb.active{outline:3px solid #a78bfa;}
+    .img-thumb .labeled-dot{position:absolute;top:4px;right:4px;width:10px;height:10px;border-radius:50%;background:#68d391;}
+    .img-thumb .num{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:2px 4px;text-align:center;}
+
+    /* 캔버스 영역 */
+    .canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+    .canvas-wrap{flex:1;position:relative;overflow:hidden;background:#000;cursor:crosshair;}
+    #img-canvas{position:absolute;top:0;left:0;}
+    #draw-canvas{position:absolute;top:0;left:0;cursor:crosshair;}
+
+    /* 오른쪽 패널 */
+    .right-panel{width:clamp(160px,22vw,220px);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+    .panel-section{padding:10px;border-bottom:1px solid var(--border);}
+    .panel-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+    .class-btn{width:100%;padding:7px 10px;margin-bottom:5px;border:2px solid transparent;border-radius:8px;color:white;font-size:clamp(11px,1.8vw,12px);cursor:pointer;font-family:inherit;text-align:left;transition:all .2s;display:flex;align-items:center;gap:6px;}
+    .class-btn.active{border-color:white;font-weight:700;}
+    .class-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+
+    /* 박스 목록 */
+    .boxes-list{flex:1;overflow-y:auto;padding:8px;}
+    .box-item{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;margin-bottom:4px;cursor:pointer;font-size:11px;border:1px solid transparent;}
+    .box-item:hover{background:rgba(255,255,255,0.05);}
+    .box-item.selected{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);}
+    .box-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+    .box-del{margin-left:auto;background:rgba(252,129,129,0.15);border:none;border-radius:4px;padding:2px 6px;color:var(--red);font-size:10px;cursor:pointer;}
+
+    /* 하단 툴바 */
+    .bottom-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+    .tool-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.07);color:var(--text);font-size:clamp(11px,2vw,13px);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}
+    .tool-btn:hover{background:rgba(255,255,255,0.12);}
+    .tool-btn.active{background:rgba(167,139,250,0.2);border-color:#a78bfa;color:#a78bfa;}
+
+    /* 저장 상태 */
+    .save-status{font-size:11px;color:var(--muted);margin-left:auto;}
+
+    /* 빈화면 */
+    .empty-canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted);}
+
+    @media(max-width:600px){
+      .img-sidebar{width:clamp(70px,15vw,100px);}
+      .right-panel{width:clamp(120px,25vw,160px);}
+    }
+  </style>
 </head>
-<body class="page">
-<button class="hamburger" onclick="toggleSidebar()">☰</button>
-<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-<div class="app-layout">
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">🤖 AI 가디언</div>
-    <div class="char-widget">
-      <img id="sb-char-img" src="images/robot_1.png"
-        style="width:80px;height:80px;object-fit:contain;
-               filter:drop-shadow(0 0 12px rgba(99,179,237,0.8));
-               animation:float 3s ease-in-out infinite;"
-        onerror="this.style.display='none';document.getElementById('sb-char-emoji').style.display='block'">
-      <div id="sb-char-emoji" class="char-emoji" style="display:none;">🤖</div>
-      <div class="char-name" id="sb-char-name">-</div>
-      <div class="char-level" id="sb-char-level">Lv.1</div>
-      <div class="char-score" id="sb-score">0 점</div>
-      <div class="xp-bar-wrap"><div class="xp-bar" id="sb-xp-bar" style="width:0%"></div></div>
+<body>
+<div class="labeler-layout">
+  <!-- 상단 바 -->
+  <div class="top-bar">
+    <a href="quest6.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;text-decoration:none;">← 업로드</a>
+    <div class="title">🏷️ 퀘스트 7: 라벨링하기</div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span id="progress-label" style="font-size:12px;color:var(--muted);"></span>
+      <button onclick="downloadAllLabels()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ txt 다운로드</button>
+      <button onclick="sessionStorage.setItem('from_quest','1');window.location.href='main.html'" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">🏠 메인</button>
     </div>
-    <div class="quest-section">
-      <h4>📋 퀘스트</h4>
-      <div id="quest-list"></div>
+  </div>
+
+  <div class="content-area">
+    <!-- 이미지 목록 사이드바 -->
+    <div class="img-sidebar" id="img-sidebar">
+      <div style="padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">내 사진</div>
+      <div id="thumb-list"></div>
     </div>
-    <button class="btn btn-ghost" onclick="window.location.href='main.html'"
-      style="margin-top:auto;padding:10px;font-size:13px;">🏠 메인으로</button>
-  </aside>
-  <main class="main-content">
-    <a href="main.html" style="color:var(--muted);font-size:13px;text-decoration:none;">← 메인으로</a>
-    <h2 style="font-family:'Jua',sans-serif;font-size:24px;margin-top:8px;margin-bottom:24px;">
-      🏷️ 퀘스트 7: 라벨링하기
-    </h2>
-    <div class="chat-box" style="max-width:600px;">
-      <div class="chat-header">
-        <img id="panel-img" src="images/robot_1.png"
-          style="width:40px;height:40px;object-fit:contain;
-                 filter:drop-shadow(0 0 8px rgba(99,179,237,0.6));">
-        <h3>라벨링하기</h3>
-      </div>
-      <div style="padding:40px;text-align:center;">
-        <img id="center-img" src="images/robot_1.png"
-          style="width:120px;height:120px;object-fit:contain;
-                 filter:drop-shadow(0 0 16px rgba(99,179,237,0.8));
-                 animation:float 3s ease-in-out infinite;margin-bottom:20px;">
-        <h3 style="font-size:20px;margin-bottom:12px;">라벨링하기</h3>
-        <p style="color:var(--muted);margin-bottom:32px;">
-          이 퀘스트는 준비 중이에요!<br>곧 콘텐츠가 추가될 예정입니다. ✨
-        </p>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick="window.location.href='quest6.html'">
-            ← 이전 퀘스트
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="window.location.href='main.html'">
-            🏠 메인으로
-          </button>
+
+    <!-- 캔버스 -->
+    <div class="canvas-area">
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="img-canvas"></canvas>
+        <canvas id="draw-canvas"
+          onmousedown="startDraw(event)" onmousemove="moveDraw(event)" onmouseup="endDraw(event)"
+          ontouchstart="touchStartDraw(event)" ontouchmove="touchMoveDraw(event)" ontouchend="touchEndDraw(event)">
+        </canvas>
+        <div class="empty-canvas" id="empty-msg">
+          <div style="font-size:40px;">👈</div>
+          <div>왼쪽에서 사진을 선택하세요</div>
         </div>
       </div>
+      <!-- 하단 툴바 -->
+      <div class="bottom-bar">
+        <button class="tool-btn active" id="tool-draw" onclick="setTool('draw')">✏️ 그리기</button>
+        <button class="tool-btn" id="tool-select" onclick="setTool('select')">↖️ 선택</button>
+        <button class="tool-btn" onclick="undoLast()">↩️ 되돌리기</button>
+        <button class="tool-btn" onclick="clearBoxes()" style="color:var(--red);">🗑️ 전체삭제</button>
+        <div class="save-status" id="save-status"></div>
+      </div>
     </div>
-  </main>
+
+    <!-- 오른쪽 패널 -->
+    <div class="right-panel">
+      <div class="panel-section">
+        <div class="panel-title">클래스 선택</div>
+        <div id="class-buttons"><div style="font-size:12px;color:var(--muted);">로딩 중...</div></div>
+      </div>
+      <div class="panel-title" style="padding:10px 10px 0;">박스 목록</div>
+      <div class="boxes-list" id="boxes-list"></div>
+    </div>
+  </div>
 </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-requireAuth(async (user) => {
-  let userData = { charName:"-", score:0, quests:{} };
-  if (user.uid !== "student") {
-    const snap = await db.collection("users").where("id","==",user.id).get();
-    if (!snap.empty) { userData = snap.docs[0].data(); user.uid = snap.docs[0].id; }
+let currentUser=null, userData=null;
+let classes=[], myImages=[], currentImgIdx=-1;
+let allBoxes={}, currentImg=null;
+let isDrawing=false, startX=0, startY=0, currentBox=null;
+let selectedClassIdx=0, selectedBoxIdx=-1, currentTool='draw';
+let scale=1, offsetX=0, offsetY=0;
+
+requireAuth(async (user)=>{
+  currentUser=user;
+  if(user.uid==='student'){
+    const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
+    userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else {
+    const snap=await db.collection('users').where('id','==',user.id).get();
+    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
-  const score = userData.score || 0;
-  const lv = getLevelByScore(score);
-  const next = getNextLevel(score);
-
-  // 이미지 업데이트
-  document.getElementById("sb-char-img").src = lv.img;
-  document.getElementById("panel-img").src = lv.img;
-  document.getElementById("center-img").src = lv.img;
-
-  // 사이드바 정보
-  document.getElementById("sb-char-name").textContent = userData.charName || "-";
-  document.getElementById("sb-char-level").textContent = "Lv."+lv.level+" "+lv.name;
-  document.getElementById("sb-score").textContent = score+" 점";
-  const pct = next ? ((score-lv.minScore)/(next.minScore-lv.minScore))*100 : 100;
-  document.getElementById("sb-xp-bar").style.width = Math.min(100,pct)+"%";
-
-  // 퀘스트 목록
-  document.getElementById("quest-list").innerHTML = QUESTS.map(q=>{
-    const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-item ${q.id===7?'active':''} ${done?'done':''}">
-      <div class="quest-check ${done?'done':''}"> ${done?'✓':''}</div>
-      <span>${q.icon} ${q.title}</span></a>`;
-  }).join("");
+  await loadClasses();
+  await loadMyImages();
+  setupResize();
 });
 
-function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("open");
-  document.getElementById("overlay").classList.toggle("open");
+async function loadClasses(){
+  const snap=await db.collection('label_classes').orderBy('order').get();
+  classes=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(!classes.length) classes=[{name:'object',color:'#63b3ed',order:0}];
+  renderClassButtons();
+}
+
+function renderClassButtons(){
+  document.getElementById('class-buttons').innerHTML=classes.map((c,i)=>`
+    <button class="class-btn ${i===selectedClassIdx?'active':''}"
+      style="background:${c.color}22;border-color:${i===selectedClassIdx?c.color:'transparent'};"
+      onclick="selectClass(${i})">
+      <span class="class-dot" style="background:${c.color};"></span>
+      [${i}] ${c.name}
+    </button>`).join('');
+}
+
+function selectClass(i){selectedClassIdx=i;renderClassButtons();}
+
+async function loadMyImages(){
+  const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
+  const snap=await db.collection('uploads').where('userId','==',userId).orderBy('created_at','desc').get();
+  myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // 기존 라벨 로드
+  const labelSnap=await db.collection('labels').where('userId','==',userId).get();
+  labelSnap.docs.forEach(d=>{
+    const data=d.data();
+    allBoxes[data.imageId]=data.boxes||[];
+  });
+
+  updateProgress();
+  document.getElementById('thumb-list').innerHTML=myImages.map((img,i)=>`
+    <div class="img-thumb ${i===currentImgIdx?'active':''}" id="thumb-${i}" onclick="selectImage(${i})">
+      <img src="${img.url}" onerror="this.style.display='none'">
+      ${allBoxes[img.id]?.length?'<div class="labeled-dot"></div>':''}
+      <div class="num">${i+1}</div>
+    </div>`).join('');
+
+  if(myImages.length>0) selectImage(0);
+  else document.getElementById('empty-msg').style.display='flex';
+}
+
+function updateProgress(){
+  const labeled=myImages.filter(img=>allBoxes[img.id]?.length>0).length;
+  document.getElementById('progress-label').textContent=`${labeled}/${myImages.length} 라벨링 완료`;
+}
+
+function selectImage(idx){
+  currentImgIdx=idx;
+  const img=myImages[idx];
+  currentImg=img;
+  document.getElementById('empty-msg').style.display='none';
+  // 썸네일 active
+  document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
+  renderBoxList();
+  // 이미지 로드
+  const image=new Image();
+  image.crossOrigin='anonymous';
+  image.onload=()=>{
+    fitImageToCanvas(image);
+    redrawCanvas(image);
+  };
+  image.src=img.url;
+  currentImg._image=null;
+  currentImg._imageEl=image;
+}
+
+function fitImageToCanvas(image){
+  const wrap=document.getElementById('canvas-wrap');
+  const cw=wrap.clientWidth, ch=wrap.clientHeight;
+  scale=Math.min(cw/image.width, ch/image.height, 1);
+  const dw=image.width*scale, dh=image.height*scale;
+  offsetX=(cw-dw)/2; offsetY=(ch-dh)/2;
+  ['img-canvas','draw-canvas'].forEach(id=>{
+    const c=document.getElementById(id);
+    c.width=cw; c.height=ch;
+  });
+}
+
+function redrawCanvas(imageEl){
+  if(!imageEl) return;
+  const imgC=document.getElementById('img-canvas');
+  const drawC=document.getElementById('draw-canvas');
+  const ic=imgC.getContext('2d');
+  const dc=drawC.getContext('2d');
+  ic.clearRect(0,0,imgC.width,imgC.height);
+  dc.clearRect(0,0,drawC.width,drawC.height);
+  // 배경
+  ic.fillStyle='#111';ic.fillRect(0,0,imgC.width,imgC.height);
+  // 이미지
+  ic.drawImage(imageEl, offsetX, offsetY, imageEl.width*scale, imageEl.height*scale);
+  // 박스들
+  const boxes=allBoxes[currentImg.id]||[];
+  boxes.forEach((box,i)=>{
+    const cls=classes[box.classIdx]||{color:'#fff',name:'?'};
+    const x=offsetX+box.x*scale, y=offsetY+box.y*scale;
+    const w=box.w*scale, h=box.h*scale;
+    dc.strokeStyle=cls.color;dc.lineWidth=i===selectedBoxIdx?3:2;
+    dc.strokeRect(x,y,w,h);
+    dc.fillStyle=cls.color+'44';dc.fillRect(x,y,w,h);
+    dc.fillStyle=cls.color;dc.font='bold '+(clamp(10,scale*14,14))+'px sans-serif';
+    dc.fillRect(x,y-16,Math.max(60,cls.name.length*8),16);
+    dc.fillStyle='#000';dc.fillText('['+box.classIdx+'] '+cls.name,x+2,y-3);
+  });
+  // 현재 그리는 박스
+  if(currentBox){
+    const cls=classes[selectedClassIdx]||{color:'#fff'};
+    dc.strokeStyle=cls.color;dc.lineWidth=2;dc.setLineDash([5,3]);
+    dc.strokeRect(currentBox.x,currentBox.y,currentBox.w,currentBox.h);
+    dc.setLineDash([]);
+  }
+}
+
+// 그리기
+function getCanvasPos(e){
+  const c=document.getElementById('draw-canvas');
+  const rect=c.getBoundingClientRect();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return {x:clientX-rect.left, y:clientY-rect.top};
+}
+
+function startDraw(e){
+  if(currentTool!=='draw'||!currentImg) return;
+  const pos=getCanvasPos(e);
+  isDrawing=true;
+  startX=pos.x;startY=pos.y;
+  currentBox={x:pos.x,y:pos.y,w:0,h:0};
+}
+function moveDraw(e){
+  if(!isDrawing||!currentImg) return;
+  const pos=getCanvasPos(e);
+  currentBox={x:Math.min(startX,pos.x),y:Math.min(startY,pos.y),
+    w:Math.abs(pos.x-startX),h:Math.abs(pos.y-startY)};
+  redrawCanvas(currentImg._imageEl);
+}
+function endDraw(e){
+  if(!isDrawing) return;
+  isDrawing=false;
+  if(currentBox&&currentBox.w>10&&currentBox.h>10){
+    // 캔버스 좌표 → 이미지 좌표 변환
+    const imgBox={
+      classIdx:selectedClassIdx,
+      x:(currentBox.x-offsetX)/scale,
+      y:(currentBox.y-offsetY)/scale,
+      w:currentBox.w/scale,
+      h:currentBox.h/scale,
+    };
+    // 이미지 범위 클리핑
+    const img=currentImg._imageEl;
+    imgBox.x=Math.max(0,imgBox.x);imgBox.y=Math.max(0,imgBox.y);
+    imgBox.w=Math.min(img.width-imgBox.x,imgBox.w);
+    imgBox.h=Math.min(img.height-imgBox.y,imgBox.h);
+    if(!allBoxes[currentImg.id]) allBoxes[currentImg.id]=[];
+    allBoxes[currentImg.id].push(imgBox);
+    renderBoxList();
+    saveLabels();
+    updateThumb();
+    updateProgress();
+  }
+  currentBox=null;
+  redrawCanvas(currentImg._imageEl);
+}
+// 터치
+function touchStartDraw(e){e.preventDefault();startDraw(e);}
+function touchMoveDraw(e){e.preventDefault();moveDraw(e);}
+function touchEndDraw(e){e.preventDefault();endDraw(e);}
+
+function setTool(t){
+  currentTool=t;
+  document.getElementById('tool-draw').classList.toggle('active',t==='draw');
+  document.getElementById('tool-select').classList.toggle('active',t==='select');
+  document.getElementById('draw-canvas').style.cursor=t==='draw'?'crosshair':'default';
+}
+
+function undoLast(){
+  if(!currentImg||!allBoxes[currentImg.id]?.length) return;
+  allBoxes[currentImg.id].pop();
+  renderBoxList();saveLabels();updateThumb();updateProgress();
+  redrawCanvas(currentImg._imageEl);
+}
+
+function clearBoxes(){
+  if(!currentImg) return;
+  if(!confirm('이 사진의 모든 박스를 삭제할까요?')) return;
+  allBoxes[currentImg.id]=[];
+  renderBoxList();saveLabels();updateThumb();updateProgress();
+  redrawCanvas(currentImg._imageEl);
+}
+
+function deleteBox(i){
+  allBoxes[currentImg.id].splice(i,1);
+  renderBoxList();saveLabels();updateThumb();updateProgress();
+  redrawCanvas(currentImg._imageEl);
+}
+
+function renderBoxList(){
+  const boxes=allBoxes[currentImg?.id]||[];
+  document.getElementById('boxes-list').innerHTML=boxes.length
+    ?boxes.map((b,i)=>{
+      const cls=classes[b.classIdx]||{color:'#fff',name:'?'};
+      return `<div class="box-item ${i===selectedBoxIdx?'selected':''}" onclick="selectBox(${i})">
+        <span class="box-dot" style="background:${cls.color};"></span>
+        <span>[${b.classIdx}] ${cls.name}</span>
+        <button class="box-del" onclick="event.stopPropagation();deleteBox(${i})">✕</button>
+      </div>`;}).join('')
+    :`<div style="font-size:12px;color:var(--muted);padding:8px;">박스를 그려주세요</div>`;
+}
+
+function selectBox(i){
+  selectedBoxIdx=i===selectedBoxIdx?-1:i;
+  renderBoxList();
+  redrawCanvas(currentImg._imageEl);
+}
+
+async function saveLabels(){
+  if(!currentImg) return;
+  const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
+  document.getElementById('save-status').textContent='저장 중...';
+  try{
+    const boxes=allBoxes[currentImg.id]||[];
+    const snap=await db.collection('labels').where('userId','==',userId).where('imageId','==',currentImg.id).get();
+    if(snap.empty){
+      await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,updated_at:new Date().toISOString()});
+    } else {
+      await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});
+    }
+    // 업로드 문서 labeled 업데이트
+    await db.collection('uploads').doc(currentImg.id).update({labeled:boxes.length>0});
+    document.getElementById('save-status').textContent='✅ 저장됨';
+    setTimeout(()=>document.getElementById('save-status').textContent='',2000);
+  }catch(e){document.getElementById('save-status').textContent='❌ 저장 실패';}
+}
+
+function updateThumb(){
+  const thumb=document.getElementById('thumb-'+currentImgIdx);
+  if(!thumb) return;
+  const dot=thumb.querySelector('.labeled-dot');
+  if(allBoxes[currentImg.id]?.length){
+    if(!dot){const d=document.createElement('div');d.className='labeled-dot';thumb.appendChild(d);}
+  } else {
+    dot?.remove();
+  }
+}
+
+// YOLO txt 다운로드
+function downloadAllLabels(){
+  const labeled=Object.entries(allBoxes).filter(([id,boxes])=>boxes.length>0);
+  if(!labeled.length){alert('라벨링된 사진이 없습니다!');return;}
+
+  // classes.txt
+  const classesContent=classes.map(c=>c.name).join('\n');
+  downloadText('classes.txt',classesContent);
+
+  // 각 이미지별 txt
+  labeled.forEach(([imgId,boxes])=>{
+    const img=myImages.find(i=>i.id===imgId);
+    if(!img||!img._imageEl) return;
+    const iw=img._imageEl.width, ih=img._imageEl.height;
+    const content=boxes.map(b=>{
+      const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
+      const bw=b.w/iw, bh=b.h/ih;
+      return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
+    }).join('\n');
+    const fname=(img.fileName||imgId).replace(/\.[^.]+$/,'')+'.txt';
+    downloadText(fname,content);
+  });
+  alert(`✅ ${labeled.length}개 파일 + classes.txt 다운로드 완료!\nYOLO 형식으로 저장되었습니다.`);
+}
+
+function downloadText(filename, content){
+  const blob=new Blob([content],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+}
+
+function clamp(min,val,max){return Math.min(max,Math.max(min,val));}
+
+function setupResize(){
+  window.addEventListener('resize',()=>{
+    if(currentImg?._imageEl) fitImageToCanvas(currentImg._imageEl);
+    redrawCanvas(currentImg?._imageEl);
+  });
 }
 </script>
 </body>
