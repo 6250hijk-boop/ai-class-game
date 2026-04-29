@@ -11,38 +11,100 @@
     .game-screen{position:fixed;inset:0;background:#000;}
     .game-bg{position:absolute;inset:0;background:url('images/bgq4-1.png') center/cover no-repeat;}
     .game-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(0,0,0,0.82) 100%);}
-    .ai-notice{position:absolute;top:52px;left:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.6);z-index:25;backdrop-filter:blur(4px);}
-    .my-char{position:absolute;bottom:clamp(155px,21vw,210px);left:3%;height:clamp(110px,33vh,320px);object-fit:contain;filter:drop-shadow(4px 4px 10px rgba(0,0,0,0.9)) brightness(0.85);animation:charFloat 3s ease-in-out infinite .5s;z-index:10;}
-    .speaker-char{position:absolute;bottom:clamp(155px,21vw,210px);right:3%;height:clamp(110px,33vh,320px);object-fit:contain;filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9));animation:charFloat 3s ease-in-out infinite;z-index:10;}
+    .ai-notice{position:absolute;top:52px;left:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.6);z-index:25;backdrop-filter:blur(4px);max-width:calc(100vw - 24px);}
+
+    /* 캐릭터: robot 왼쪽(좌우반전), char4 오른쪽 */
+    .my-char{
+      position:absolute;bottom:clamp(155px,21vw,210px);left:3%;
+      height:clamp(110px,33vh,320px);object-fit:contain;
+      filter:drop-shadow(4px 4px 10px rgba(0,0,0,0.9)) brightness(0.85);
+      animation:myFloat 3s ease-in-out infinite .5s;z-index:10;
+      transform:scaleX(-1);
+    }
+    .speaker-char{
+      position:absolute;bottom:clamp(155px,21vw,210px);right:3%;
+      height:clamp(110px,33vh,320px);object-fit:contain;
+      filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9));
+      animation:charFloat 3s ease-in-out infinite;z-index:10;
+    }
     @keyframes charFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    @keyframes myFloat{0%,100%{transform:scaleX(-1) translateY(0);}50%{transform:scaleX(-1) translateY(-8px);}}
+
+    /* HUD */
     .game-hud{position:absolute;top:0;left:0;right:0;padding:10px 14px;display:flex;align-items:center;gap:8px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);z-index:20;}
     .hud-back{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:white;font-size:12px;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;}
     .hud-title{font-family:'Jua',sans-serif;font-size:clamp(11px,2.2vw,14px);color:white;text-shadow:0 2px 4px rgba(0,0,0,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .hud-right{display:flex;gap:6px;margin-left:auto;flex-shrink:0;}
-    .hud-score{background:rgba(99,179,237,0.25);border:1px solid rgba(99,179,237,0.4);border-radius:20px;padding:4px 10px;font-size:12px;color:#63b3ed;font-weight:700;}
-    .hud-progress{background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.7);}
+    .hud-score{background:rgba(167,139,250,0.25);border:1px solid rgba(167,139,250,0.4);border-radius:20px;padding:4px 10px;font-size:12px;color:#a78bfa;font-weight:700;white-space:nowrap;}
+    .hud-progress{background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;}
+
+    /* 대화창 */
     .dialog-box{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:0 clamp(8px,3vw,20px) clamp(10px,2vh,16px);}
     .dialog-top-bar{display:flex;align-items:center;gap:8px;}
     .char-name-tag{display:inline-block;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-weight:700;font-family:'Jua',sans-serif;padding:5px 16px;border-radius:10px 10px 0 0;font-size:clamp(12px,3vw,15px);box-shadow:0 -2px 10px rgba(167,139,250,0.3);}
-    .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;}
+    .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;transition:all .2s;}
     .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(167,139,250,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(90px,13vh,125px);max-height:clamp(150px,26vh,220px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
     .dialog-text{font-size:clamp(14px,2.4vw,17px);line-height:1.85;color:#e2e8f0;white-space:pre-line;}
     .dialog-next{position:absolute;bottom:12px;right:12px;width:26px;height:26px;background:rgba(167,139,250,0.2);border:2px solid rgba(167,139,250,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:arrowBounce 1s ease-in-out infinite;}
     .dialog-next::after{content:'▼';font-size:10px;color:#a78bfa;}
     @keyframes arrowBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
+
+    /* 빔프로젝터 이미지 */
+    .study-img-overlay{
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-58%);
+      z-index:15;
+      width:clamp(220px,50vw,560px);
+      max-height:clamp(140px,35vh,360px);
+      object-fit:contain;
+      border-radius:10px;
+      box-shadow:0 0 50px rgba(0,0,0,0.9),0 0 0 3px rgba(255,255,255,0.15);
+      animation:projectorIn .5s ease;
+    }
+    @keyframes projectorIn{from{opacity:0;transform:translate(-50%,-55%) scale(0.9);}to{opacity:1;transform:translate(-50%,-58%) scale(1);}}
+
+    /* 퀴즈 오버레이 */
+    .quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
+    .quiz-box{background:#111827;border:1px solid rgba(167,139,250,0.3);border-radius:20px;width:100%;max-width:560px;padding:clamp(18px,3vw,28px);animation:slideUp .4s ease;box-shadow:0 0 80px rgba(167,139,250,0.15);max-height:92vh;overflow-y:auto;}
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+    .quiz-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .quiz-header h2{font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;}
+    .quiz-step{font-size:12px;color:rgba(255,255,255,0.4);margin-left:auto;}
+    .quiz-check-btn{width:100%;padding:12px;margin-top:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
+    .quiz-check-btn:hover{transform:translateY(-2px);}
+    .quiz-result{text-align:center;padding:16px 0;}
+    .quiz-result .big-emoji{font-size:clamp(48px,8vw,64px);margin-bottom:12px;}
+    .xp-gain{color:#f6ad55;font-size:clamp(16px,3vw,20px);margin-bottom:16px;}
+    .levelup-screen{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+    .levelup-screen h1{font-family:'Jua',sans-serif;font-size:clamp(32px,6vw,48px);color:#f6ad55;}
     .xp-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#a78bfa,#f6ad55);color:#0a0e1a;font-weight:700;font-size:clamp(18px,4vw,24px);padding:14px 36px;border-radius:18px;z-index:500;animation:popIn .4s ease,fadeOutUp .5s ease 1.5s forwards;pointer-events:none;}
     @keyframes popIn{from{transform:translate(-50%,-50%) scale(.5);opacity:0;}to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
     @keyframes fadeOutUp{to{opacity:0;transform:translate(-50%,-70%);}}
-    @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
-    @media(max-width:480px){.my-char,.speaker-char{height:clamp(90px,25vh,180px);}}
+    @media(max-width:480px){
+      .my-char,.speaker-char{height:clamp(90px,25vh,180px);}
+      .study-img-overlay{width:clamp(180px,70vw,320px);}
+    }
   </style>
 </head>
 <body>
+
+<div id="quiz-overlay" class="quiz-overlay" style="display:none;">
+  <div class="quiz-box">
+    <div class="quiz-header">
+      <h2 id="quiz-title">📝 라벨링 퀴즈!</h2>
+      <span id="quiz-step" class="quiz-step"></span>
+    </div>
+    <div id="quiz-content"></div>
+  </div>
+</div>
+
 <div class="game-screen">
   <div class="game-bg"></div>
   <div class="ai-notice">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
   <img class="my-char" id="my-char" src="images/robot_1.png" alt="내캐릭터">
-  <img class="speaker-char" id="speaker-char" src="images/char3.png" alt="캐릭터">
+  <img class="speaker-char" id="speaker-char" src="images/char4.png" alt="AI튜터">
+  <img id="study-img" class="study-img-overlay" style="display:none;" alt="학습자료">
 
   <div class="game-hud">
     <a href="main.html" class="hud-back">← 메인</a>
@@ -55,7 +117,7 @@
 
   <div class="dialog-box">
     <div class="dialog-top-bar">
-      <div class="char-name-tag" id="dialog-name">AI 튜터</div>
+      <div class="char-name-tag">AI 튜터</div>
       <button class="btn-prev" id="btn-prev" onclick="prevMessage()">◀ 이전</button>
     </div>
     <div class="dialog-text-box">
@@ -71,14 +133,55 @@
 <script src="firebase-config.js"></script>
 <script>
 const MESSAGES = [
-  { text:"안녕! 나는 AI 튜터야 🤖\n퀘스트 4: 인공지능 공부시키기에 오신 것을 환영해요!\n곧 콘텐츠가 추가될 예정이에요." },
-  { text:"현재 이 퀘스트는 준비 중이에요. 📝\n조금만 기다려주세요!", type:"done" },
+  { text:"안녕하세요. AI튜터입니다. 😊\n라벨링은 인공지능에게 '세상을 보는 기준'을\n심어주는 아주 정교한 작업이에요." },
+  { text:"단순히 박스 치는 것을 넘어\n모델이 헷갈리지 않게 일관성을 유지하는 것이\n중요해요." },
+  { text:"첫째, 경계 기준을 잘 잡아야 해요. 📏", type:"img", img:"study4-1" },
+  { text:"라벨링을 하기 전에 기준을 잘 잡아야 해요.\n물체의 끝부분만 잡을 것인지,\n그림자까지 포함할 것인지." },
+  { text:"물체의 가려진 부분도 체크할 것인지,\n보이는 부분만 체크할 것인지.\n너무 멀리 있는 물체는 무시할 것인지\n라벨링할 것인지." },
+  { text:"대충하면 AI가 알아서 배우겠지? 라는 생각은 안 돼요.\n우리가 준 오답까지 성실하게 학습하기 때문에\n이게 제일 중요해요! ⚠️" },
+  { text:"둘째, 물체의 외곽선에 최대한\n딱 맞게 박스를 그려야 합니다. 🎯", type:"img", img:"study4-2" },
+  { text:"여백이 너무 많으면 배경을\n물체의 특성으로 오해할 수 있어요." },
+  { text:"물체의 픽셀이 박스 경계에 거의 닿을 정도로\n정교하게 그려야 해요." },
+  { text:"셋째, 클래스의 일관성을 유지해야 합니다. 🏷️", type:"img", img:"study4-3" },
+  { text:"같은 물체를 다르게 부르면\nAI는 혼란에 빠집니다." },
+  { text:"어떨 때는 '사과' 어떤 때는 'apple'로\n라벨링 하면 안 됩니다." },
+  { text:"그리고 대분류(과일)-소분류(사과)로 할지,\n처음부터 사과로만 할지\n미리 정해야 합니다." },
+  { text:"", type:"hide_img" },
+  { text:"요즘에는 라벨링을 일일이 수동으로\n할 필요는 없어요. 🤖" },
+  { text:"이미 학습된 모델로 1차 라벨링하고\n사람은 수정만 하는 방식이 있어요." },
+  { text:"자, 지금까지 라벨링에 대해 배웠어요!\n퀴즈로 확인해볼까요? 📝", type:"quiz" },
+];
+
+// 퀴즈
+const QUIZZES = [
+  {
+    type:"photo_multi",
+    title:"문제 1. 라벨링에 적합한 사진 고르기",
+    desc:"라벨링하기 좋은 사진을 선택하세요! (1개 선택)",
+    photos:["q4-1-1","q4-1-2"],
+    answers:["q4-1-2"],
+    selectCount:1,
+    exp:"q4-1-2가 정답이에요! 물체가 잘 보이고 외곽선이 명확한 사진이 라벨링에 적합해요."
+  },
+  {
+    type:"ox",
+    q:"라벨링할 때 '사과'와 'apple'을 번갈아 써도 AI가 알아서 같은 것으로 인식한다.",
+    ans:false,
+    exp:"클래스 이름은 일관성 있게 통일해야 해요! 다르게 쓰면 AI는 다른 물체로 인식합니다."
+  },
+  {
+    type:"ox",
+    q:"라벨링 박스를 물체보다 크게 여유 있게 그리면 AI가 더 잘 인식할 수 있다.",
+    ans:false,
+    exp:"여백이 많으면 배경도 물체의 특성으로 학습해요. 외곽선에 딱 맞게 그려야 합니다!"
+  },
 ];
 
 let currentUser=null, userData=null;
-let msgIdx=0, isTyping=false, typingTimer=null;
+let msgIdx=0, isTyping=false, typingTimer=null, quizShowing=false;
+let qIdx=0, qScore=0, selectedPhotos=[];
 
-requireAuth(async (user) => {
+requireAuth(async (user)=>{
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
@@ -88,29 +191,47 @@ requireAuth(async (user) => {
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
   updateHUD(); updateCharImages();
+  const quests=userData.quests||{};
+  msgIdx=quests.q4_done?0:Math.min(quests.q4_msgIdx||0,MESSAGES.length-1);
   document.getElementById('hud-progress').textContent='1 / '+MESSAGES.length;
-  setTimeout(()=>showMessage(0),500);
+  setTimeout(()=>showMessage(msgIdx),500);
 });
 
-function updateCharImages(){ document.getElementById('my-char').src=getLevelByScore(userData.score||0).img; }
-function updateHUD(){ document.getElementById('hud-score').textContent=(userData.score||0)+' 점'; }
+function updateCharImages(){document.getElementById('my-char').src=getLevelByScore(userData.score||0).img;}
+function updateHUD(){document.getElementById('hud-score').textContent=(userData.score||0)+' 점';}
 
 function showMessage(idx){
   if(idx>=MESSAGES.length){showComplete();return;}
   const msg=MESSAGES[idx];
-  document.getElementById('hud-progress').textContent=(idx+1)+' / '+MESSAGES.length;
+  document.getElementById('hud-progress').textContent=`${idx+1} / ${MESSAGES.length}`;
   document.getElementById('btn-prev').style.display=idx>0?'flex':'none';
   document.getElementById('dialog-next').style.display='flex';
+
+  const imgEl=document.getElementById('study-img');
+  if(msg.type==='img'){
+    imgEl.src='images/'+msg.img+'.png';
+    imgEl.style.display='block';
+  } else if(msg.type==='hide_img'){
+    imgEl.style.display='none';
+  }
+
+  // 빈 텍스트 메시지는 자동으로 넘김
+  if(!msg.text){
+    setTimeout(()=>{msgIdx++;autoSave();showMessage(msgIdx);},300);
+    return;
+  }
+
   typeText(document.getElementById('dialog-text'),msg.text,()=>{
-    if(msg.type==='done'){
+    if(msg.type==='quiz'){
       document.getElementById('dialog-next').style.display='none';
-      showComplete();
+      quizShowing=true;
+      setTimeout(()=>startQuiz(),600);
     }
   });
 }
 
 function typeText(el,text,cb){
-  el.textContent=''; isTyping=true;
+  el.textContent='';isTyping=true;
   document.getElementById('dialog-next').style.opacity='0.3';
   let i=0;
   typingTimer=setInterval(()=>{
@@ -120,38 +241,250 @@ function typeText(el,text,cb){
 }
 
 function nextMessage(){
-  if(isTyping){clearInterval(typingTimer);document.getElementById('dialog-text').textContent=MESSAGES[msgIdx].text;isTyping=false;document.getElementById('dialog-next').style.opacity='1';if(MESSAGES[msgIdx].type==='done'){document.getElementById('dialog-next').style.display='none';showComplete();}return;}
-  msgIdx++;
-  showMessage(msgIdx);
+  if(quizShowing) return;
+  if(isTyping){
+    clearInterval(typingTimer);
+    const msg=MESSAGES[msgIdx];
+    document.getElementById('dialog-text').textContent=msg.text||'';
+    isTyping=false;
+    document.getElementById('dialog-next').style.opacity='1';
+    if(msg.type==='img'){document.getElementById('study-img').src='images/'+msg.img+'.png';document.getElementById('study-img').style.display='block';}
+    if(msg.type==='quiz'){document.getElementById('dialog-next').style.display='none';quizShowing=true;setTimeout(()=>startQuiz(),400);}
+    return;
+  }
+  msgIdx++;autoSave();showMessage(msgIdx);
 }
-function prevMessage(){if(isTyping){clearInterval(typingTimer);isTyping=false;}if(msgIdx>0){msgIdx--;showMessage(msgIdx);}}
+function prevMessage(){
+  if(quizShowing) return;
+  if(isTyping){clearInterval(typingTimer);isTyping=false;}
+  if(msgIdx>0){msgIdx--;showMessage(msgIdx);}
+}
+async function autoSave(){
+  if(currentUser.uid==='student'){
+    userData.quests=userData.quests||{};userData.quests.q4_msgIdx=msgIdx;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));return;
+  }
+  await db.collection('users').doc(currentUser.uid).update({'quests.q4_msgIdx':msgIdx});
+}
 
 document.addEventListener('click',(e)=>{
+  if(quizShowing) return;
   if(e.target.closest('.dialog-next')||e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
   nextMessage();
 });
 document.addEventListener('keydown',(e)=>{
+  if(quizShowing) return;
   if(e.code==='Space'||e.code==='Enter') nextMessage();
   if(e.code==='ArrowLeft') prevMessage();
 });
 
+// ══ 퀴즈 ══
+function startQuiz(){
+  qIdx=0;qScore=0;selectedPhotos=[];
+  document.getElementById('quiz-overlay').style.display='flex';
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const q=QUIZZES[qIdx];
+  document.getElementById('quiz-step').textContent=`${qIdx+1} / ${QUIZZES.length}`;
+  if(q.type==='photo_multi') renderPhotoQuiz(q);
+  else renderOX(q);
+}
+
+// 사진 선택
+function renderPhotoQuiz(q){
+  selectedPhotos=[];
+  document.getElementById('quiz-title').textContent='📸 라벨링 퀴즈!';
+  document.getElementById('quiz-content').innerHTML=`
+    <div style="font-size:clamp(14px,2.5vw,16px);font-weight:700;color:#e2e8f0;margin-bottom:6px;">${q.title}</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:14px;">${q.desc}</div>
+    <div style="display:grid;grid-template-columns:repeat(${q.photos.length},1fr);gap:clamp(6px,2vw,12px);margin-bottom:14px;" id="photo-grid">
+      ${q.photos.map(p=>`
+        <div id="ph-${p}" onclick="togglePhoto('${p}','${q.type}')"
+          style="border-radius:10px;overflow:hidden;cursor:pointer;
+                 border:3px solid rgba(255,255,255,0.1);transition:all .2s;
+                 aspect-ratio:1;position:relative;">
+          <img src="images/${p}.png" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;"
+            onerror="this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none'">
+          <div id="check-${p}" style="display:none;position:absolute;top:6px;right:6px;
+               background:#a78bfa;border-radius:50%;width:26px;height:26px;
+               align-items:center;justify-content:center;font-size:15px;color:white;">✓</div>
+        </div>`).join('')}
+    </div>
+    <div id="photo-hint" style="font-size:12px;color:rgba(167,139,250,0.7);margin-bottom:10px;text-align:center;">사진을 선택하세요</div>
+    <div id="quiz-feedback"></div>
+    <button id="confirm-btn" onclick="confirmPhoto()"
+      style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);
+             border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
+             font-weight:700;cursor:pointer;font-family:inherit;opacity:0.4;pointer-events:none;">
+      ✅ 선택 완료
+    </button>`;
+}
+
+function togglePhoto(photoId,quizType){
+  const el=document.getElementById('ph-'+photoId);
+  const check=document.getElementById('check-'+photoId);
+  const q=QUIZZES[qIdx];
+  if(selectedPhotos.includes(photoId)){
+    selectedPhotos=selectedPhotos.filter(p=>p!==photoId);
+    el.style.borderColor='rgba(255,255,255,0.1)';el.style.transform='';
+    check.style.display='none';
+  } else {
+    if(quizType==='photo_single'||q.selectCount===1){
+      selectedPhotos.forEach(p=>{
+        document.getElementById('ph-'+p).style.borderColor='rgba(255,255,255,0.1)';
+        document.getElementById('ph-'+p).style.transform='';
+        document.getElementById('check-'+p).style.display='none';
+      });
+      selectedPhotos=[];
+    }
+    if(selectedPhotos.length>=q.selectCount) return;
+    selectedPhotos.push(photoId);
+    el.style.borderColor='#a78bfa';el.style.transform='scale(1.04)';
+    check.style.display='flex';
+  }
+  const hint=document.getElementById('photo-hint');
+  hint.textContent=selectedPhotos.length?`${selectedPhotos.length}개 선택됨 - 완료 버튼을 눌러주세요`:'사진을 선택하세요';
+  const btn=document.getElementById('confirm-btn');
+  const ready=selectedPhotos.length===q.selectCount;
+  btn.style.opacity=ready?'1':'0.4';btn.style.pointerEvents=ready?'auto':'none';
+}
+
+function confirmPhoto(){
+  const q=QUIZZES[qIdx];
+  const correct=q.answers.length===selectedPhotos.length&&q.answers.every(a=>selectedPhotos.includes(a));
+  if(correct) qScore++;
+  q.photos.forEach(p=>{
+    const el=document.getElementById('ph-'+p);
+    if(q.answers.includes(p)){el.style.borderColor='#68d391';el.style.boxShadow='0 0 12px rgba(104,211,145,0.5)';}
+    else if(selectedPhotos.includes(p)){el.style.borderColor='#fc8181';el.style.boxShadow='0 0 12px rgba(252,129,129,0.5)';}
+  });
+  document.getElementById('confirm-btn').style.display='none';
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div style="padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.5;margin-bottom:10px;
+         background:rgba(${correct?'104,211,145':'252,129,129'},0.12);
+         border:1px solid ${correct?'#68d391':'#fc8181'};color:${correct?'#68d391':'#fc8181'};">
+      ${correct?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button onclick="nextQuiz()" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;">
+      다음 문제 →
+    </button>`;
+}
+
+// OX 퀴즈
+function renderOX(q){
+  document.getElementById('quiz-title').textContent='⭕❌ OX 퀴즈!';
+  document.getElementById('quiz-content').innerHTML=`
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.2);border-radius:12px;padding:16px;margin-bottom:18px;font-size:clamp(14px,2.5vw,16px);line-height:1.7;color:#e2e8f0;">${q.q}</div>
+    <div style="display:flex;gap:12px;">
+      <button onclick="selectOX(true,this)"
+        style="flex:1;padding:clamp(16px,4vw,24px);background:rgba(104,211,145,0.1);
+               border:2px solid rgba(104,211,145,0.3);border-radius:14px;
+               color:#68d391;font-size:clamp(28px,6vw,40px);cursor:pointer;font-family:inherit;transition:all .2s;"
+        onmouseover="this.style.background='rgba(104,211,145,0.2)'" onmouseout="if(!this.disabled)this.style.background='rgba(104,211,145,0.1)'">⭕</button>
+      <button onclick="selectOX(false,this)"
+        style="flex:1;padding:clamp(16px,4vw,24px);background:rgba(252,129,129,0.1);
+               border:2px solid rgba(252,129,129,0.3);border-radius:14px;
+               color:#fc8181;font-size:clamp(28px,6vw,40px);cursor:pointer;font-family:inherit;transition:all .2s;"
+        onmouseover="this.style.background='rgba(252,129,129,0.2)'" onmouseout="if(!this.disabled)this.style.background='rgba(252,129,129,0.1)'">❌</button>
+    </div>
+    <div id="quiz-feedback" style="margin-top:12px;"></div>`;
+}
+
+function selectOX(val,btn){
+  const q=QUIZZES[qIdx];
+  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
+  const ok=val===q.ans;
+  if(ok) qScore++;
+  btn.style.transform='scale(1.06)';
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div style="padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.5;
+         background:rgba(${ok?'104,211,145':'252,129,129'},0.12);
+         border:1px solid ${ok?'#68d391':'#fc8181'};color:${ok?'#68d391':'#fc8181'};">
+      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button onclick="nextQuiz()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;">
+      ${qIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
+}
+
+function nextQuiz(){
+  qIdx++;
+  if(qIdx>=QUIZZES.length) finishQuiz();
+  else renderQuiz();
+}
+
+async function finishQuiz(){
+  const total=QUIZZES.length;
+  const xp=qScore*10+(qScore===total?20:0);
+  if(currentUser.uid==='student'){
+    userData.score=(userData.score||0)+xp;
+    userData.quests=userData.quests||{};userData.quests.q4_done=true;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+    updateHUD();updateCharImages();
+  } else {
+    await addScore(currentUser.uid,xp,'퀘스트4 퀴즈');
+    await db.collection('users').doc(currentUser.uid).update({'quests.q4_done':true});
+    await db.collection('quiz_results').doc(currentUser.uid).set({
+      q4:firebase.firestore.FieldValue.arrayUnion({score:qScore,total,xp,accuracy:Math.round(qScore/total*100),date:new Date().toISOString()})
+    },{merge:true});
+    userData.score=(userData.score||0)+xp;
+    updateHUD();updateCharImages();
+    checkLevelUp(userData.score-xp,userData.score);
+  }
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-result">
+      <div class="big-emoji">${qScore===total?'🏆':qScore>=2?'👍':'💪'}</div>
+      <h3>${qScore} / ${total} 정답</h3>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(qScore/total*100)}%</div>
+      <div class="xp-gain">+${xp} 점 획득!</div>
+      <button class="quiz-check-btn" onclick="closeQuiz()">계속하기 →</button>
+    </div>`;
+  showXPPopup('+'+xp+' 점');
+}
+
+function closeQuiz(){
+  quizShowing=false;
+  document.getElementById('quiz-overlay').style.display='none';
+  showComplete();
+}
+
+function checkLevelUp(before,after){
+  const lvB=getLevelByScore(before),lvA=getLevelByScore(after);
+  if(lvA.level>lvB.level){
+    const el=document.createElement('div');el.className='levelup-screen';
+    el.innerHTML=`<img src="${lvA.img}" style="height:130px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));">
+      <h1>레벨 업! 🎉</h1><p>Lv.${lvA.level} ${lvA.name}</p>
+      <button class="quiz-check-btn" style="max-width:200px;margin-top:14px;" onclick="this.parentElement.remove()">확인</button>`;
+    document.body.appendChild(el);
+  }
+}
+
+let completeShown=false;
 function showComplete(){
-  const old=document.getElementById('complete-overlay');
-  if(old) return;
+  if(completeShown) return;
+  completeShown=true;
   const overlay=document.createElement('div');
   overlay.id='complete-overlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;';
   overlay.innerHTML=`
     <div style="background:#111827;border:2px solid rgba(167,139,250,0.4);border-radius:24px;
-         padding:36px 32px;text-align:center;max-width:360px;width:90%;
+         padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;
          box-shadow:0 0 60px rgba(167,139,250,0.2);animation:slideUp .4s ease;">
-      <div style="font-size:56px;margin-bottom:12px;">🎓</div>
-      <h2 style="font-family:'Jua',sans-serif;font-size:22px;color:#a78bfa;margin-bottom:6px;">퀘스트 4: 인공지능 공부시키기</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,0.5);margin-bottom:24px;">현재 준비 중인 퀘스트예요 🛠️</p>
+      <div style="font-size:56px;margin-bottom:12px;">🏅</div>
+      <h2 style="font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);color:#a78bfa;margin-bottom:6px;">퀘스트 4 완료!</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;">
+        데이터 라벨링을<br>성공적으로 배웠어요! 🏷️
+      </p>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button onclick="window.location.href='quest5.html'"
-          style="padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
-          다음 퀘스트 → 🎓 배운내용 확인하기
+          style="padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;">
+          다음 퀘스트 → 배운내용 확인하기 ✅
+        </button>
+        <button onclick="replayQuest()"
+          style="padding:12px;background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.4);border-radius:12px;color:#f6ad55;font-size:14px;cursor:pointer;font-family:inherit;">
+          🔄 다시 하기
         </button>
         <button onclick="goMain()"
           style="padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;font-family:inherit;">
@@ -162,10 +495,16 @@ function showComplete(){
   document.body.appendChild(overlay);
 }
 
-function goMain(){
-  sessionStorage.setItem('from_quest','1');
-  window.location.href='main.html';
+function replayQuest(){
+  if(currentUser.uid==='student'){
+    userData.quests=userData.quests||{};userData.quests.q4_msgIdx=0;userData.quests.q4_done=false;
+    localStorage.setItem('tempUserData',JSON.stringify(userData));
+  } else {
+    db.collection('users').doc(currentUser.uid).update({'quests.q4_msgIdx':0,'quests.q4_done':false});
+  }
+  window.location.reload();
 }
+function goMain(){sessionStorage.setItem('from_quest','1');window.location.href='main.html';}
 </script>
 </body>
 </html>
