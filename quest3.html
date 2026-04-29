@@ -73,24 +73,8 @@
     .quiz-header h2{font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;}
     .quiz-step{font-size:12px;color:rgba(255,255,255,0.4);margin-left:auto;}
 
-    /* 카드 뒤집기 */
-    .card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(6px,1.5vw,12px);margin-top:14px;}
-    .card-wrap{perspective:600px;height:clamp(70px,12vw,100px);cursor:pointer;}
-    .card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .5s ease;border-radius:10px;}
-    .card-wrap.flipped .card-inner{transform:rotateY(180deg);}
-    .card-wrap.matched .card-inner{transform:rotateY(180deg);}
-    .card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:8px;font-size:clamp(11px,1.8vw,13px);line-height:1.4;text-align:center;}
-    .card-back{background:linear-gradient(135deg,#2d1b69,#4c1d95);border:2px solid rgba(167,139,250,0.4);color:#a78bfa;font-size:clamp(18px,3vw,24px);}
-    .card-front{background:rgba(255,255,255,0.06);border:2px solid rgba(167,139,250,0.3);color:#e2e8f0;transform:rotateY(180deg);}
-    .card-wrap.matched .card-front{background:rgba(104,211,145,0.15);border-color:#68d391;color:#68d391;}
-    .card-wrap.wrong-flash .card-inner{animation:wrongFlash .4s ease;}
-    @keyframes wrongFlash{0%,100%{transform:rotateY(180deg);}50%{transform:rotateY(180deg) scale(0.95);border-color:#fc8181;}}
-
     .quiz-check-btn{width:100%;padding:12px;margin-top:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
     .quiz-check-btn:hover{transform:translateY(-2px);}
-    .quiz-feedback{margin-top:10px;padding:10px 14px;border-radius:9px;font-size:clamp(12px,2vw,13px);line-height:1.5;}
-    .quiz-feedback.correct{background:rgba(104,211,145,0.15);border:1px solid #68d391;color:#68d391;}
-    .quiz-feedback.wrong{background:rgba(252,129,129,0.15);border:1px solid #fc8181;color:#fc8181;}
     .quiz-result{text-align:center;padding:16px 0;}
     .quiz-result .big-emoji{font-size:clamp(48px,8vw,64px);margin-bottom:12px;}
     .xp-gain{color:#f6ad55;font-size:clamp(16px,3vw,20px);margin-bottom:16px;}
@@ -189,12 +173,32 @@ const MESSAGES = [
   { text:"자, 지금까지 좋은 학습 데이터의 조건을\n배웠어요! 퀴즈로 확인해볼까요? 🃏", type:"quiz" },
 ];
 
-// 카드 매칭 퀴즈 - 조건과 설명 매칭
-const CARD_PAIRS = [
-  { id:1, front:"선명한 초점", back:"픽셀 경계로 특징을 찾기 때문" },
-  { id:2, front:"가림 없는 사진", back:"AI는 가려진 부분을 유추 못함" },
-  { id:3, front:"다양한 사람 사진", back:"나이·성별·인종 등 모두 인식하려면" },
-  { id:4, front:"다양한 배경", back:"실내·외, 날씨 변해도 인식하려면" },
+// 빈칸 채우기 퀴즈
+const FILL_QUIZZES = [
+  {
+    sentence: "AI는 이미지의 [___] 경계로 특징을 찾기 때문에\n초점이 흐린 사진은 학습에 적합하지 않다.",
+    blank: "픽셀",
+    choices: ["픽셀", "색상", "크기", "밝기"],
+    exp: "AI는 수십만 개의 픽셀 경계로 특징을 찾아냅니다. 초점이 흐리면 경계가 불분명해져요!"
+  },
+  {
+    sentence: "쓰레기통 뒤에 가려진 고양이 사진만 학습시키면\nAI가 [___]도 고양이로 인식할 수 있다.",
+    blank: "쓰레기통",
+    choices: ["강아지", "쓰레기통", "나무", "자동차"],
+    exp: "가려진 배경까지 함께 학습해서 쓰레기통도 고양이 특징으로 잘못 학습할 수 있어요!"
+  },
+  {
+    sentence: "교복 입은 사람만 학습시키면\n[___]이나 군복을 입은 사람은 인식하지 못할 수 있다.",
+    blank: "정장",
+    choices: ["교복", "정장", "운동복", "잠옷"],
+    exp: "다양한 복장의 사람을 학습시켜야 어떤 옷을 입어도 사람으로 인식할 수 있어요!"
+  },
+  {
+    sentence: "같은 장소에서만 찍은 사진은 아무리 많아도\n[___] 데이터로서 의미가 없다.",
+    blank: "학습",
+    choices: ["저장", "학습", "백업", "공유"],
+    exp: "다양한 환경과 배경에서 찍은 사진이어야 의미 있는 학습 데이터가 됩니다!"
+  },
 ];
 
 let currentUser=null, userData=null;
@@ -298,84 +302,112 @@ document.addEventListener('keydown',(e)=>{
   if(e.code==='ArrowLeft') prevMessage();
 });
 
-// ══ 카드 뒤집기 매칭 퀴즈 ══
-let flipped=[], matched=0, canFlip=true, totalScore=0;
+// ══ 빈칸 채우기 퀴즈 ══
+let qIdx=0, qScore=0;
 
 function startQuiz(){
-  // 카드 섞기
-  const cards=[];
-  CARD_PAIRS.forEach(p=>{
-    cards.push({id:p.id, type:'front', text:p.front});
-    cards.push({id:p.id, type:'back',  text:p.back});
-  });
-  cards.sort(()=>Math.random()-.5);
-
+  qIdx=0; qScore=0;
   document.getElementById('quiz-overlay').style.display='flex';
-  document.getElementById('quiz-title').textContent='🃏 카드 매칭 퀴즈!';
-  document.getElementById('quiz-step').textContent='조건과 이유를 매칭하세요!';
+  document.getElementById('quiz-title').textContent='📝 빈칸 채우기 퀴즈!';
+  renderFillQuiz();
+}
+
+function renderFillQuiz(){
+  const q=FILL_QUIZZES[qIdx];
+  document.getElementById('quiz-step').textContent=`${qIdx+1} / ${FILL_QUIZZES.length}`;
+
+  // 진행 도트
+  const dots=FILL_QUIZZES.map((_,i)=>
+    `<div style="width:8px;height:8px;border-radius:50%;background:${i<qIdx?'#68d391':i===qIdx?'#a78bfa':'rgba(255,255,255,0.15)'};transition:background .3s;"></div>`
+  ).join('');
+
+  // 문장에서 [___] 하이라이트
+  const displayText=q.sentence.replace('[___]',
+    `<span style="display:inline-block;background:rgba(167,139,250,0.2);border:2px dashed rgba(167,139,250,0.6);border-radius:6px;padding:2px 16px;color:#a78bfa;font-weight:700;min-width:60px;text-align:center;">___</span>`
+  );
+
+  // 보기 섞기
+  const shuffled=[...q.choices].sort(()=>Math.random()-.5);
+
   document.getElementById('quiz-content').innerHTML=`
-    <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6;">
-      카드를 뒤집어서 조건과 그 이유를 짝지어보세요!<br>
-      <span style="color:#a78bfa;">보라색 카드</span>: 조건 &nbsp;|&nbsp; <span style="color:#e2e8f0;">흰색 카드</span>: 이유
-    </p>
-    <div class="card-grid" id="card-grid">
-      ${cards.map((c,i)=>`
-        <div class="card-wrap" id="card-${i}" data-id="${c.id}" data-type="${c.type}" data-idx="${i}" onclick="flipCard(${i})">
-          <div class="card-inner">
-            <div class="card-face card-back">🃏</div>
-            <div class="card-face card-front">${c.text}</div>
-          </div>
-        </div>`).join('')}
+    <div style="display:flex;gap:5px;margin-bottom:16px;">${dots}</div>
+
+    <!-- 문장 -->
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.2);
+         border-radius:12px;padding:16px;margin-bottom:18px;
+         font-size:clamp(14px,2.5vw,16px);line-height:2;color:#e2e8f0;white-space:pre-line;">
+      ${displayText}
+    </div>
+
+    <!-- 보기 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      ${shuffled.map(word=>`
+        <button onclick="selectWord('${word}', this)"
+          style="padding:12px 8px;background:rgba(167,139,250,0.1);
+                 border:2px solid rgba(167,139,250,0.25);border-radius:11px;
+                 color:#e2e8f0;font-size:clamp(13px,2.5vw,15px);font-weight:600;
+                 cursor:pointer;font-family:inherit;transition:all .2s;"
+          onmouseover="if(!this.disabled)this.style.background='rgba(167,139,250,0.2)'"
+          onmouseout="if(!this.disabled)this.style.background='rgba(167,139,250,0.1)'">
+          ${word}
+        </button>`).join('')}
     </div>
     <div id="quiz-feedback" style="margin-top:12px;"></div>`;
-  flipped=[]; matched=0; canFlip=true; totalScore=0;
 }
 
-function flipCard(idx){
-  if(!canFlip) return;
-  const card=document.getElementById('card-'+idx);
-  if(!card||card.classList.contains('flipped')||card.classList.contains('matched')) return;
-  card.classList.add('flipped');
-  flipped.push(idx);
-  if(flipped.length===2) checkMatch();
-}
+function selectWord(word, btn){
+  const q=FILL_QUIZZES[qIdx];
+  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
+  const ok=word===q.blank;
+  if(ok) qScore++;
 
-function checkMatch(){
-  canFlip=false;
-  const [i1,i2]=flipped;
-  const c1=document.getElementById('card-'+i1);
-  const c2=document.getElementById('card-'+i2);
-  const id1=c1.dataset.id, id2=c2.dataset.id;
-  const type1=c1.dataset.type, type2=c2.dataset.type;
-
-  if(id1===id2&&type1!==type2){
-    // 매칭 성공
-    setTimeout(()=>{
-      c1.classList.add('matched'); c2.classList.add('matched');
-      matched++;
-      totalScore+=10;
-      document.getElementById('quiz-feedback').innerHTML=
-        `<div class="quiz-feedback correct">🎉 매칭 성공! +10점 (${matched}/${CARD_PAIRS.length}쌍 완료)</div>`;
-      if(matched===CARD_PAIRS.length) setTimeout(finishQuiz,800);
-      flipped=[]; canFlip=true;
-    },500);
-  } else {
-    // 매칭 실패
-    setTimeout(()=>{
-      c1.classList.add('wrong-flash'); c2.classList.add('wrong-flash');
-      document.getElementById('quiz-feedback').innerHTML=
-        `<div class="quiz-feedback wrong">❌ 다시 시도해보세요!</div>`;
-      setTimeout(()=>{
-        c1.classList.remove('flipped','wrong-flash');
-        c2.classList.remove('flipped','wrong-flash');
-        flipped=[]; canFlip=true;
-      },800);
-    },500);
+  // 정답 표시
+  btn.style.background=ok?'rgba(104,211,145,0.2)':'rgba(252,129,129,0.2)';
+  btn.style.borderColor=ok?'#68d391':'#fc8181';
+  btn.style.color=ok?'#68d391':'#fc8181';
+  // 정답 버튼 강조 (오답 선택 시)
+  if(!ok){
+    document.querySelectorAll('#quiz-content button').forEach(b=>{
+      if(b.textContent.trim()===q.blank){
+        b.style.background='rgba(104,211,145,0.2)';
+        b.style.borderColor='#68d391';
+        b.style.color='#68d391';
+      }
+    });
   }
+
+  // 문장에 정답 채우기
+  const filled=q.sentence.replace('[___]',
+    `<span style="background:${ok?'rgba(104,211,145,0.25)':'rgba(252,129,129,0.25)'};
+     border-radius:5px;padding:1px 8px;color:${ok?'#68d391':'#fc8181'};font-weight:700;">
+     ${q.blank}</span>`
+  );
+  document.querySelector('#quiz-content > div:nth-child(2)').innerHTML=filled;
+
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div style="padding:10px 14px;border-radius:9px;font-size:clamp(12px,2vw,13px);line-height:1.5;
+         background:rgba(${ok?'104,211,145':'252,129,129'},0.12);
+         border:1px solid ${ok?'#68d391':'#fc8181'};color:${ok?'#68d391':'#fc8181'};">
+      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button onclick="nextFillQuiz()"
+      style="width:100%;padding:12px;margin-top:10px;
+             background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;
+             border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
+             font-weight:700;cursor:pointer;font-family:inherit;">
+      ${qIdx+1<FILL_QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
+}
+
+function nextFillQuiz(){
+  qIdx++;
+  if(qIdx>=FILL_QUIZZES.length) finishQuiz();
+  else renderFillQuiz();
 }
 
 async function finishQuiz(){
-  const xp=totalScore+(matched===CARD_PAIRS.length?10:0);
+  const total=FILL_QUIZZES.length;
+  const xp=qScore*10+(qScore===total?20:0);
   if(currentUser.uid==='student'){
     userData.score=(userData.score||0)+xp;
     userData.quests=userData.quests||{};
@@ -386,7 +418,11 @@ async function finishQuiz(){
     await addScore(currentUser.uid,xp,'퀘스트3 퀴즈');
     await db.collection('users').doc(currentUser.uid).update({'quests.q3_done':true});
     await db.collection('quiz_results').doc(currentUser.uid).set({
-      q3:firebase.firestore.FieldValue.arrayUnion({score:matched,total:CARD_PAIRS.length,xp,date:new Date().toISOString()})
+      q3:firebase.firestore.FieldValue.arrayUnion({
+        score:qScore,total,xp,
+        accuracy:Math.round(qScore/total*100),
+        date:new Date().toISOString()
+      })
     },{merge:true});
     userData.score=(userData.score||0)+xp;
     updateHUD(); updateCharImages();
@@ -394,9 +430,11 @@ async function finishQuiz(){
   }
   document.getElementById('quiz-content').innerHTML=`
     <div class="quiz-result">
-      <div class="big-emoji">${matched===CARD_PAIRS.length?'🏆':'👍'}</div>
-      <h3>모든 카드 매칭 완료! 🎉</h3>
-      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${CARD_PAIRS.length}쌍 모두 완성!</div>
+      <div class="big-emoji">${qScore===total?'🏆':qScore>=3?'👍':'💪'}</div>
+      <h3>${qScore} / ${total} 정답</h3>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">
+        정답률 ${Math.round(qScore/total*100)}%
+      </div>
       <div class="xp-gain">+${xp} 점 획득!</div>
       <button class="quiz-check-btn" onclick="closeQuiz()">계속하기 →</button>
     </div>`;
