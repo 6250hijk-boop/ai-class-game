@@ -210,10 +210,12 @@ requireAuth(async (user) => {
     const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
     document.getElementById('temp-reset-wrap').style.display='block';
 
-    // 퀘스트에서 돌아온 경우 → 이어하기 화면 스킵
+    // 이미 이번 세션에서 선택했으면 바로 진행
+    const alreadyChose = sessionStorage.getItem('temp_chose');
     const fromQuest = sessionStorage.getItem('from_quest');
-    if (fromQuest) {
-      sessionStorage.removeItem('from_quest');
+    if (fromQuest) sessionStorage.removeItem('from_quest');
+
+    if (alreadyChose || fromQuest) {
       userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
       if (!userData.charName) showStory();
       else initUI();
@@ -222,7 +224,6 @@ requireAuth(async (user) => {
 
     if (local && local.charName) {
       userData = local;
-      const lv = getLevelByScore(local.score||0);
       const questDone = Object.keys(local.quests||{}).filter(k=>k.endsWith('_done')).length;
       document.getElementById('saved-info').innerHTML=`
         <div style="margin-bottom:6px;">👤 캐릭터: <strong style="color:#63b3ed;">${local.charName}</strong></div>
@@ -231,6 +232,7 @@ requireAuth(async (user) => {
       document.getElementById('temp-choice-screen').style.display='flex';
     } else {
       userData = { charName:null, score:0, quests:{}, name:'임시학생' };
+      sessionStorage.setItem('temp_chose','1');
       showStory();
     }
     return;
@@ -250,16 +252,16 @@ requireAuth(async (user) => {
 });
 
 function tempContinue(){
-  // 이어하기
+  sessionStorage.setItem('temp_chose','1');
   document.getElementById('temp-choice-screen').style.display='none';
   initUI();
 }
 
 function tempNewStart(){
-  // 새로 시작 - 데이터 초기화 후 스토리
   if(!confirm('정말 새로 시작할까요?\n기존 점수와 퀘스트 진행이 모두 사라집니다.')) return;
   localStorage.removeItem('tempUserData');
   userData = { charName:null, score:0, quests:{}, name:'임시학생' };
+  sessionStorage.setItem('temp_chose','1');
   document.getElementById('temp-choice-screen').style.display='none';
   storyStep=0;
   showStory();
@@ -374,6 +376,8 @@ function toggleSidebar(){
 }
 function logout(){
   sessionStorage.removeItem('gameUser');
+  sessionStorage.removeItem('temp_chose');
+  sessionStorage.removeItem('from_quest');
   window.location.href='index.html';
 }
 </script>
