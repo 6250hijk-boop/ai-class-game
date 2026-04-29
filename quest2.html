@@ -188,8 +188,14 @@ requireAuth(async (user) => {
   // 이름 치환
   MESSAGES[2].text=MESSAGES[2].text.replace('{{name}}', userData.name||'당신');
   updateHUD(); updateCharImages();
-  const saved=(userData.quests||{}).q2_msgIdx||0;
-  msgIdx=Math.min(saved,MESSAGES.length-1);
+
+  // 완료된 퀘스트는 처음부터 다시 시작
+  const quests=userData.quests||{};
+  if(quests.q2_done){
+    msgIdx=0;
+  } else {
+    msgIdx=Math.min(quests.q2_msgIdx||0, MESSAGES.length-1);
+  }
   setTimeout(()=>showMessage(msgIdx),500);
 });
 
