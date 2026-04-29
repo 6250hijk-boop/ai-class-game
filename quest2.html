@@ -34,6 +34,7 @@
     .char-name-tag.turing{background:linear-gradient(135deg,#68d391,#38a169);}
     .char-name-tag.hinton{background:linear-gradient(135deg,#f6ad55,#ed8936);}
     .char-name-tag.both{background:linear-gradient(135deg,#b794f4,#805ad5);}
+    .char-name-tag.goodfellow{background:linear-gradient(135deg,#fc8181,#e53e3e);}
     .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;transition:all .2s;}
     .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(99,179,237,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(90px,13vh,125px);max-height:clamp(150px,26vh,220px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
     .dialog-text{font-size:clamp(14px,2.4vw,17px);line-height:1.85;color:#e2e8f0;text-shadow:0 1px 3px rgba(0,0,0,0.5);white-space:pre-line;}
@@ -96,14 +97,15 @@
 <div id="quiz-overlay" class="quiz-overlay" style="display:none;">
   <div class="quiz-box">
     <div class="quiz-header">
-      <h2>🔍 인공지능 아버지 퀴즈!</h2>
+      <h2 id="quiz-title">🔍 인공지능 아버지 퀴즈!</h2>
+      <span id="quiz-step" style="font-size:12px;color:rgba(255,255,255,0.4);margin-left:auto;"></span>
     </div>
     <div id="quiz-content"></div>
   </div>
 </div>
 
 <div class="game-screen">
-  <div class="game-bg"></div>
+  <div class="game-bg" id="game-bg"></div>
   <div class="ai-notice">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
 
   <!-- 내 캐릭터 (왼쪽) -->
@@ -139,7 +141,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-// speaker: 0=내레이터, 1=앨런튜링(char2-1), 2=제프리힌턴(char2-2), 3=둘다
+// speaker: 0=내레이터, 1=앨런튜링(char2-1), 2=제프리힌턴(char2-2), 3=둘다, 4=이언굿펠로(char2-3)
+// bg: 기본=bgq2-1, 지정 시 msg.bg로 배경 변경
 const MESSAGES = [
   { speaker:0, name:"내레이터", cls:"",
     text:"나의 아버지를 소개할께.\n음악의 아버지가 바흐라면\n인공지능의 아버지는 앨런 튜링(Alan Turing)과\n제프리 힌턴(Geoffrey Hinton)이야." },
@@ -159,7 +162,60 @@ const MESSAGES = [
     text:"앨런 튜링이 AI라는 꿈을 꾸었다면,\n제프리 힌턴은 그 꿈을 현실로 만드는 딥러닝을 만들었지.\n둘 다 인공지능의 역사에서 빠질 수 없는 아버지들이야! 👨‍👨‍👦" },
   { speaker:3, name:"앨런 튜링 & 제프리 힌턴", cls:"both",
     text:"자, 우리 두 사람에 대해 잘 배웠지?\n두 사람의 특징을 구분하는 퀴즈를 풀어볼까? 🎮",
-    type:"quiz_trigger" },
+    type:"quiz_1" },
+
+  // ── 2부: 지도학습/비지도학습 (배경 bgq2-2) ──
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
+    text:"인공지능의 시작을 알아봤으니\n인공지능 학습의 가장 큰 두 줄기를 알아보도록 하자." },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
+    text:"인공지능 학습방법에는 크게\n[지도학습]과 [비지도학습]이 있지." },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
+    text:"지도학습이란 인공지능에게 문제와 정답을\n세트로 다 알려주면서 가르치는 방법이야." },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
+    text:"마치 인간이 기출문제와 답을 보면서\n\"아! 이 문제는 이렇게 푸는구나!\"라고\n깨닫게 하는 방법이야." },
+
+  // 배경 bgq2-3
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
+    text:"인공지능에게 수천장의 강아지와 고양이 사진을\n보여주면서 \"이건 강아지야\", \"이건 고양이야\"라고\n이름을 붙여주는거야." },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
+    text:"이걸 라벨링(레이블링)이라고 하지. 🏷️" },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
+    text:"그럼 인공지능은 학습하지 않은 강아지나 고양이 사진을 보면\n\"아 이건 예전에 배운 특징을 보니 고양이구나\"라고\n정답을 맞추는 거야." },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
+    text:"정답을 맞춘다고 했지만 정확히 말하면\n예측하는 거지. 🎯" },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
+    text:"여기서 똑똑한 친구들은 눈치챘겠지만\n인공지능이 배우지 않은 내용은\n정확한 예측을 할 수 없어." },
+  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
+    text:"대표적인 학자는 '제프리힌턴', '얀 르쿤', '앤드류 응'이 있지." },
+
+  // 이언 굿펠로 (char2-3) 등장
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
+    text:"안녕 나는 이언 굿펠로야. 👋\n이번에는 비지도학습에 대해 설명해줄께." },
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
+    text:"지도학습과 다르게 비지도학습은 정답이 없어.\n그냥 데이터들만 던져주고\n\"인공지능아 니가 여기서 뭐가 비슷한지 찾아봐\"라고 하는거야." },
+
+  // 배경 bgq2-5
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
+    text:"우리가 여러 옷 더미를 던져줬을 때\n양말은 양말끼리, 반팔은 반팔끼리,\n바지는 바지끼리 분류하는 것과 같아. 👕👖🧦" },
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
+    text:"라벨링 되어있지 않은 수만개의 데이터를 보여주고\n스스로 데이터 사이의 공통점을 찾는거지." },
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
+    text:"그럼 언제 활용할 수 있을까? 🤔" },
+
+  // 배경 bgq2-6
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-6",
+    text:"음악 취향 찾기나 카드 부정사용을 방지하는데\n활용하기 좋지! 🎵💳" },
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-6",
+    text:"\"이 사람은 이런 음악들을 듣네?\n비슷한 음악들을 그룹으로 묶어서 추천해주자!\"" },
+
+  // 배경 bgq2-7
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
+    text:"\"평소 이 사람은 한국에서 만원 정도 쓰는데\n갑자기 외국에서 100만원이 결제되었네?\n일단 정지시키자!\" 🚨" },
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
+    text:"대표적인 학자로는\n'요수아 벤지오', '테우보 코호넨', '이언 굿펠로'가 있지." },
+  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
+    text:"자, 지도학습과 비지도학습에 대해 잘 배웠지?\n퀴즈로 확인해볼까? 🎮",
+    type:"quiz_2" },
 ];
 
 const QUIZ_ITEMS = [
@@ -169,6 +225,17 @@ const QUIZ_ITEMS = [
   { id:"d", text:"🧠 인공신경망 주장", answer:"hinton" },
   { id:"e", text:"🔬 딥러닝 개발", answer:"hinton" },
   { id:"f", text:"🏆 노벨 물리학상 수상", answer:"hinton" },
+];
+
+// 퀴즈2 - OX 2문제 + 객관식 1문제
+const QUIZZES_2 = [
+  { type:"ox", q:"지도학습에서는 AI에게 문제와 정답을 함께 알려주면서 학습시킨다.", ans:true,
+    exp:"맞아요! 지도학습은 문제와 정답 세트를 함께 제공해서 AI를 학습시키는 방법이에요." },
+  { type:"ox", q:"비지도학습에서는 AI에게 정답이 있는 라벨링된 데이터를 제공한다.", ans:false,
+    exp:"틀렸어요! 비지도학습은 정답(라벨) 없이 데이터만 주고 AI 스스로 패턴을 찾게 해요." },
+  { type:"mc", q:"다음 중 비지도학습을 활용하기 가장 적합한 사례는?",
+    opts:["사진 속 동물이 강아지인지 고양이인지 분류하기","음악 취향을 분석해서 비슷한 음악 추천하기","손글씨 숫자를 0~9로 인식하기","스팸 메일 여부를 '스팸/정상'으로 분류하기"],
+    ans:1, exp:"음악 취향 분석은 정답 없이 비슷한 패턴을 묶는 비지도학습의 대표적인 활용 사례예요!" },
 ];
 
 let currentUser=null, userData=null;
@@ -214,6 +281,11 @@ function showMessage(idx){
   document.getElementById('hud-progress').textContent=`${idx+1} / ${MESSAGES.length}`;
   document.getElementById('btn-prev').style.display=idx>0?'flex':'none';
 
+  // 배경 변경
+  if(msg.bg){
+    document.getElementById('game-bg').style.backgroundImage=`url('images/${msg.bg}.png')`;
+  }
+
   // 화자별 처리
   const nameTag=document.getElementById('dialog-name');
   const sc=document.getElementById('speaker-char');
@@ -233,14 +305,21 @@ function showMessage(idx){
   } else if(msg.speaker===3){
     sc.src='images/char2-2.png'; sc.style.display='block';
     sc2.src='images/char2-1.png'; sc2.style.display='block';
+  } else if(msg.speaker===4){
+    sc.src='images/char2-3.png'; sc.style.display='block';
+    sc2.style.display='none';
   }
 
   document.getElementById('dialog-next').style.display='flex';
   typeText(document.getElementById('dialog-text'), msg.text, ()=>{
-    if(msg.type==='quiz_trigger'){
+    if(msg.type==='quiz_1'){
       document.getElementById('dialog-next').style.display='none';
       quizShowing=true;
-      setTimeout(()=>showQuiz(), 600);
+      setTimeout(()=>showQuiz1(), 600);
+    } else if(msg.type==='quiz_2'){
+      document.getElementById('dialog-next').style.display='none';
+      quizShowing=true;
+      setTimeout(()=>showQuiz2(), 600);
     }
   });
 }
@@ -267,10 +346,12 @@ function nextMessage(){
     document.getElementById('dialog-text').textContent=msg.text;
     isTyping=false;
     document.getElementById('dialog-next').style.opacity='1';
-    if(msg.type==='quiz_trigger'){
+    if(msg.type==='quiz_1'){
       document.getElementById('dialog-next').style.display='none';
-      quizShowing=true;
-      setTimeout(()=>showQuiz(),400);
+      quizShowing=true; setTimeout(()=>showQuiz1(),400);
+    } else if(msg.type==='quiz_2'){
+      document.getElementById('dialog-next').style.display='none';
+      quizShowing=true; setTimeout(()=>showQuiz2(),400);
     }
     return;
   }
@@ -305,8 +386,8 @@ document.addEventListener('keydown',(e)=>{
   if(e.code==='ArrowLeft') prevMessage();
 });
 
-// ══ 드래그앤드롭 퀴즈 ══
-function showQuiz(){
+// ══ 퀴즈1: 드래그앤드롭 분류 ══
+function showQuiz1(){
   slotMap={};
   const shuffled=[...QUIZ_ITEMS].sort(()=>Math.random()-.5);
   document.getElementById('quiz-overlay').style.display='flex';
@@ -386,30 +467,144 @@ function checkQuiz(){
       ${ok?'🎉 완벽해요!':'❌ 아쉬워요!'} ${correct}/${total}개 정답!<br>
       튜링: 1912년생·튜링기계·튜링테스트 / 힌턴: 인공신경망·딥러닝·노벨상
     </div>
-    <button class="quiz-check-btn" onclick="finishQuiz(${correct},${total})">
+    <button class="quiz-check-btn" onclick="finishQuiz1(${correct},${total})">
       결과 보기 →
     </button>`;
   document.getElementById('check-btn').style.display='none';
 }
 
-async function finishQuiz(correct, total){
+async function finishQuiz1(correct, total){
   const xp=correct*8+(correct===total?20:0);
+  await saveQuizResult('q2_quiz1',correct,total,xp);
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-result">
+      <div class="big-emoji">${correct===total?'🏆':correct>=4?'👍':'💪'}</div>
+      <h3>${correct} / ${total} 정답</h3>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(correct/total*100)}%</div>
+      <div class="xp-gain">+${xp} 점 획득!</div>
+      <button class="quiz-check-btn" onclick="closeQuiz1()">계속하기 →</button>
+    </div>`;
+  showXPPopup('+'+xp+' 점');
+}
+
+function closeQuiz1(){
+  quizShowing=false;
+  document.getElementById('quiz-overlay').style.display='none';
+  msgIdx++; autoSave(); showMessage(msgIdx);
+}
+
+// ══ 퀴즈2: OX 2문제 + 객관식 1문제 ══
+let q2Idx=0, q2Score=0;
+
+function showQuiz2(){
+  q2Idx=0; q2Score=0;
+  document.getElementById('quiz-title').textContent='🧠 지도/비지도학습 퀴즈!';
+  document.getElementById('quiz-overlay').style.display='flex';
+  renderQ2();
+}
+
+function renderQ2(){
+  const q=QUIZZES_2[q2Idx];
+  document.getElementById('quiz-step').textContent=`${q2Idx+1} / ${QUIZZES_2.length}`;
+  if(q.type==='ox') renderOX(q);
+  else renderMC2(q);
+}
+
+function renderOX(q){
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-question" style="font-size:clamp(14px,2.5vw,16px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;">${q.q}</div>
+    <div style="display:flex;gap:12px;margin-top:16px;">
+      <button onclick="selectOX(true,this)"
+        style="flex:1;padding:20px;background:rgba(104,211,145,0.1);border:2px solid rgba(104,211,145,0.3);
+               border-radius:14px;color:#68d391;font-size:32px;cursor:pointer;font-family:inherit;">⭕</button>
+      <button onclick="selectOX(false,this)"
+        style="flex:1;padding:20px;background:rgba(252,129,129,0.1);border:2px solid rgba(252,129,129,0.3);
+               border-radius:14px;color:#fc8181;font-size:32px;cursor:pointer;font-family:inherit;">❌</button>
+    </div>
+    <div id="quiz-feedback" style="margin-top:12px;"></div>`;
+}
+
+function selectOX(val,btn){
+  const q=QUIZZES_2[q2Idx];
+  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
+  const ok=val===q.ans;
+  if(ok) q2Score++;
+  btn.style.transform='scale(1.05)';
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div class="quiz-feedback ${ok?'correct':'wrong'}" style="margin-top:10px;">
+      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button class="quiz-check-btn" onclick="nextQ2()">
+      ${q2Idx+1<QUIZZES_2.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
+}
+
+function renderMC2(q){
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-question" style="font-size:clamp(14px,2.5vw,16px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;">${q.q}</div>
+    ${q.opts.map((opt,i)=>`
+      <button onclick="selectMC2(${i},this)"
+        style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.06);
+               border:2px solid rgba(99,179,237,0.2);border-radius:11px;color:#e2e8f0;
+               font-size:clamp(13px,2.3vw,14px);cursor:pointer;margin-bottom:8px;
+               text-align:left;font-family:inherit;transition:all .2s;">
+        ${opt}</button>`).join('')}
+    <div id="quiz-feedback" style="margin-top:4px;"></div>`;
+}
+
+function selectMC2(idx,btn){
+  const q=QUIZZES_2[q2Idx];
+  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
+  const ok=idx===q.ans;
+  if(ok) q2Score++;
+  btn.style.background=ok?'rgba(104,211,145,0.15)':'rgba(252,129,129,0.15)';
+  btn.style.borderColor=ok?'#68d391':'#fc8181';
+  document.querySelectorAll('#quiz-content button')[q.ans].style.background='rgba(104,211,145,0.15)';
+  document.querySelectorAll('#quiz-content button')[q.ans].style.borderColor='#68d391';
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div class="quiz-feedback ${ok?'correct':'wrong'}">
+      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button class="quiz-check-btn" onclick="nextQ2()">결과 보기 →</button>`;
+}
+
+function nextQ2(){
+  q2Idx++;
+  if(q2Idx>=QUIZZES_2.length) finishQuiz2();
+  else renderQ2();
+}
+
+async function finishQuiz2(){
+  const total=QUIZZES_2.length;
+  const xp=q2Score*12+(q2Score===total?20:0);
+  await saveQuizResult('q2_quiz2',q2Score,total,xp);
+  document.getElementById('quiz-content').innerHTML=`
+    <div class="quiz-result">
+      <div class="big-emoji">${q2Score===total?'🏆':q2Score>=2?'👍':'💪'}</div>
+      <h3>${q2Score} / ${total} 정답</h3>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(q2Score/total*100)}%</div>
+      <div class="xp-gain">+${xp} 점 획득!</div>
+      <button class="quiz-check-btn" onclick="closeQuiz2()">계속하기 →</button>
+    </div>`;
+  showXPPopup('+'+xp+' 점');
+}
+
+function closeQuiz2(){
+  quizShowing=false;
+  document.getElementById('quiz-overlay').style.display='none';
+  showBoard();
+}
+
+async function saveQuizResult(quizName, score, total, xp){
   if(currentUser.uid==='student'){
     userData.score=(userData.score||0)+xp;
-    userData.quests=userData.quests||{};
-    userData.quests.q2_done=true;
-    userData.quests.q2_msgIdx=MESSAGES.length;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
     updateHUD(); updateCharImages();
   } else {
     await addScore(currentUser.uid,xp,'퀘스트2 퀴즈');
-    await db.collection('users').doc(currentUser.uid).update({
-      'quests.q2_done':true,'quests.q2_msgIdx':MESSAGES.length
-    });
     await db.collection('quiz_results').doc(currentUser.uid).set({
-      q2:firebase.firestore.FieldValue.arrayUnion({
-        score:correct,total,xp,
-        accuracy:Math.round(correct/total*100),
+      [quizName]:firebase.firestore.FieldValue.arrayUnion({
+        score,total,xp,accuracy:Math.round(score/total*100),
         date:new Date().toISOString()
       })
     },{merge:true});
@@ -417,23 +612,6 @@ async function finishQuiz(correct, total){
     updateHUD(); updateCharImages();
     checkLevelUp(userData.score-xp,userData.score);
   }
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-result">
-      <div class="big-emoji">${correct===total?'🏆':correct>=4?'👍':'💪'}</div>
-      <h3>${correct} / ${total} 정답</h3>
-      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">
-        정답률 ${Math.round(correct/total*100)}%
-      </div>
-      <div class="xp-gain">+${xp} 점 획득!</div>
-      <button class="quiz-check-btn" onclick="closeQuiz()">계속하기 →</button>
-    </div>`;
-  showXPPopup('+'+xp+' 점');
-}
-
-function closeQuiz(){
-  quizShowing=false;
-  document.getElementById('quiz-overlay').style.display='none';
-  showBoard();
 }
 
 // ══════════════════════════════════════════
