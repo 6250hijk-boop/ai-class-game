@@ -21,6 +21,8 @@
       <a href="#tab-students" class="quest-item active" onclick="showTab('students')">👥 학생 현황</a>
       <a href="#tab-quiz" class="quest-item" onclick="showTab('quiz')">📝 퀴즈 결과</a>
       <a href="#tab-board" class="quest-item" onclick="showTab('board')">📋 게시판 관리</a>
+      <a href="#tab-classes" class="quest-item" onclick="showTab('classes')">🏷️ 라벨 클래스 관리</a>
+      <a href="#tab-uploads" class="quest-item" onclick="showTab('uploads')">📁 업로드 현황</a>
       <a href="#tab-stats" class="quest-item" onclick="showTab('stats')">📊 전체 통계</a>
     </div>
     <button class="btn btn-ghost" onclick="logout()"
@@ -111,6 +113,35 @@
           </div>
           <div id="board-admin-list"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- 라벨 클래스 관리 탭 -->
+    <div id="tab-classes" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;">
+        <h3 style="margin-bottom:16px;">🏷️ 라벨링 클래스 관리</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">퀘스트7 라벨링에 사용할 클래스를 설정하세요. 클래스 순서가 YOLO 클래스 번호가 됩니다.</p>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <input id="new-class-name" placeholder="클래스 이름 (예: cat, dog, person)"
+            style="flex:1;min-width:180px;padding:9px 12px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:14px;font-family:inherit;outline:none;">
+          <input id="new-class-color" type="color" value="#63b3ed"
+            style="width:44px;height:38px;border:1px solid var(--border);border-radius:9px;cursor:pointer;background:transparent;">
+          <button onclick="addClass()" class="btn btn-primary btn-sm" style="white-space:nowrap;">+ 클래스 추가</button>
+        </div>
+        <div id="class-list" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="text-align:center;padding:20px;color:var(--muted);">로딩 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 업로드 현황 탭 -->
+    <div id="tab-uploads" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <h3>📁 학생 업로드 현황</h3>
+          <button onclick="loadUploads()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
+        </div>
+        <div id="upload-list"><div style="text-align:center;padding:30px;color:var(--muted);">로딩 중...</div></div>
       </div>
     </div>
 
@@ -236,13 +267,94 @@ async function loadData() {
 }
 
 function showTab(t) {
-  ['students','quiz','board','stats'].forEach(id => {
-    document.getElementById('tab-'+id).style.display = id===t?'block':'none';
+  ['students','quiz','board','classes','uploads','stats'].forEach(id => {
+    const el=document.getElementById('tab-'+id);
+    if(el) el.style.display = id===t?'block':'none';
   });
   document.querySelectorAll('.sidebar .quest-item').forEach((el,i) => {
-    el.classList.toggle('active', ['students','quiz','board','stats'][i]===t);
+    el.classList.toggle('active', ['students','quiz','board','classes','uploads','stats'][i]===t);
   });
   if(t==='board') loadBoardAdmin('board_q1');
+  if(t==='classes') loadClasses();
+  if(t==='uploads') loadUploads();
+}
+
+// ── 클래스 관리 ──
+async function loadClasses(){
+  const snap = await db.collection('label_classes').orderBy('order').get();
+  const list = document.getElementById('class-list');
+  if(snap.empty){
+    list.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);">클래스가 없습니다. 추가해주세요!</div>`;
+    return;
+  }
+  list.innerHTML = snap.docs.map((doc,i)=>{
+    const d=doc.data();
+    return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:10px 14px;">
+      <span style="background:${d.color};border-radius:6px;width:20px;height:20px;flex-shrink:0;"></span>
+      <span style="flex:1;font-size:14px;"><strong style="color:var(--primary);">[${i}]</strong> ${d.name}</span>
+      <span style="font-size:11px;color:var(--muted);">클래스 ${i}</span>
+      <button onclick="deleteClass('${doc.id}')"
+        style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 10px;color:var(--red);font-size:12px;cursor:pointer;font-family:inherit;">
+        🗑️ 삭제
+      </button>
+    </div>`;
+  }).join('');
+}
+
+async function addClass(){
+  const name=document.getElementById('new-class-name').value.trim();
+  const color=document.getElementById('new-class-color').value;
+  if(!name){alert('클래스 이름을 입력하세요.');return;}
+  const snap=await db.collection('label_classes').orderBy('order').get();
+  const order=snap.size;
+  await db.collection('label_classes').add({name,color,order,created_at:new Date().toISOString()});
+  document.getElementById('new-class-name').value='';
+  alert(`✅ 클래스 "${name}" 추가됨 (클래스 번호: ${order})`);
+  loadClasses();
+}
+
+async function deleteClass(docId){
+  if(!confirm('이 클래스를 삭제할까요?\n기존 라벨링 데이터에 영향을 줄 수 있습니다.')) return;
+  await db.collection('label_classes').doc(docId).delete();
+  // 순서 재정렬
+  const snap=await db.collection('label_classes').orderBy('order').get();
+  const batch=db.batch();
+  snap.docs.forEach((d,i)=>batch.update(d.ref,{order:i}));
+  await batch.commit();
+  loadClasses();
+}
+
+// ── 업로드 현황 ──
+async function loadUploads(){
+  const list=document.getElementById('upload-list');
+  list.innerHTML=`<div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto;"></div></div>`;
+  try{
+    const snap=await db.collection('uploads').orderBy('created_at','desc').get();
+    if(snap.empty){list.innerHTML=`<div style="text-align:center;padding:30px;color:var(--muted);">업로드된 파일이 없습니다.</div>`;return;}
+    // userId별 그룹화
+    const groups={};
+    snap.docs.forEach(doc=>{
+      const d=doc.data();
+      const uid=d.userId||'unknown';
+      if(!groups[uid]) groups[uid]={userName:d.userName||uid,files:[]};
+      groups[uid].files.push({id:doc.id,...d});
+    });
+    list.innerHTML=Object.entries(groups).map(([uid,g])=>`
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <strong style="color:var(--primary);">👤 ${g.userName}</strong>
+          <span style="font-size:12px;color:var(--muted);">${g.files.length}장</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${g.files.map(f=>`
+            <div style="position:relative;width:80px;height:80px;">
+              <img src="${f.url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"
+                onerror="this.src='';this.parentElement.style.background='rgba(255,255,255,0.05)'">
+              <div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px;">${f.fileName||''}</div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+  }catch(e){list.innerHTML=`<div style="color:var(--red);padding:16px;">오류: ${e.message}</div>`;}
 }
 
 let currentBoardCollection = 'board_q1';
