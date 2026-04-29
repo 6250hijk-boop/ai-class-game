@@ -173,31 +173,38 @@ const MESSAGES = [
   { text:"자, 지금까지 좋은 학습 데이터의 조건을\n배웠어요! 퀴즈로 확인해볼까요? 🃏", type:"quiz" },
 ];
 
-// 빈칸 채우기 퀴즈
-const FILL_QUIZZES = [
+// ══ 퀴즈 데이터 ══
+const QUIZZES = [
   {
-    sentence: "AI는 이미지의 [___] 경계로 특징을 찾기 때문에\n초점이 흐린 사진은 학습에 적합하지 않다.",
-    blank: "픽셀",
-    choices: ["픽셀", "색상", "크기", "밝기"],
-    exp: "AI는 수십만 개의 픽셀 경계로 특징을 찾아냅니다. 초점이 흐리면 경계가 불분명해져요!"
+    type: "photo_multi",
+    title: "문제 1. 학습시키기 좋은 사진 두 개 고르기",
+    desc: "AI 학습에 적합한 사진을 모두 선택하세요! (2개 선택)",
+    photos: ["q3-1-1", "q3-1-2", "q3-1-3"],
+    answers: ["q3-1-2", "q3-1-3"],
+    selectCount: 2,
+    exp: "q3-1-2와 q3-1-3이 정답이에요! 선명하고 가림 없이 잘 찍힌 사진이 AI 학습에 적합합니다."
   },
   {
-    sentence: "쓰레기통 뒤에 가려진 고양이 사진만 학습시키면\nAI가 [___]도 고양이로 인식할 수 있다.",
-    blank: "쓰레기통",
-    choices: ["강아지", "쓰레기통", "나무", "자동차"],
-    exp: "가려진 배경까지 함께 학습해서 쓰레기통도 고양이 특징으로 잘못 학습할 수 있어요!"
+    type: "photo_single",
+    title: "문제 2. 학습시키기 좋은 사진 한 개 고르기",
+    desc: "AI 학습에 가장 적합한 사진을 하나 선택하세요!",
+    photos: ["q3-2-1", "q3-2-2", "q3-2-3"],
+    answers: ["q3-2-3"],
+    selectCount: 1,
+    exp: "q3-2-3이 정답이에요! 다양한 배경과 상황에서 찍힌 선명한 사진이 좋은 학습 데이터입니다."
   },
   {
-    sentence: "교복 입은 사람만 학습시키면\n[___]이나 군복을 입은 사람은 인식하지 못할 수 있다.",
-    blank: "정장",
-    choices: ["교복", "정장", "운동복", "잠옷"],
-    exp: "다양한 복장의 사람을 학습시켜야 어떤 옷을 입어도 사람으로 인식할 수 있어요!"
-  },
-  {
-    sentence: "같은 장소에서만 찍은 사진은 아무리 많아도\n[___] 데이터로서 의미가 없다.",
-    blank: "학습",
-    choices: ["저장", "학습", "백업", "공유"],
-    exp: "다양한 환경과 배경에서 찍은 사진이어야 의미 있는 학습 데이터가 됩니다!"
+    type: "mc",
+    title: "문제 3. 객관식",
+    q: "AI 이미지 학습 데이터로 가장 적합하지 않은 것은?",
+    opts: [
+      "다양한 각도에서 찍은 사과 사진",
+      "실내외 여러 환경에서 찍은 고양이 사진",
+      "같은 책상 위에서만 찍은 사과 사진 1000장",
+      "맑은 날과 흐린 날 모두 찍은 강아지 사진"
+    ],
+    ans: 2,
+    exp: "같은 장소에서만 찍은 사진은 아무리 많아도 다양성이 없어 의미 있는 학습 데이터가 되지 않아요!"
   },
 ];
 
@@ -302,111 +309,179 @@ document.addEventListener('keydown',(e)=>{
   if(e.code==='ArrowLeft') prevMessage();
 });
 
-// ══ 빈칸 채우기 퀴즈 ══
-let qIdx=0, qScore=0;
+// ══ 퀴즈 ══
+let qIdx=0, qScore=0, selectedPhotos=[];
 
 function startQuiz(){
   qIdx=0; qScore=0;
   document.getElementById('quiz-overlay').style.display='flex';
-  document.getElementById('quiz-title').textContent='📝 빈칸 채우기 퀴즈!';
-  renderFillQuiz();
+  renderQuiz();
 }
 
-function renderFillQuiz(){
-  const q=FILL_QUIZZES[qIdx];
-  document.getElementById('quiz-step').textContent=`${qIdx+1} / ${FILL_QUIZZES.length}`;
+function renderQuiz(){
+  const q=QUIZZES[qIdx];
+  document.getElementById('quiz-title').textContent='📸 데이터 수집 퀴즈!';
+  document.getElementById('quiz-step').textContent=`${qIdx+1} / ${QUIZZES.length}`;
 
-  // 진행 도트
-  const dots=FILL_QUIZZES.map((_,i)=>
-    `<div style="width:8px;height:8px;border-radius:50%;background:${i<qIdx?'#68d391':i===qIdx?'#a78bfa':'rgba(255,255,255,0.15)'};transition:background .3s;"></div>`
-  ).join('');
+  if(q.type==='photo_multi'||q.type==='photo_single') renderPhotoQuiz(q);
+  else renderMC(q);
+}
 
-  // 문장에서 [___] 하이라이트
-  const displayText=q.sentence.replace('[___]',
-    `<span style="display:inline-block;background:rgba(167,139,250,0.2);border:2px dashed rgba(167,139,250,0.6);border-radius:6px;padding:2px 16px;color:#a78bfa;font-weight:700;min-width:60px;text-align:center;">___</span>`
-  );
-
-  // 보기 섞기
-  const shuffled=[...q.choices].sort(()=>Math.random()-.5);
-
+function renderPhotoQuiz(q){
+  selectedPhotos=[];
   document.getElementById('quiz-content').innerHTML=`
-    <div style="display:flex;gap:5px;margin-bottom:16px;">${dots}</div>
-
-    <!-- 문장 -->
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.2);
-         border-radius:12px;padding:16px;margin-bottom:18px;
-         font-size:clamp(14px,2.5vw,16px);line-height:2;color:#e2e8f0;white-space:pre-line;">
-      ${displayText}
+    <div style="font-size:clamp(14px,2.5vw,16px);font-weight:700;color:#e2e8f0;margin-bottom:6px;">${q.title}</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:14px;">${q.desc}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(6px,1.5vw,10px);margin-bottom:14px;" id="photo-grid">
+      ${q.photos.map(p=>`
+        <div id="ph-${p}" onclick="togglePhoto('${p}','${q.type}')"
+          style="border-radius:10px;overflow:hidden;cursor:pointer;
+                 border:3px solid rgba(255,255,255,0.1);transition:all .2s;
+                 aspect-ratio:1;position:relative;">
+          <img src="images/${p}.png"
+            style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;"
+            onerror="this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none'">
+          <div id="check-${p}"
+            style="display:none;position:absolute;top:6px;right:6px;
+                   background:#a78bfa;border-radius:50%;width:24px;height:24px;
+                   align-items:center;justify-content:center;font-size:14px;color:white;">✓</div>
+        </div>`).join('')}
     </div>
-
-    <!-- 보기 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      ${shuffled.map(word=>`
-        <button onclick="selectWord('${word}', this)"
-          style="padding:12px 8px;background:rgba(167,139,250,0.1);
-                 border:2px solid rgba(167,139,250,0.25);border-radius:11px;
-                 color:#e2e8f0;font-size:clamp(13px,2.5vw,15px);font-weight:600;
-                 cursor:pointer;font-family:inherit;transition:all .2s;"
-          onmouseover="if(!this.disabled)this.style.background='rgba(167,139,250,0.2)'"
-          onmouseout="if(!this.disabled)this.style.background='rgba(167,139,250,0.1)'">
-          ${word}
-        </button>`).join('')}
+    <div id="photo-hint" style="font-size:12px;color:rgba(167,139,250,0.7);margin-bottom:10px;text-align:center;">
+      ${q.type==='photo_multi'?`0 / ${q.selectCount}개 선택됨`:'사진을 선택하세요'}
     </div>
-    <div id="quiz-feedback" style="margin-top:12px;"></div>`;
+    <div id="quiz-feedback"></div>
+    <button id="confirm-btn" onclick="confirmPhoto()"
+      style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);
+             border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
+             font-weight:700;cursor:pointer;font-family:inherit;opacity:0.4;pointer-events:none;">
+      ✅ 선택 완료
+    </button>`;
 }
 
-function selectWord(word, btn){
-  const q=FILL_QUIZZES[qIdx];
-  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
-  const ok=word===q.blank;
-  if(ok) qScore++;
+function togglePhoto(photoId, quizType){
+  const el=document.getElementById('ph-'+photoId);
+  const check=document.getElementById('check-'+photoId);
+  const q=QUIZZES[qIdx];
 
-  // 정답 표시
-  btn.style.background=ok?'rgba(104,211,145,0.2)':'rgba(252,129,129,0.2)';
-  btn.style.borderColor=ok?'#68d391':'#fc8181';
-  btn.style.color=ok?'#68d391':'#fc8181';
-  // 정답 버튼 강조 (오답 선택 시)
-  if(!ok){
-    document.querySelectorAll('#quiz-content button').forEach(b=>{
-      if(b.textContent.trim()===q.blank){
-        b.style.background='rgba(104,211,145,0.2)';
-        b.style.borderColor='#68d391';
-        b.style.color='#68d391';
-      }
-    });
+  if(selectedPhotos.includes(photoId)){
+    // 선택 취소
+    selectedPhotos=selectedPhotos.filter(p=>p!==photoId);
+    el.style.borderColor='rgba(255,255,255,0.1)';
+    el.style.transform='';
+    check.style.display='none';
+  } else {
+    if(quizType==='photo_single'){
+      // 단일 선택: 기존 선택 해제
+      selectedPhotos.forEach(p=>{
+        document.getElementById('ph-'+p).style.borderColor='rgba(255,255,255,0.1)';
+        document.getElementById('ph-'+p).style.transform='';
+        document.getElementById('check-'+p).style.display='none';
+      });
+      selectedPhotos=[];
+    }
+    if(quizType==='photo_multi'&&selectedPhotos.length>=q.selectCount) return;
+    selectedPhotos.push(photoId);
+    el.style.borderColor='#a78bfa';
+    el.style.transform='scale(1.03)';
+    check.style.display='flex';
   }
 
-  // 문장에 정답 채우기
-  const filled=q.sentence.replace('[___]',
-    `<span style="background:${ok?'rgba(104,211,145,0.25)':'rgba(252,129,129,0.25)'};
-     border-radius:5px;padding:1px 8px;color:${ok?'#68d391':'#fc8181'};font-weight:700;">
-     ${q.blank}</span>`
-  );
-  document.querySelector('#quiz-content > div:nth-child(2)').innerHTML=filled;
+  // 힌트 업데이트
+  const hint=document.getElementById('photo-hint');
+  if(quizType==='photo_multi') hint.textContent=`${selectedPhotos.length} / ${q.selectCount}개 선택됨`;
+  else hint.textContent=selectedPhotos.length?'선택됨 - 완료 버튼을 눌러주세요':'사진을 선택하세요';
 
+  // 완료 버튼 활성화
+  const btn=document.getElementById('confirm-btn');
+  const ready=(quizType==='photo_multi'&&selectedPhotos.length===q.selectCount)||(quizType==='photo_single'&&selectedPhotos.length===1);
+  btn.style.opacity=ready?'1':'0.4';
+  btn.style.pointerEvents=ready?'auto':'none';
+}
+
+function confirmPhoto(){
+  const q=QUIZZES[qIdx];
+  const correct=q.answers.length===selectedPhotos.length&&
+    q.answers.every(a=>selectedPhotos.includes(a));
+
+  if(correct) qScore++;
+
+  // 정답/오답 표시
+  q.photos.forEach(p=>{
+    const el=document.getElementById('ph-'+p);
+    const isAnswer=q.answers.includes(p);
+    const isSelected=selectedPhotos.includes(p);
+    if(isAnswer){
+      el.style.borderColor='#68d391';
+      el.style.boxShadow='0 0 12px rgba(104,211,145,0.5)';
+    } else if(isSelected&&!isAnswer){
+      el.style.borderColor='#fc8181';
+      el.style.boxShadow='0 0 12px rgba(252,129,129,0.5)';
+    }
+  });
+
+  document.getElementById('confirm-btn').style.display='none';
   document.getElementById('quiz-feedback').innerHTML=`
-    <div style="padding:10px 14px;border-radius:9px;font-size:clamp(12px,2vw,13px);line-height:1.5;
+    <div style="padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.5;margin-bottom:10px;
+         background:rgba(${correct?'104,211,145':'252,129,129'},0.12);
+         border:1px solid ${correct?'#68d391':'#fc8181'};color:${correct?'#68d391':'#fc8181'};">
+      ${correct?'✅ 정답!':'❌ 오답!'} ${q.exp}
+    </div>
+    <button onclick="nextQuiz()"
+      style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);
+             border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
+             font-weight:700;cursor:pointer;font-family:inherit;">
+      ${qIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+    </button>`;
+}
+
+function renderMC(q){
+  document.getElementById('quiz-content').innerHTML=`
+    <div style="font-size:clamp(14px,2.5vw,16px);font-weight:700;color:#e2e8f0;margin-bottom:6px;">${q.title}</div>
+    <div style="font-size:clamp(13px,2.3vw,15px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;">${q.q}</div>
+    ${q.opts.map((opt,i)=>`
+      <button onclick="selectMC(${i},this)"
+        style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.06);
+               border:2px solid rgba(167,139,250,0.2);border-radius:11px;color:#e2e8f0;
+               font-size:clamp(12px,2.3vw,14px);cursor:pointer;margin-bottom:8px;
+               text-align:left;font-family:inherit;transition:all .2s;"
+        onmouseover="if(!this.disabled)this.style.borderColor='#a78bfa'"
+        onmouseout="if(!this.disabled)this.style.borderColor='rgba(167,139,250,0.2)'">
+        ${opt}</button>`).join('')}
+    <div id="quiz-feedback" style="margin-top:4px;"></div>`;
+}
+
+function selectMC(idx,btn){
+  const q=QUIZZES[qIdx];
+  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
+  const ok=idx===q.ans;
+  if(ok) qScore++;
+  btn.style.background=ok?'rgba(104,211,145,0.15)':'rgba(252,129,129,0.15)';
+  btn.style.borderColor=ok?'#68d391':'#fc8181';
+  document.querySelectorAll('#quiz-content button')[q.ans].style.background='rgba(104,211,145,0.15)';
+  document.querySelectorAll('#quiz-content button')[q.ans].style.borderColor='#68d391';
+  document.getElementById('quiz-feedback').innerHTML=`
+    <div style="padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.5;
          background:rgba(${ok?'104,211,145':'252,129,129'},0.12);
          border:1px solid ${ok?'#68d391':'#fc8181'};color:${ok?'#68d391':'#fc8181'};">
       ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
     </div>
-    <button onclick="nextFillQuiz()"
-      style="width:100%;padding:12px;margin-top:10px;
-             background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;
-             border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
+    <button onclick="nextQuiz()"
+      style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#a78bfa,#7c3aed);
+             border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
              font-weight:700;cursor:pointer;font-family:inherit;">
-      ${qIdx+1<FILL_QUIZZES.length?'다음 문제 →':'결과 보기 →'}
+      결과 보기 →
     </button>`;
 }
 
-function nextFillQuiz(){
+function nextQuiz(){
   qIdx++;
-  if(qIdx>=FILL_QUIZZES.length) finishQuiz();
-  else renderFillQuiz();
+  if(qIdx>=QUIZZES.length) finishQuiz();
+  else renderQuiz();
 }
 
 async function finishQuiz(){
-  const total=FILL_QUIZZES.length;
+  const total=QUIZZES.length;
   const xp=qScore*10+(qScore===total?20:0);
   if(currentUser.uid==='student'){
     userData.score=(userData.score||0)+xp;
@@ -430,7 +505,7 @@ async function finishQuiz(){
   }
   document.getElementById('quiz-content').innerHTML=`
     <div class="quiz-result">
-      <div class="big-emoji">${qScore===total?'🏆':qScore>=3?'👍':'💪'}</div>
+      <div class="big-emoji">${qScore===total?'🏆':qScore>=2?'👍':'💪'}</div>
       <h3>${qScore} / ${total} 정답</h3>
       <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">
         정답률 ${Math.round(qScore/total*100)}%
