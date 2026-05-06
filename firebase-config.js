@@ -11,9 +11,10 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth    = firebase.auth();
-const db      = firebase.firestore();
-const storage = firebase.storage();
+const auth = firebase.auth();
+const db   = firebase.firestore();
+// Storage는 SDK가 로드된 페이지에서만 초기화
+const storage = (typeof firebase.storage === 'function') ? firebase.storage() : null;
 
 // ── 관리자 계정 ──
 const ADMIN_ID = "admin";
