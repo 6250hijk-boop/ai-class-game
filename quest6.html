@@ -204,14 +204,32 @@ function clearPending(){
   document.getElementById('pending-card').style.display='none';
 }
 
-// 단일 파일 업로드 함수
-async function uploadOne(pf, userId, userName){
-  const resizedBlob=await resizeImage(pf.file);
+// 단일 파일 업로드 함수 - 진행률 콜백 포함
+async function uploadOne(pf, userId, userName, onProgress){
+  // 1단계: 리사이징
+  onProgress(pf.id, 'resize', 0);
+  const resizedBlob = await resizeImage(pf.file, (p)=>onProgress(pf.id,'resize',p));
   if(!resizedBlob) throw new Error('이미지 변환 실패');
+  onProgress(pf.id, 'resize', 100);
+
+  // 2단계: 업로드
   const fileName=pf.file.name.replace(/\.[^.]+$/,'')+`_${TARGET_SIZE}x${TARGET_SIZE}.jpg`;
   const path=`uploads/${userId}/${Date.now()}_${fileName}`;
   const ref=storage.ref(path);
-  await ref.put(resizedBlob,{contentType:'image/jpeg'});
+
+  await new Promise((resolve, reject)=>{
+    const task=ref.put(resizedBlob,{contentType:'image/jpeg'});
+    task.on('state_changed',
+      snap=>{
+        const pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);
+        onProgress(pf.id,'upload',pct);
+      },
+      err=>reject(err),
+      ()=>resolve()
+    );
+  });
+  onProgress(pf.id, 'upload', 100);
+
   const url=await ref.getDownloadURL();
   await db.collection('uploads').add({
     userId, userName,
@@ -221,6 +239,7 @@ async function uploadOne(pf, userId, userName){
     width:TARGET_SIZE, height:TARGET_SIZE,
     created_at:new Date().toISOString(),
   });
+  return url;
 }
 
 async function uploadAll(){
@@ -235,31 +254,86 @@ async function uploadAll(){
     :currentUser.uid;
   const userName=userData.name||userData.charName||'익명';
 
-  let done=0;
+  let doneCount=0;
   const total=toUpload.length;
 
-  // PARALLEL 개씩 묶어서 병렬 처리
-  for(let i=0;i<toUpload.length;i+=PARALLEL){
-    const chunk=toUpload.slice(i, i+PARALLEL);
-    document.getElementById('upload-status').textContent=
-      `⚡ 병렬 업로드 중... ${done+1}~${Math.min(done+PARALLEL,total)}/${total}`;
+  // 각 파일별 진행 상태
+  const fileProgress={};
+  toUpload.forEach(pf=>fileProgress[pf.id]={stage:'대기',pct:0});
 
+  function updateStatusUI(){
+    // 전체 진행률 계산
+    const totalPct=toUpload.reduce((sum,pf)=>{
+      const fp=fileProgress[pf.id];
+      if(!fp) return sum;
+      // resize=0~50%, upload=50~100%
+      if(fp.stage==='resize') return sum+(fp.pct*0.5);
+      if(fp.stage==='upload') return sum+(50+fp.pct*0.5);
+      if(fp.stage==='done')   return sum+100;
+      return sum;
+    },0)/total;
+
+    document.getElementById('progress-bar').style.width=totalPct+'%';
+
+    // 상태 텍스트
+    const uploading=toUpload.filter(pf=>fileProgress[pf.id]?.stage==='upload');
+    const resizing=toUpload.filter(pf=>fileProgress[pf.id]?.stage==='resize');
+    if(resizing.length>0){
+      const p=Math.round(resizing.reduce((s,pf)=>s+fileProgress[pf.id].pct,0)/resizing.length);
+      document.getElementById('upload-status').textContent=
+        `⚙️ 리사이징 중... ${p}% | 전체 ${Math.round(totalPct)}%`;
+    } else if(uploading.length>0){
+      const p=Math.round(uploading.reduce((s,pf)=>s+fileProgress[pf.id].pct,0)/uploading.length);
+      document.getElementById('upload-status').textContent=
+        `☁️ 업로드 중... ${p}% | 완료 ${doneCount}/${total}장 | 전체 ${Math.round(totalPct)}%`;
+    }
+    // 프리뷰 뱃지 업데이트
+    toUpload.forEach(pf=>{
+      const badge=document.querySelector(`#prev-${pf.id} .status-badge`);
+      if(!badge) return;
+      const fp=fileProgress[pf.id];
+      if(!fp) return;
+      if(fp.stage==='resize'){
+        badge.className='status-badge status-pending';
+        badge.textContent=`⚙️ ${fp.pct}%`;
+      } else if(fp.stage==='upload'){
+        badge.className='status-badge status-pending';
+        badge.textContent=`☁️ ${fp.pct}%`;
+      } else if(fp.stage==='done'){
+        badge.className='status-badge status-done';
+        badge.textContent='✅ 완료';
+      } else if(fp.stage==='error'){
+        badge.className='status-badge status-error';
+        badge.textContent='❌ 오류';
+      }
+    });
+  }
+
+  // PARALLEL 개씩 병렬 처리
+  for(let i=0;i<toUpload.length;i+=PARALLEL){
+    const chunk=toUpload.slice(i,i+PARALLEL);
     await Promise.all(chunk.map(async pf=>{
       try{
-        await uploadOne(pf, userId, userName);
+        await uploadOne(pf, userId, userName, (id,stage,pct)=>{
+          fileProgress[id]={stage,pct};
+          updateStatusUI();
+        });
+        fileProgress[pf.id]={stage:'done',pct:100};
         pf.status='done';
-      } catch(e){
+        doneCount++;
+      }catch(e){
+        fileProgress[pf.id]={stage:'error',pct:0};
         pf.status='error';
-        console.error('업로드 오류:', e);
+        console.error('업로드 오류:',e);
+        doneCount++;
       }
-      done++;
-      document.getElementById('progress-bar').style.width=(done/total*100)+'%';
-      renderPreview();
+      updateStatusUI();
     }));
   }
 
   document.getElementById('upload-status').textContent=
-    `✅ ${done}장 완료! (600×600, 압축 적용)`;
+    `✅ ${doneCount}장 완료! (600×600 변환, 압축 적용)`;
+  document.getElementById('progress-bar').style.width='100%';
   btn.disabled=false;
   loadMyUploads();
 
