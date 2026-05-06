@@ -123,7 +123,9 @@
 <script>
 let currentUser=null, userData=null;
 let pendingFiles=[];
-const TARGET_SIZE = 600; // 600x600 리사이징
+const TARGET_SIZE = 600;
+const JPEG_QUALITY = 0.75;  // 품질 낮춰서 파일 크기 감소
+const PARALLEL = 3;          // 동시 업로드 수
 
 requireAuth(async (user)=>{
   currentUser=user;
@@ -137,6 +139,191 @@ requireAuth(async (user)=>{
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
   loadMyUploads();
 });
+
+// 600x600 리사이징 + 품질 압축
+function resizeImage(file){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=TARGET_SIZE; canvas.height=TARGET_SIZE;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,TARGET_SIZE,TARGET_SIZE);
+      const scale=Math.min(TARGET_SIZE/img.width, TARGET_SIZE/img.height);
+      const dw=img.width*scale, dh=img.height*scale;
+      const dx=(TARGET_SIZE-dw)/2, dy=(TARGET_SIZE-dh)/2;
+      ctx.drawImage(img,dx,dy,dw,dh);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob=>resolve(blob),'image/jpeg', JPEG_QUALITY);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);resolve(null);};
+    img.src=url;
+  });
+}
+
+// 드래그앤드롭
+function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('dragover');}
+function dragLeave(e){document.getElementById('upload-zone').classList.remove('dragover');}
+function dropFiles(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('dragover');handleFiles(e.dataTransfer.files);}
+
+function handleFiles(files){
+  const arr=Array.from(files).filter(f=>f.type.startsWith('image/'));
+  if(!arr.length){showAlert('main-alert','이미지 파일만 업로드 가능합니다.','error');return;}
+  if(pendingFiles.length+arr.length>20){showAlert('main-alert','한 번에 최대 20장까지 업로드 가능합니다.','error');return;}
+  arr.forEach(file=>{
+    const id='f'+Date.now()+Math.random().toString(36).slice(2);
+    pendingFiles.push({id,file,status:'pending'});
+  });
+  renderPreview();
+  document.getElementById('pending-card').style.display='block';
+}
+
+function renderPreview(){
+  document.getElementById('pending-count').textContent=pendingFiles.length;
+  document.getElementById('preview-grid').innerHTML=pendingFiles.map(pf=>{
+    const url=URL.createObjectURL(pf.file);
+    const statusClass=pf.status==='done'?'status-done':pf.status==='error'?'status-error':'status-pending';
+    const statusText=pf.status==='done'?'✅ 완료':pf.status==='error'?'❌ 오류':'⏳ 대기';
+    return `<div class="preview-item" id="prev-${pf.id}">
+      <img src="${url}">
+      ${pf.status==='pending'?`<button class="remove-btn" onclick="removeFile('${pf.id}')">✕</button>`:''}
+      <div class="status-badge ${statusClass}">${statusText}</div>
+    </div>`;
+  }).join('');
+}
+
+function removeFile(id){
+  pendingFiles=pendingFiles.filter(f=>f.id!==id);
+  if(!pendingFiles.length) document.getElementById('pending-card').style.display='none';
+  else renderPreview();
+}
+function clearPending(){
+  pendingFiles=[];
+  document.getElementById('pending-card').style.display='none';
+}
+
+// 단일 파일 업로드 함수
+async function uploadOne(pf, userId, userName){
+  const resizedBlob=await resizeImage(pf.file);
+  if(!resizedBlob) throw new Error('이미지 변환 실패');
+  const fileName=pf.file.name.replace(/\.[^.]+$/,'')+`_${TARGET_SIZE}x${TARGET_SIZE}.jpg`;
+  const path=`uploads/${userId}/${Date.now()}_${fileName}`;
+  const ref=storage.ref(path);
+  await ref.put(resizedBlob,{contentType:'image/jpeg'});
+  const url=await ref.getDownloadURL();
+  await db.collection('uploads').add({
+    userId, userName,
+    fileName, originalName:pf.file.name,
+    storagePath:path, url,
+    labeled:false,
+    width:TARGET_SIZE, height:TARGET_SIZE,
+    created_at:new Date().toISOString(),
+  });
+}
+
+async function uploadAll(){
+  const toUpload=pendingFiles.filter(f=>f.status==='pending');
+  if(!toUpload.length) return;
+  const btn=document.getElementById('upload-btn');
+  btn.disabled=true;
+  document.getElementById('progress-wrap').style.display='block';
+
+  const userId=currentUser.uid==='student'
+    ?('temp_'+(userData.charName||'익명'))
+    :currentUser.uid;
+  const userName=userData.name||userData.charName||'익명';
+
+  let done=0;
+  const total=toUpload.length;
+
+  // PARALLEL 개씩 묶어서 병렬 처리
+  for(let i=0;i<toUpload.length;i+=PARALLEL){
+    const chunk=toUpload.slice(i, i+PARALLEL);
+    document.getElementById('upload-status').textContent=
+      `⚡ 병렬 업로드 중... ${done+1}~${Math.min(done+PARALLEL,total)}/${total}`;
+
+    await Promise.all(chunk.map(async pf=>{
+      try{
+        await uploadOne(pf, userId, userName);
+        pf.status='done';
+      } catch(e){
+        pf.status='error';
+        console.error('업로드 오류:', e);
+      }
+      done++;
+      document.getElementById('progress-bar').style.width=(done/total*100)+'%';
+      renderPreview();
+    }));
+  }
+
+  document.getElementById('upload-status').textContent=
+    `✅ ${done}장 완료! (600×600, 압축 적용)`;
+  btn.disabled=false;
+  loadMyUploads();
+
+  if(currentUser.uid!=='student'){
+    const q=(userData.quests||{});
+    if(!q.q6_done){
+      await addScore(currentUser.uid,20,'퀘스트6 첫 업로드');
+      await db.collection('users').doc(currentUser.uid).update({'quests.q6_done':true});
+      showAlert('main-alert','🎉 퀘스트 6 완료! +20점 획득!','success');
+    }
+  }
+}
+
+async function loadMyUploads(){
+  const userId=currentUser.uid==='student'
+    ?('temp_'+(userData.charName||'익명'))
+    :currentUser.uid;
+  try{
+    const snap=await db.collection('uploads')
+      .where('userId','==',userId)
+      .orderBy('created_at','desc').get();
+    document.getElementById('my-count').textContent=snap.size;
+    if(snap.empty){
+      document.getElementById('my-uploads').innerHTML=
+        `<div style="text-align:center;padding:20px;color:var(--muted);">아직 업로드한 사진이 없어요!</div>`;
+      return;
+    }
+    document.getElementById('my-uploads').innerHTML=snap.docs.map(doc=>{
+      const d=doc.data();
+      const date=d.created_at?.slice(0,16).replace('T',' ')||'';
+      return `<div class="uploaded-item">
+        <img src="${d.url}" onerror="this.style.background='rgba(255,255,255,0.05)';this.style.display='none'">
+        <div class="name">
+          ${d.fileName||'파일'}
+          <div style="font-size:10px;color:var(--muted);">${d.width||TARGET_SIZE}×${d.height||TARGET_SIZE}px</div>
+        </div>
+        <div style="font-size:11px;padding:2px 7px;border-radius:5px;flex-shrink:0;
+          ${d.labeled?'background:rgba(104,211,145,0.15);color:#68d391;':'background:rgba(246,173,85,0.15);color:#f6ad55;'}">
+          ${d.labeled?'✅ 라벨링 완료':'⏳ 미완료'}
+        </div>
+        <div class="date">${date}</div>
+        <button class="del-btn" onclick="deleteUpload('${doc.id}','${d.storagePath}')">🗑️</button>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('my-uploads').innerHTML=
+      `<div style="color:var(--red);padding:16px;">오류: ${e.message}</div>`;
+  }
+}
+
+async function deleteUpload(docId, storagePath){
+  if(!confirm('이 사진을 삭제할까요?')) return;
+  try{
+    if(storagePath) await storage.ref(storagePath).delete().catch(()=>{});
+    await db.collection('uploads').doc(docId).delete();
+    loadMyUploads();
+  }catch(e){alert('삭제 실패: '+e.message);}
+}
+
+function showAlert(id,msg,type='info'){
+  const colors={info:'alert-info',success:'alert-success',error:'alert-error'};
+  document.getElementById(id).innerHTML=`<div class="alert ${colors[type]}">${msg}</div>`;
+  setTimeout(()=>{const el=document.getElementById(id);if(el)el.innerHTML='';},4000);
+}
 
 // 이미지를 600x600으로 리사이징 (Canvas 사용)
 function resizeImage(file){
