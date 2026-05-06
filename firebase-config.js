@@ -10,6 +10,16 @@ const firebaseConfig = {
   appId: "여기에_APP_ID"
 };
 
+// ══════════════════════════════════════════
+//  Google Drive 설정 - 선생님이 설정하는 부분
+// ══════════════════════════════════════════
+const GDRIVE_CONFIG = {
+  CLIENT_ID: "103338765759-0efg8dvocht355vab1jmhe4dps0md5r1.apps.googleusercontent.com",
+  ROOT_FOLDER_ID: "1geDWq2RrVjHenewwf5Bxg_6rWEOZtnz_",
+  API_KEY: "AIzaSyAPfaW3Vb9beLdcgGlus1ZMADRhjIXpmwE",
+  SCOPES: "https://www.googleapis.com/auth/drive.file",
+};
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
