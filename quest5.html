@@ -153,6 +153,17 @@
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
     .levelup-screen{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
     .levelup-screen h1{font-family:'Jua',sans-serif;font-size:clamp(32px,6vw,48px);color:#f6ad55;}
+
+    /* 퀴즈 확인 팝업 */
+    .quiz-confirm-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
+    .quiz-confirm-box{background:#111827;border:2px solid rgba(a78bfa,0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(a78bfa,0.2);animation:slideUp .4s ease;}
+    .quiz-confirm-emoji{font-size:clamp(44px,8vw,64px);margin-bottom:14px;}
+    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:a78bfa_VAR;margin-bottom:8px;}
+    .quiz-confirm-desc{font-size:clamp(13px,2.5vw,15px);color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;}
+    .quiz-confirm-btns{display:flex;gap:10px;}
+    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,a78bfa_BTN);border:none;border-radius:12px;color:white;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
+    .quiz-confirm-ok:hover{transform:translateY(-2px);}
+    .quiz-confirm-cancel{padding:clamp(12px,2.5vw,14px) clamp(16px,3vw,20px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:clamp(13px,2.5vw,15px);cursor:pointer;font-family:inherit;}
   </style>
 </head>
 <body>
@@ -174,7 +185,7 @@
     <div id="intro-score-wrap" style="display:none;background:rgba(246,173,85,0.08);border:1px solid rgba(246,173,85,0.2);border-radius:10px;padding:10px;margin-bottom:16px;font-size:13px;color:rgba(255,255,255,0.6);">
       <div>이전 기록: <span id="prev-score" style="color:#f6ad55;font-weight:700;"></span></div>
     </div>
-    <button class="start-btn" onclick="startGame()">🚀 게임 시작!</button>
+    <button class="start-btn" onclick="showQuizConfirm(startGame)">🚀 게임 시작!</button>
   </div>
 </div>
 
@@ -461,6 +472,28 @@ function checkLevelUp(before,after){
     document.body.appendChild(el);
   }
 }
+
+// 퀴즈 시작 확인 팝업
+function showQuizConfirm(onConfirm){
+  const old=document.getElementById('quiz-confirm-overlay');
+  if(old) old.remove();
+  const overlay=document.createElement('div');
+  overlay.id='quiz-confirm-overlay';
+  overlay.className='quiz-confirm-overlay';
+  overlay.innerHTML=`
+    <div class="quiz-confirm-box">
+      <div class="quiz-confirm-emoji">🚀</div>
+      <div class="quiz-confirm-title">퀴즈 런 시작! 🚀</div>
+      <div class="quiz-confirm-desc">12문제 · 문제당 10초 · 라이프 3개<br>도전할 준비가 됐나요?</div>
+      <div class="quiz-confirm-btns">
+        <button class="quiz-confirm-cancel" onclick="document.getElementById('quiz-confirm-overlay').remove();quizShowing=false;">나중에</button>
+        <button class="quiz-confirm-ok" onclick="document.getElementById('quiz-confirm-overlay').remove();onConfirmCallback();">도전하기! 🚀</button>
+      </div>
+    </div>`;
+  window.onConfirmCallback=onConfirm;
+  document.body.appendChild(overlay);
+}
+
 </script>
 </body>
 </html>
