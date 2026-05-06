@@ -124,7 +124,7 @@ requireAuth(async (user)=>{
 
 // ── Apps Script 호출 ──
 async function callAppsScript(data){
-  if(!GDRIVE_CONFIG.APPS_SCRIPT_URL||GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
+  if(!GDRIVE_CONFIG.APPS_SCRIPT_URL||GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbwqOI5DXKfzY1vemjUzZPzPOHj95strY_JT-rWcn8vnlPbTOZkVooId9gl4fQD0yxm0wg/exec')){
     throw new Error('Apps Script URL이 설정되지 않았습니다. firebase-config.js를 확인하세요.');
   }
   const res=await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
