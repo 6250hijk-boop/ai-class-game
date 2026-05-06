@@ -124,8 +124,8 @@
 let currentUser=null, userData=null;
 let pendingFiles=[];
 const TARGET_SIZE = 600;
-const JPEG_QUALITY = 0.75;  // 품질 낮춰서 파일 크기 감소
-const PARALLEL = 3;          // 동시 업로드 수
+const JPEG_QUALITY = 0.60;  // AI학습용 최적 품질 (파일 크기 작음)
+const PARALLEL = 5;          // 5장 동시 업로드
 
 requireAuth(async (user)=>{
   currentUser=user;
@@ -140,7 +140,7 @@ requireAuth(async (user)=>{
   loadMyUploads();
 });
 
-// 600x600 리사이징 + 품질 압축
+// 리사이징 - WebP 우선 사용 (JPEG보다 30% 작음)
 function resizeImage(file){
   return new Promise((resolve)=>{
     const img=new Image();
@@ -156,7 +156,14 @@ function resizeImage(file){
       const dx=(TARGET_SIZE-dw)/2, dy=(TARGET_SIZE-dh)/2;
       ctx.drawImage(img,dx,dy,dw,dh);
       URL.revokeObjectURL(url);
-      canvas.toBlob(blob=>resolve(blob),'image/jpeg', JPEG_QUALITY);
+      // WebP 지원하면 WebP로 (30% 더 작음)
+      const testDataURL=canvas.toDataURL('image/webp');
+      const useWebP=testDataURL.startsWith('data:image/webp');
+      if(useWebP){
+        canvas.toBlob(blob=>resolve({blob,ext:'webp',mime:'image/webp'}), 'image/webp', JPEG_QUALITY);
+      } else {
+        canvas.toBlob(blob=>resolve({blob,ext:'jpg',mime:'image/jpeg'}), 'image/jpeg', JPEG_QUALITY);
+      }
     };
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(null);};
     img.src=url;
@@ -174,10 +181,21 @@ function handleFiles(files){
   if(pendingFiles.length+arr.length>20){showAlert('main-alert','한 번에 최대 20장까지 업로드 가능합니다.','error');return;}
   arr.forEach(file=>{
     const id='f'+Date.now()+Math.random().toString(36).slice(2);
-    pendingFiles.push({id,file,status:'pending'});
+    pendingFiles.push({id,file,status:'pending',resized:null});
   });
   renderPreview();
   document.getElementById('pending-card').style.display='block';
+  // 파일 선택 즉시 백그라운드 리사이징 시작 (업로드 버튼 기다리는 동안 미리 처리)
+  preResizeAll();
+}
+
+async function preResizeAll(){
+  const targets=pendingFiles.filter(f=>f.status==='pending'&&!f.resized);
+  // 모두 병렬로 리사이징
+  await Promise.all(targets.map(async pf=>{
+    const result=await resizeImage(pf.file);
+    if(result) pf.resized=result;
+  }));
 }
 
 function renderPreview(){
@@ -206,19 +224,20 @@ function clearPending(){
 
 // 단일 파일 업로드 함수 - 진행률 콜백 포함
 async function uploadOne(pf, userId, userName, onProgress){
-  // 1단계: 리사이징
+  // 1단계: 리사이징 (미리 처리된 게 있으면 재사용)
   onProgress(pf.id, 'resize', 0);
-  const resizedBlob = await resizeImage(pf.file, (p)=>onProgress(pf.id,'resize',p));
-  if(!resizedBlob) throw new Error('이미지 변환 실패');
+  const resized = pf.resized || await resizeImage(pf.file);
+  if(!resized) throw new Error('이미지 변환 실패');
   onProgress(pf.id, 'resize', 100);
+  const {blob:resizedBlob, ext, mime} = resized;
 
   // 2단계: 업로드
-  const fileName=pf.file.name.replace(/\.[^.]+$/,'')+`_${TARGET_SIZE}x${TARGET_SIZE}.jpg`;
+  const fileName=pf.file.name.replace(/\.[^.]+$/,'')+`_${TARGET_SIZE}x${TARGET_SIZE}.${ext}`;
   const path=`uploads/${userId}/${Date.now()}_${fileName}`;
   const ref=storage.ref(path);
 
   await new Promise((resolve, reject)=>{
-    const task=ref.put(resizedBlob,{contentType:'image/jpeg'});
+    const task=ref.put(resizedBlob,{contentType:mime});
     task.on('state_changed',
       snap=>{
         const pct=Math.round(snap.bytesTransferred/snap.totalBytes*100);
