@@ -71,7 +71,8 @@
     <div class="title">🏷️ 퀘스트 7: 라벨링하기</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span id="progress-label" style="font-size:12px;color:var(--muted);"></span>
-      <button onclick="downloadAllLabels()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ txt 다운로드</button>
+      <button onclick="downloadAllLabels()" style="background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ txt만</button>
+      <button onclick="downloadZip()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📦 이미지+txt ZIP</button>
       <button onclick="sessionStorage.setItem('from_quest','1');window.location.href='main.html'" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">🏠 메인</button>
     </div>
   </div>
@@ -121,6 +122,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 let currentUser=null, userData=null;
@@ -197,17 +199,30 @@ function selectImage(idx){
   const img=myImages[idx];
   currentImg=img;
   document.getElementById('empty-msg').style.display='none';
-  // 썸네일 active
   document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
   renderBoxList();
-  // 이미지 로드
+
+  // Cloudinary URL에 CORS 파라미터 추가
+  let imgUrl=img.url||'';
+  // Cloudinary URL이면 crossorigin 허용 파라미터 추가
+  if(imgUrl.includes('cloudinary.com') && !imgUrl.includes('fl_attachment')){
+    imgUrl=imgUrl.replace('/upload/','/upload/fl_attachment:false/');
+  }
+
   const image=new Image();
   image.crossOrigin='anonymous';
   image.onload=()=>{
     fitImageToCanvas(image);
     redrawCanvas(image);
   };
-  image.src=img.url;
+  image.onerror=()=>{
+    // crossOrigin 없이 재시도
+    const img2=new Image();
+    img2.onload=()=>{fitImageToCanvas(img2);redrawCanvas(img2);};
+    img2.src=imgUrl+'?t='+Date.now();
+    currentImg._imageEl=img2;
+  };
+  image.src=imgUrl;
   currentImg._image=null;
   currentImg._imageEl=image;
 }
@@ -399,26 +414,99 @@ function downloadAllLabels(){
   const classesContent=classes.map(c=>c.name).join('\n');
   downloadText('classes.txt',classesContent);
 
-  // 각 이미지별 txt
+  // 각 이미지별 txt (600x600 고정)
   labeled.forEach(([imgId,boxes])=>{
     const img=myImages.find(i=>i.id===imgId);
-    if(!img||!img._imageEl) return;
-    const iw=img._imageEl.width, ih=img._imageEl.height;
+    if(!img) return;
+    // 이미지 크기 - 업로드 시 600x600으로 고정
+    const iw=img.width||img._imageEl?.width||600;
+    const ih=img.height||img._imageEl?.height||600;
     const content=boxes.map(b=>{
       const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
       const bw=b.w/iw, bh=b.h/ih;
       return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
     }).join('\n');
-    const fname=(img.fileName||imgId).replace(/\.[^.]+$/,'')+'.txt';
+    // 파일명 처리 (cloudinary public_id에서 파일명 추출)
+    const rawName=img.originalName||img.fileName||imgId;
+    const fname=rawName.replace(/\.[^.]+$/,'')+'.txt';
     downloadText(fname,content);
   });
-  alert(`✅ ${labeled.length}개 파일 + classes.txt 다운로드 완료!\nYOLO 형식으로 저장되었습니다.`);
+  alert(`✅ ${labeled.length}개 라벨 파일 + classes.txt 다운로드 완료!\nYOLO 형식으로 저장되었습니다.`);
 }
 
 function downloadText(filename, content){
   const blob=new Blob([content],{type:'text/plain'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+}
+
+// ZIP 다운로드 (이미지 + txt 라벨 + classes.txt)
+async function downloadZip(){
+  const labeled=Object.entries(allBoxes).filter(([id,boxes])=>boxes.length>0);
+  if(!labeled.length){alert('라벨링된 사진이 없습니다!');return;}
+
+  const btn=document.querySelector('[onclick="downloadZip()"]');
+  if(btn){btn.textContent='⏳ 준비 중...';btn.disabled=true;}
+
+  try{
+    const zip=new JSZip();
+    const imgFolder=zip.folder('images');
+    const lblFolder=zip.folder('labels');
+
+    // classes.txt 추가
+    zip.file('classes.txt', classes.map(c=>c.name).join('\n'));
+
+    let done=0;
+    const total=labeled.length;
+
+    for(const [imgId,boxes] of labeled){
+      const img=myImages.find(i=>i.id===imgId);
+      if(!img) continue;
+
+      const iw=img.width||600;
+      const ih=img.height||600;
+
+      // 파일명 처리
+      const rawName=img.originalName||img.fileName||imgId;
+      const baseName=rawName.replace(/\.[^.]+$/,'');
+      const imgExt=rawName.split('.').pop()||'jpg';
+
+      // txt 라벨 생성
+      const txtContent=boxes.map(b=>{
+        const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
+        const bw=b.w/iw, bh=b.h/ih;
+        return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
+      }).join('\n');
+      lblFolder.file(`${baseName}.txt`, txtContent);
+
+      // 이미지 다운로드 (Cloudinary URL)
+      try{
+        const imgUrl=img.url;
+        const res=await fetch(imgUrl);
+        const blob=await res.blob();
+        imgFolder.file(`${baseName}.${imgExt}`, blob);
+      }catch(e){
+        console.warn('이미지 다운로드 실패:', imgId, e);
+      }
+
+      done++;
+      if(btn) btn.textContent=`⏳ ${done}/${total}장 처리 중...`;
+    }
+
+    // ZIP 생성 및 다운로드
+    if(btn) btn.textContent='📦 ZIP 생성 중...';
+    const zipBlob=await zip.generateAsync({type:'blob', compression:'DEFLATE'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(zipBlob);
+    a.download=`ai-class-labels-${Date.now()}.zip`;
+    a.click();
+
+    alert(`✅ ZIP 다운로드 완료!\n\n📁 구조:\n  images/ - 사진 ${done}장\n  labels/ - 라벨 txt ${done}개\n  classes.txt - 클래스 목록\n\nYOLOv8 학습에 바로 사용 가능합니다!`);
+  }catch(e){
+    alert('ZIP 생성 실패: '+e.message);
+  }finally{
+    if(btn){btn.textContent='📦 이미지+txt ZIP';btn.disabled=false;}
+  }
 }
 
 function clamp(min,val,max){return Math.min(max,Math.max(min,val));}
