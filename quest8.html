@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-  <title>퀘스트 8: 테스트해보기</title>
+  <title>퀘스트 8: AI 학습 & 테스트</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     *{box-sizing:border-box;}
@@ -12,30 +12,24 @@
     .page-title{font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);color:#a78bfa;margin-bottom:6px;}
     .page-desc{font-size:clamp(13px,2.3vw,14px);color:var(--muted);margin-bottom:24px;line-height:1.6;}
     .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px);margin-bottom:16px;}
-    .card h3{font-size:clamp(15px,2.8vw,17px);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-    .step-badge{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;border-radius:8px;padding:2px 10px;font-size:12px;font-weight:700;}
-    .code-block{background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;font-family:monospace;font-size:clamp(11px,2vw,13px);color:#a78bfa;overflow-x:auto;margin:10px 0;white-space:pre;}
-    .copy-btn{background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);border-radius:6px;padding:4px 10px;color:#a78bfa;font-size:11px;cursor:pointer;font-family:inherit;margin-top:4px;}
-    .copy-btn:hover{background:rgba(167,139,250,0.25);}
-    .btn{display:inline-block;padding:clamp(10px,2.2vw,13px) clamp(16px,3vw,22px);border:none;border-radius:11px;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;text-decoration:none;}
-    .btn-primary{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;}
-    .btn-primary:hover{transform:translateY(-2px);}
-    .btn-ghost{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);}
+    .card h3{font-size:clamp(15px,2.8vw,17px);margin-bottom:12px;display:flex;align-items:center;gap:8px;margin-top:0;}
+    .step-badge{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;border-radius:8px;padding:2px 10px;font-size:12px;font-weight:700;flex-shrink:0;}
+    .code-block{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;font-family:'Courier New',monospace;font-size:clamp(11px,1.8vw,13px);color:#a78bfa;overflow-x:auto;margin:10px 0;white-space:pre;line-height:1.6;position:relative;}
+    .copy-btn{position:absolute;top:8px;right:8px;background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:4px 10px;color:#a78bfa;font-size:11px;cursor:pointer;font-family:inherit;}
+    .copy-btn:hover{background:rgba(167,139,250,0.35);}
+    .copy-btn.copied{background:rgba(104,211,145,0.2);border-color:#68d391;color:#68d391;}
     .tip-box{background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:10px;padding:12px 14px;font-size:13px;color:rgba(99,179,237,0.9);margin:10px 0;line-height:1.6;}
     .warn-box{background:rgba(246,173,85,0.08);border:1px solid rgba(246,173,85,0.2);border-radius:10px;padding:12px 14px;font-size:13px;color:rgba(246,173,85,0.9);margin:10px 0;line-height:1.6;}
-    .step-list{counter-reset:step;}
-    .step-item{counter-increment:step;display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;}
+    .step-item{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;}
     .step-num{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-top:2px;}
     .step-content{flex:1;font-size:clamp(13px,2.3vw,14px);line-height:1.7;color:var(--text);}
-
-    /* 테스트 업로드 */
-    .test-zone{border:2px dashed rgba(167,139,250,0.4);border-radius:14px;padding:clamp(20px,4vw,32px);text-align:center;cursor:pointer;transition:all .3s;background:rgba(167,139,250,0.04);}
-    .test-zone:hover{border-color:#a78bfa;background:rgba(167,139,250,0.08);}
-    .result-img-wrap{position:relative;display:inline-block;max-width:100%;}
-    .result-img-wrap img{max-width:100%;border-radius:10px;display:block;}
-    #result-canvas{position:absolute;top:0;left:0;pointer-events:none;}
-
-    @media(max-width:480px){.page-wrap{padding:12px;}}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:clamp(10px,2vw,13px) clamp(14px,3vw,22px);border:none;border-radius:11px;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;text-decoration:none;}
+    .btn-primary{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(167,139,250,0.4);}
+    .btn-colab{background:#F9AB00;color:#000;}
+    .btn-colab:hover{background:#f0a500;transform:translateY(-2px);}
+    .yaml-box{background:rgba(0,0,0,0.4);border:1px solid rgba(104,211,145,0.2);border-radius:10px;padding:14px;font-family:monospace;font-size:13px;color:#68d391;white-space:pre;overflow-x:auto;margin:10px 0;position:relative;}
+    @media(max-width:480px){.page-wrap{padding:12px;}.code-block{font-size:10px;}}
   </style>
 </head>
 <body>
@@ -46,176 +40,251 @@
     <div id="hud-score" style="background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:4px 12px;font-size:13px;color:#a78bfa;font-weight:700;margin-left:auto;">0 점</div>
   </div>
 
-  <div class="page-title">🧪 퀘스트 8: 테스트해보기</div>
-  <div class="page-desc">직접 라벨링한 데이터로 AI를 학습시키고 결과를 확인해보세요!<br>Google Colab + Streamlit을 활용합니다.</div>
+  <div class="page-title">🧪 퀘스트 8: AI 학습 & 테스트</div>
+  <div class="page-desc">라벨링한 데이터로 AI를 학습시키고 테스트해봐요!<br>Google Colab에서 무료 GPU로 YOLOv8을 학습시킬 수 있어요.</div>
 
-  <!-- STEP 1: 파일 준비 -->
+  <!-- STEP 1 -->
   <div class="card">
-    <h3><span class="step-badge">STEP 1</span> 📁 학습 파일 준비하기</h3>
-    <div class="step-list">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <strong>퀘스트7</strong>에서 라벨링 완료 후 <strong>txt 다운로드</strong> 버튼을 눌러
-          라벨 파일(txt)과 classes.txt를 받으세요.
-        </div>
+    <h3><span class="step-badge">STEP 1</span> 📦 ZIP 파일 준비하기</h3>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        퀘스트 7에서 <strong>📦 이미지+txt ZIP</strong> 버튼을 눌러 ZIP 파일을 다운로드하세요.
+        <div class="tip-box">💡 ZIP 안에 images/, labels/, classes.txt 가 있으면 완벽해요!</div>
       </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          업로드한 이미지들을 <strong>Google Drive</strong>의 아래 구조로 정리하세요:
-          <div class="code-block">📁 MyDataset/
-├── images/
-│   ├── train/    ← 학습용 이미지 (전체 80%)
-│   └── val/      ← 검증용 이미지 (전체 20%)
-└── labels/
-    ├── train/    ← 학습용 txt 라벨
-    └── val/      ← 검증용 txt 라벨</div>
-          <button class="copy-btn" onclick="copyText('📁 MyDataset/\n├── images/\n│   ├── train/\n│   └── val/\n└── labels/\n    ├── train/\n    └── val/')">📋 복사</button>
-        </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        다운로드한 ZIP 파일을 <strong>Google Drive</strong>에 업로드하세요.<br>
+        위치 예시: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">내 드라이브 / ai-class / dataset.zip</code>
       </div>
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          아래 <strong>dataset.yaml</strong> 파일을 만들어 MyDataset 폴더에 넣으세요:
-          <div id="yaml-content" class="code-block"></div>
-          <button class="copy-btn" onclick="copyYaml()">📋 yaml 복사</button>
-          <div class="tip-box">💡 path는 Google Drive에서 실제 경로로 변경하세요!</div>
-        </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        아래 <strong>dataset.yaml</strong> 내용을 복사해서 같은 폴더에 저장하세요.
+        <div class="yaml-box" id="yaml-content"></div>
+        <button class="copy-btn" style="position:static;margin-top:6px;display:inline-block;" onclick="copyYaml()">📋 yaml 복사</button>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2: Colab 학습 -->
+  <!-- STEP 2 -->
   <div class="card">
-    <h3><span class="step-badge">STEP 2</span> 🤖 Google Colab으로 학습하기</h3>
-    <div class="tip-box">💡 Google Colab에서 GPU를 무료로 사용할 수 있어요! (런타임 → GPU 선택)</div>
-    <div class="step-list">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          아래 코드를 Colab 셀에 붙여넣고 실행하세요:
-          <div class="code-block"># Google Drive 마운트
+    <h3><span class="step-badge">STEP 2</span> 🤖 Colab에서 AI 학습하기</h3>
+    <div style="margin-bottom:14px;">
+      <a href="https://colab.research.google.com" target="_blank" class="btn btn-colab">
+        🔗 Google Colab 열기
+      </a>
+    </div>
+    <div class="warn-box">⚠️ 런타임 → 런타임 유형 변경 → <strong>T4 GPU</strong> 선택 후 시작!</div>
+
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Google Drive 연결</strong>
+        <div class="code-block" id="code1"># Google Drive 마운트
 from google.colab import drive
-drive.mount('/content/drive')
+drive.mount('/content/drive')</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code1')">📋 복사</button>
+      </div>
+    </div>
 
-# YOLOv8 설치
-!pip install ultralytics -q
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>YOLOv8 설치 & 데이터 준비</strong>
+        <div class="code-block" id="code2">!pip install ultralytics -q
 
-# 학습 시작
-from ultralytics import YOLO
+import zipfile, os
+
+# ZIP 파일 경로 (본인 Drive 경로로 수정)
+zip_path = '/content/drive/MyDrive/ai-class/dataset.zip'
+extract_path = '/content/dataset'
+
+# ZIP 압축 해제
+with zipfile.ZipFile(zip_path, 'r') as z:
+    z.extractall(extract_path)
+
+print("✅ 데이터 준비 완료!")
+print(os.listdir(extract_path))</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code2')">📋 복사</button>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>학습 데이터 train/val 분리</strong>
+        <div class="code-block" id="code3">import shutil, random
+
+img_dir = '/content/dataset/images'
+lbl_dir = '/content/dataset/labels'
+
+# train/val 폴더 생성
+for d in ['images/train','images/val','labels/train','labels/val']:
+    os.makedirs(f'/content/dataset/{d}', exist_ok=True)
+
+# 이미지 목록
+imgs = [f for f in os.listdir(img_dir) 
+        if f.lower().endswith(('.jpg','.jpeg','.png','.webp'))
+        and os.path.isfile(f'{img_dir}/{f}')]
+random.shuffle(imgs)
+
+# 80% train, 20% val
+split = int(len(imgs) * 0.8)
+train_imgs = imgs[:split]
+val_imgs   = imgs[split:]
+
+for fname in train_imgs:
+    shutil.move(f'{img_dir}/{fname}', f'/content/dataset/images/train/{fname}')
+    base = os.path.splitext(fname)[0]
+    txt  = f'{lbl_dir}/{base}.txt'
+    if os.path.exists(txt):
+        shutil.move(txt, f'/content/dataset/labels/train/{base}.txt')
+
+for fname in val_imgs:
+    shutil.move(f'{img_dir}/{fname}', f'/content/dataset/images/val/{fname}')
+    base = os.path.splitext(fname)[0]
+    txt  = f'{lbl_dir}/{base}.txt'
+    if os.path.exists(txt):
+        shutil.move(txt, f'/content/dataset/labels/val/{base}.txt')
+
+print(f"✅ train: {len(train_imgs)}장 / val: {len(val_imgs)}장")</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code3')">📋 복사</button>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>YOLOv8 학습 시작!</strong>
+        <div class="code-block" id="code4">from ultralytics import YOLO
+
 model = YOLO('yolov8n.pt')  # nano 모델 (가장 빠름)
 
 results = model.train(
-    data='/content/drive/MyDrive/MyDataset/dataset.yaml',
-    epochs=50,
-    imgsz=640,
-    batch=16,
+    data='/content/dataset/dataset.yaml',
+    epochs=50,       # 학습 횟수 (적을수록 빠름)
+    imgsz=640,       # 이미지 크기
+    batch=16,        # 배치 크기
     name='my_model',
-    project='/content/drive/MyDrive/runs'
-)</div>
-          <button class="copy-btn" onclick="copyColab()">📋 코드 복사</button>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          학습 완료 후 <strong>best.pt</strong> 파일 위치를 확인하세요:
-          <div class="code-block"># best.pt 위치 확인
-import glob
-files = glob.glob('/content/drive/MyDrive/runs/**/best.pt', recursive=True)
-print(files)</div>
-          <button class="copy-btn" onclick="copyText(\"import glob\\nfiles = glob.glob('/content/drive/MyDrive/runs/**/best.pt', recursive=True)\\nprint(files)\")">📋 복사</button>
-        </div>
+    project='/content/drive/MyDrive/ai-class/runs',
+    save=True,
+)
+
+print("🎉 학습 완료!")
+print("best.pt 위치:", results.save_dir + '/weights/best.pt')</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code4')">📋 복사</button>
+        <div class="tip-box">💡 데이터가 적으면 epochs=30으로 줄이세요. 학습 시간: 약 5~15분</div>
       </div>
     </div>
   </div>
 
-  <!-- STEP 3: Streamlit 테스트 -->
+  <!-- STEP 3 -->
   <div class="card">
-    <h3><span class="step-badge">STEP 3</span> 🌐 Streamlit으로 테스트하기</h3>
-    <div class="warn-box">⚠️ Streamlit은 별도 서버가 필요합니다. Colab에서 ngrok으로 실행하거나 Streamlit Cloud를 사용하세요.</div>
-    <div class="step-list">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          아래 코드를 <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">app.py</code>로 저장하세요:
-          <div class="code-block">import streamlit as st
-from ultralytics import YOLO
-from PIL import Image
-import numpy as np
-import cv2
+    <h3><span class="step-badge">STEP 3</span> 🎯 Colab에서 바로 테스트하기</h3>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>테스트할 사진 업로드 & 결과 확인</strong>
+        <div class="code-block" id="code5">from ultralytics import YOLO
+from google.colab import files
+from IPython.display import display
+import PIL.Image, io
 
-st.title("🤖 내가 만든 AI 테스트!")
-st.write("직접 라벨링하고 학습시킨 AI로 사물을 인식해보세요.")
+# 학습된 모델 로드
+model = YOLO('/content/drive/MyDrive/ai-class/runs/my_model/weights/best.pt')
 
-model_path = st.text_input("best.pt 경로", "best.pt")
-conf = st.slider("신뢰도 임계값", 0.1, 1.0, 0.5)
+# 테스트 사진 업로드
+print("📸 테스트할 사진을 업로드하세요!")
+uploaded = files.upload()
 
-uploaded = st.file_uploader("테스트할 사진 업로드", type=["jpg","jpeg","png","webp"])
-
-if uploaded and model_path:
-    model = YOLO(model_path)
-    image = Image.open(uploaded)
-    img_array = np.array(image)
-    results = model(img_array, conf=conf)
+for fname, data in uploaded.items():
+    # 예측
+    results = model(io.BytesIO(data), conf=0.3)
     
-    # 결과 시각화
+    # 결과 이미지 출력
     result_img = results[0].plot()
-    result_pil = Image.fromarray(result_img[...,::-1])
+    img = PIL.Image.fromarray(result_img[..., ::-1])
+    display(img)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("**원본**")
-        st.image(image, use_container_width=True)
-    with col2:
-        st.write("**인식 결과**")
-        st.image(result_pil, use_container_width=True)
-    
-    # 결과 표
+    # 감지된 객체 출력
+    print(f"\n📋 감지된 객체 ({fname}):")
     if results[0].boxes:
-        st.write("**감지된 객체:**")
         for box in results[0].boxes:
-            cls = model.names[int(box.cls)]
-            conf_val = float(box.conf)
-            st.write(f"- {cls}: {conf_val:.1%}")</div>
-          <button class="copy-btn" onclick="copyStreamlit()">📋 코드 복사</button>
-        </div>
+            cls_name = model.names[int(box.cls)]
+            conf = float(box.conf)
+            print(f"  → {cls_name}: {conf:.1%} 신뢰도")
+    else:
+        print("  감지된 객체가 없습니다.")</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code5')">📋 복사</button>
       </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          Colab에서 실행하려면:
-          <div class="code-block">!pip install streamlit pyngrok -q
-!ngrok authtoken YOUR_TOKEN  # ngrok 토큰 입력
+    </div>
 
-import threading
-def run():
-    !streamlit run app.py --server.port 8501
-    
-t = threading.Thread(target=run)
-t.start()
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>여러 사진 한번에 테스트</strong>
+        <div class="code-block" id="code6">import glob
 
-from pyngrok import ngrok
-url = ngrok.connect(8501)
-print("🌐 접속 URL:", url)</div>
-          <button class="copy-btn" onclick="copyNgrok()">📋 복사</button>
-          <div class="tip-box">💡 <a href="https://ngrok.com" target="_blank" style="color:var(--primary);">ngrok.com</a>에서 무료 토큰을 발급받으세요!</div>
-        </div>
+# 테스트 이미지 폴더 지정
+test_imgs = glob.glob('/content/dataset/images/val/*')[:5]  # val 5장
+
+results = model(test_imgs, conf=0.3)
+
+for r in results:
+    img = PIL.Image.fromarray(r.plot()[..., ::-1])
+    display(img)
+    print(f"파일: {r.path}")</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code6')">📋 복사</button>
+        <div class="tip-box">💡 val 폴더의 사진으로 테스트하면 학습 안 한 사진으로 정확도를 확인할 수 있어요!</div>
+      </div>
+    </div>
+
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>정확도 확인 (mAP 점수)</strong>
+        <div class="code-block" id="code7">metrics = model.val(data='/content/dataset/dataset.yaml')
+
+print(f"\n📊 정확도 결과:")
+print(f"  mAP50   : {metrics.box.map50:.1%}")   # 기본 정확도
+print(f"  mAP50-95: {metrics.box.map:.1%}")     # 엄격한 정확도
+print(f"  Precision: {metrics.box.mp:.1%}")
+print(f"  Recall   : {metrics.box.mr:.1%}")</div>
+        <button class="copy-btn" style="position:static;margin-top:4px;display:inline-block;" onclick="copyCode('code7')">📋 복사</button>
+        <div class="tip-box">💡 mAP50이 70% 이상이면 꽤 좋은 모델이에요! 데이터가 많을수록 높아져요.</div>
       </div>
     </div>
   </div>
 
-  <!-- STEP 4: 여기서 테스트 -->
+  <!-- 정확도 기준 -->
   <div class="card">
-    <h3><span class="step-badge">STEP 4</span> 🎯 여기서 바로 테스트하기</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Streamlit URL을 입력하거나, 사진을 올려서 결과를 확인하세요.</p>
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <input id="streamlit-url" placeholder="https://your-app.streamlit.app 또는 ngrok URL"
-        style="flex:1;min-width:200px;padding:9px 12px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
-      <button onclick="openStreamlit()" class="btn btn-primary" style="white-space:nowrap;">🌐 열기</button>
+    <h3>📊 정확도 기준표</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+      <div style="background:rgba(252,129,129,0.1);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">😢</div>
+        <div style="font-size:13px;font-weight:700;color:#fc8181;">0~40%</div>
+        <div style="font-size:11px;color:var(--muted);">데이터가 부족해요</div>
+      </div>
+      <div style="background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.3);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">🤔</div>
+        <div style="font-size:13px;font-weight:700;color:#f6ad55;">40~60%</div>
+        <div style="font-size:11px;color:var(--muted);">더 많은 데이터 필요</div>
+      </div>
+      <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">👍</div>
+        <div style="font-size:13px;font-weight:700;color:#63b3ed;">60~75%</div>
+        <div style="font-size:11px;color:var(--muted);">나쁘지 않아요!</div>
+      </div>
+      <div style="background:rgba(104,211,145,0.1);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:12px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:4px;">🏆</div>
+        <div style="font-size:13px;font-weight:700;color:#68d391;">75% 이상</div>
+        <div style="font-size:11px;color:var(--muted);">훌륭한 모델이에요!</div>
+      </div>
     </div>
-    <div class="tip-box">📌 Streamlit 앱 주소를 위에 입력하면 새 탭으로 열립니다.</div>
   </div>
 </div>
 
@@ -231,41 +300,54 @@ requireAuth(async (user)=>{
     userData=local||{score:0};
   } else {
     const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();}
+    if(!snap.empty) userData=snap.docs[0].data();
   }
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-  loadYaml(user);
+  loadYaml();
 });
 
-async function loadYaml(user){
-  const snap=await db.collection('label_classes').orderBy('order').get();
-  const classes=snap.docs.map(d=>d.data().name);
-  const yaml=`path: /content/drive/MyDrive/MyDataset
+async function loadYaml(){
+  try{
+    const snap=await db.collection('label_classes').orderBy('order').get();
+    const classes=snap.docs.map(d=>d.data().name);
+    const nc=classes.length||1;
+    const names=classes.length?classes:['object'];
+    const yaml=`# dataset.yaml - /content/dataset/ 폴더에 저장하세요
+path: /content/dataset
 train: images/train
-val: images/val
+val:   images/val
 
-nc: ${classes.length}
-names: [${classes.map(c=>"'"+c+"'").join(', ')}]`;
-  document.getElementById('yaml-content').textContent=yaml;
+nc: ${nc}
+names: [${names.map(c=>"'"+c+"'").join(', ')}]`;
+    document.getElementById('yaml-content').textContent=yaml;
+  }catch(e){
+    document.getElementById('yaml-content').textContent=
+`# dataset.yaml
+path: /content/dataset
+train: images/train
+val:   images/val
+
+nc: 1
+names: ['object']`;
+  }
 }
 
-function copyText(text){
-  navigator.clipboard.writeText(text).then(()=>alert('📋 복사되었습니다!'));
+function copyYaml(){
+  const text=document.getElementById('yaml-content').textContent;
+  navigator.clipboard.writeText(text).then(()=>alert('📋 yaml 복사됨!'));
 }
-function copyYaml(){copyText(document.getElementById('yaml-content').textContent);}
-function copyColab(){
-  copyText(`# Google Drive 마운트\nfrom google.colab import drive\ndrive.mount('/content/drive')\n\n# YOLOv8 설치\n!pip install ultralytics -q\n\n# 학습 시작\nfrom ultralytics import YOLO\nmodel = YOLO('yolov8n.pt')\n\nresults = model.train(\n    data='/content/drive/MyDrive/MyDataset/dataset.yaml',\n    epochs=50,\n    imgsz=640,\n    batch=16,\n    name='my_model',\n    project='/content/drive/MyDrive/runs'\n)`);
-}
-function copyStreamlit(){
-  copyText(`import streamlit as st\nfrom ultralytics import YOLO\nfrom PIL import Image\nimport numpy as np\n\nst.title("🤖 내가 만든 AI 테스트!")\nmodel_path = st.text_input("best.pt 경로", "best.pt")\nconf = st.slider("신뢰도 임계값", 0.1, 1.0, 0.5)\nuploaded = st.file_uploader("테스트할 사진 업로드", type=["jpg","jpeg","png","webp"])\nif uploaded and model_path:\n    model = YOLO(model_path)\n    image = Image.open(uploaded)\n    import numpy as np\n    results = model(np.array(image), conf=conf)\n    result_img = results[0].plot()\n    from PIL import Image as PILImage\n    result_pil = PILImage.fromarray(result_img[...,::-1])\n    col1, col2 = st.columns(2)\n    with col1:\n        st.write("**원본**")\n        st.image(image, use_container_width=True)\n    with col2:\n        st.write("**인식 결과**")\n        st.image(result_pil, use_container_width=True)`);
-}
-function copyNgrok(){
-  copyText(`!pip install streamlit pyngrok -q\n!ngrok authtoken YOUR_TOKEN\n\nimport threading\ndef run():\n    !streamlit run app.py --server.port 8501\nt = threading.Thread(target=run)\nt.start()\n\nfrom pyngrok import ngrok\nurl = ngrok.connect(8501)\nprint("🌐 접속 URL:", url)`);
-}
-function openStreamlit(){
-  const url=document.getElementById('streamlit-url').value.trim();
-  if(!url){alert('URL을 입력하세요.');return;}
-  window.open(url,'_blank');
+
+function copyCode(id){
+  const el=document.getElementById(id);
+  const text=el.textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=el.nextElementSibling;
+    if(btn){
+      btn.textContent='✅ 복사됨!';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='📋 복사';btn.classList.remove('copied');},2000);
+    }
+  });
 }
 </script>
 </body>
