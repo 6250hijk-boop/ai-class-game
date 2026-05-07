@@ -180,7 +180,7 @@ async function loadMyImages(){
   updateProgress();
   document.getElementById('thumb-list').innerHTML=myImages.map((img,i)=>`
     <div class="img-thumb ${i===currentImgIdx?'active':''}" id="thumb-${i}" onclick="selectImage(${i})">
-      <img src="${img.url}" onerror="this.style.display='none'">
+      <img src="${toDisplayUrl(img.url, img.driveFileId)}" onerror="this.style.display='none'">
       ${allBoxes[img.id]?.length?'<div class="labeled-dot"></div>':''}
       <div class="num">${i+1}</div>
     </div>`).join('');
@@ -194,6 +194,22 @@ function updateProgress(){
   document.getElementById('progress-label').textContent=`${labeled}/${myImages.length} 라벨링 완료`;
 }
 
+// Drive URL을 외부 임베드 가능한 lh3 URL로 변환
+function toDisplayUrl(url, fileId){
+  if(!url && !fileId) return '';
+  // 이미 lh3 URL이면 그대로
+  if(url && url.includes('lh3.googleusercontent.com')) return url;
+  // drive.google.com/uc?...&id=FILE_ID 형식 → lh3로 변환
+  if(url && url.includes('drive.google.com')){
+    const m=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if(m) return 'https://lh3.googleusercontent.com/d/'+m[1]+'=w800';
+  }
+  // fileId가 따로 있으면 그걸로
+  if(fileId) return 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
+  // Cloudinary 등 다른 URL은 그대로
+  return url||'';
+}
+
 function selectImage(idx){
   currentImgIdx=idx;
   const img=myImages[idx];
@@ -202,12 +218,8 @@ function selectImage(idx){
   document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
   renderBoxList();
 
-  // Cloudinary URL에 CORS 파라미터 추가
-  let imgUrl=img.url||'';
-  // Cloudinary URL이면 crossorigin 허용 파라미터 추가
-  if(imgUrl.includes('cloudinary.com') && !imgUrl.includes('fl_attachment')){
-    imgUrl=imgUrl.replace('/upload/','/upload/fl_attachment:false/');
-  }
+  // Drive URL을 lh3 형식으로 변환 (CORS + 캔버스 호환)
+  const imgUrl=toDisplayUrl(img.url, img.driveFileId);
 
   const image=new Image();
   image.crossOrigin='anonymous';
@@ -216,10 +228,17 @@ function selectImage(idx){
     redrawCanvas(image);
   };
   image.onerror=()=>{
-    // crossOrigin 없이 재시도
+    // crossOrigin 없이 재시도 (캔버스에 그릴 때 tainted 될 수 있지만 표시는 됨)
+    console.warn('crossOrigin 로드 실패, 재시도:', imgUrl);
     const img2=new Image();
     img2.onload=()=>{fitImageToCanvas(img2);redrawCanvas(img2);};
-    img2.src=imgUrl+'?t='+Date.now();
+    img2.onerror=()=>{
+      console.error('이미지 로드 완전 실패:', imgUrl);
+      document.getElementById('empty-msg').style.display='flex';
+      document.getElementById('empty-msg').innerHTML=
+        '<div style="font-size:40px;">⚠️</div><div>이미지를 불러올 수 없어요<br><span style="font-size:11px;color:var(--muted);">'+imgUrl.slice(0,50)+'...</span></div>';
+    };
+    img2.src=imgUrl;
     currentImg._imageEl=img2;
   };
   image.src=imgUrl;
@@ -503,9 +522,9 @@ async function downloadZip(){
       }).join('\n');
       lblFolder.file(`${baseName}.txt`, txtContent);
 
-      // 이미지 다운로드 (Cloudinary URL)
+      // 이미지 다운로드 (lh3 URL로 변환)
       try{
-        const imgUrl=img.url;
+        const imgUrl=toDisplayUrl(img.url, img.driveFileId);
         const res=await fetch(imgUrl);
         const blob=await res.blob();
         imgFolder.file(`${baseName}.${imgExt}`, blob);
