@@ -381,16 +381,40 @@ async function saveLabels(){
   document.getElementById('save-status').textContent='저장 중...';
   try{
     const boxes=allBoxes[currentImg.id]||[];
+
+    // 1. Firestore에 저장
     const snap=await db.collection('labels').where('userId','==',userId).where('imageId','==',currentImg.id).get();
     if(snap.empty){
-      await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,updated_at:new Date().toISOString()});
+      await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});
     } else {
       await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});
     }
-    // 업로드 문서 labeled 업데이트
+    // uploads labeled 업데이트
     await db.collection('uploads').doc(currentImg.id).update({labeled:boxes.length>0});
-    document.getElementById('save-status').textContent='✅ 저장됨';
-    setTimeout(()=>document.getElementById('save-status').textContent='',2000);
+
+    // 2. Google Drive에 txt 저장
+    if(GDRIVE_CONFIG.APPS_SCRIPT_URL && !GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
+      const iw=currentImg.width||600, ih=currentImg.height||600;
+      const txtContent=boxes.map(b=>{
+        const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
+        const bw=b.w/iw, bh=b.h/ih;
+        return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
+      }).join('\n');
+      const baseName=(currentImg.originalName||currentImg.fileName||currentImg.id).replace(/\.[^.]+$/,'');
+      const subfolder=currentImg.subfolder||'train';
+      await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
+        method:'POST',
+        body:JSON.stringify({
+          action:'saveLabel',
+          fileName: baseName+'.txt',
+          content: txtContent,
+          subfolder: subfolder,
+        })
+      }).catch(()=>{});
+    }
+
+    document.getElementById('save-status').textContent='✅ 저장됨 (Drive+Firestore)';
+    setTimeout(()=>document.getElementById('save-status').textContent='',2500);
   }catch(e){document.getElementById('save-status').textContent='❌ 저장 실패';}
 }
 
