@@ -346,6 +346,18 @@ async function uploadAll(){
   }
 }
 
+// Drive URL을 외부 임베드 가능한 lh3 URL로 변환
+function toDisplayUrl(url, fileId){
+  if(!url && !fileId) return '';
+  if(url && url.includes('lh3.googleusercontent.com')) return url;
+  if(url && url.includes('drive.google.com')){
+    const m=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if(m) return 'https://lh3.googleusercontent.com/d/'+m[1]+'=w800';
+  }
+  if(fileId) return 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
+  return url||'';
+}
+
 async function loadMyUploads(){
   const uid=currentUser.uid==='student'
     ?('temp_'+(userData.charName||'익명'))
@@ -365,7 +377,7 @@ async function loadMyUploads(){
       const date=d.created_at?.slice(0,16).replace('T',' ')||'';
       const isVal=d.subfolder==='val';
       return `<div class="uploaded-item">
-        <img class="uploaded-thumb" src="${d.url||''}" onerror="this.style.opacity='0.3'">
+        <img class="uploaded-thumb" src="${toDisplayUrl(d.url, d.driveFileId)}" onerror="this.style.opacity='0.3'">
         <div style="flex:1;min-width:80px;overflow:hidden;">
           <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.originalName||d.fileName||'파일'}</div>
           <div style="font-size:10px;color:var(--muted);">
