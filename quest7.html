@@ -16,7 +16,25 @@
     .content-area{display:flex;flex:1;overflow:hidden;}
 
     /* 사이드바 (이미지 목록) */
-    .img-sidebar{width:clamp(100px,18vw,160px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+    .img-sidebar{width:clamp(100px,18vw,160px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;}
+
+    /* 필터 탭 */
+    .filter-tabs{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);flex-shrink:0;position:sticky;top:0;z-index:5;}
+    .filter-tab{flex:1;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--muted);font-size:10px;padding:5px 4px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+    .filter-tab:hover{background:rgba(255,255,255,0.05);color:var(--text);}
+    .filter-tab.active{background:rgba(167,139,250,0.2);border-color:rgba(167,139,250,0.4);color:#a78bfa;font-weight:700;}
+    #thumb-list{flex:1;overflow-y:auto;}
+    .empty-list{padding:20px 10px;text-align:center;font-size:11px;color:var(--muted);}
+
+    /* 네비게이션 버튼 (이전/다음) */
+    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);color:white;font-size:20px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s;}
+    .nav-btn:hover:not(:disabled){background:rgba(167,139,250,0.7);border-color:#a78bfa;}
+    .nav-btn:disabled{opacity:0.3;cursor:not-allowed;}
+    .nav-btn.prev{left:10px;}
+    .nav-btn.next{right:10px;}
+    .nav-info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:4px 14px;color:white;font-size:11px;z-index:10;}
+    @media(max-width:600px){.nav-btn{width:36px;height:36px;font-size:16px;}}
+
     .img-thumb{cursor:pointer;border-bottom:1px solid var(--border);position:relative;}
     .img-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
     .img-thumb.active{outline:3px solid #a78bfa;}
@@ -80,7 +98,11 @@
   <div class="content-area">
     <!-- 이미지 목록 사이드바 -->
     <div class="img-sidebar" id="img-sidebar">
-      <div style="padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">내 사진</div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" id="filter-all" onclick="setFilter('all')">전체</button>
+        <button class="filter-tab" id="filter-todo" onclick="setFilter('todo')">미완료</button>
+        <button class="filter-tab" id="filter-done" onclick="setFilter('done')">완료</button>
+      </div>
       <div id="thumb-list"></div>
     </div>
 
@@ -92,6 +114,9 @@
           onmousedown="startDraw(event)" onmousemove="moveDraw(event)" onmouseup="endDraw(event)"
           ontouchstart="touchStartDraw(event)" ontouchmove="touchMoveDraw(event)" ontouchend="touchEndDraw(event)">
         </canvas>
+        <button class="nav-btn prev" id="btn-prev" onclick="prevImage()" title="이전 사진 (←)">◀</button>
+        <button class="nav-btn next" id="btn-next" onclick="nextImage()" title="다음 사진 (→)">▶</button>
+        <div class="nav-info" id="nav-info"></div>
         <div class="empty-canvas" id="empty-msg">
           <div style="font-size:40px;">👈</div>
           <div>왼쪽에서 사진을 선택하세요</div>
@@ -131,6 +156,7 @@ let allBoxes={}, currentImg=null;
 let isDrawing=false, startX=0, startY=0, currentBox=null;
 let selectedClassIdx=0, selectedBoxIdx=-1, currentTool='draw';
 let scale=1, offsetX=0, offsetY=0;
+let currentFilter='all'; // 'all' | 'todo' | 'done'
 
 requireAuth(async (user)=>{
   currentUser=user;
@@ -178,15 +204,108 @@ async function loadMyImages(){
   });
 
   updateProgress();
-  document.getElementById('thumb-list').innerHTML=myImages.map((img,i)=>`
-    <div class="img-thumb ${i===currentImgIdx?'active':''}" id="thumb-${i}" onclick="selectImage(${i})">
-      <img src="${toDisplayUrl(img.url, img.driveFileId)}" onerror="this.style.display='none'">
-      ${allBoxes[img.id]?.length?'<div class="labeled-dot"></div>':''}
-      <div class="num">${i+1}</div>
-    </div>`).join('');
+  renderThumbList();
 
   if(myImages.length>0) selectImage(0);
   else document.getElementById('empty-msg').style.display='flex';
+}
+
+// 필터 적용해서 보여줄 사진 리스트 반환
+function getFilteredImages(){
+  if(currentFilter==='all') return myImages.map((img,i)=>({img, originalIdx:i}));
+  if(currentFilter==='done') return myImages.map((img,i)=>({img, originalIdx:i})).filter(x=>allBoxes[x.img.id]?.length>0);
+  if(currentFilter==='todo') return myImages.map((img,i)=>({img, originalIdx:i})).filter(x=>!allBoxes[x.img.id]?.length);
+  return [];
+}
+
+// 썸네일 목록 그리기
+function renderThumbList(){
+  const filtered=getFilteredImages();
+
+  // 카운트 업데이트
+  const totalCnt=myImages.length;
+  const doneCnt=myImages.filter(img=>allBoxes[img.id]?.length>0).length;
+  const todoCnt=totalCnt-doneCnt;
+  document.getElementById('filter-all').textContent=`전체 ${totalCnt}`;
+  document.getElementById('filter-todo').textContent=`미완료 ${todoCnt}`;
+  document.getElementById('filter-done').textContent=`완료 ${doneCnt}`;
+
+  if(filtered.length===0){
+    document.getElementById('thumb-list').innerHTML=`<div class="empty-list">${
+      currentFilter==='done'?'아직 라벨링한 사진이 없어요':
+      currentFilter==='todo'?'🎉 모두 라벨링 완료!':
+      '사진이 없어요'
+    }</div>`;
+    return;
+  }
+
+  document.getElementById('thumb-list').innerHTML=filtered.map(({img,originalIdx})=>{
+    const isLabeled=allBoxes[img.id]?.length>0;
+    return `
+    <div class="img-thumb ${originalIdx===currentImgIdx?'active':''}" id="thumb-${originalIdx}" onclick="selectImage(${originalIdx})">
+      <img src="${toDisplayUrl(img.url, img.driveFileId)}" onerror="this.style.display='none'">
+      ${isLabeled?'<div class="labeled-dot"></div>':''}
+      <div class="num">${originalIdx+1}</div>
+    </div>`;
+  }).join('');
+}
+
+// 필터 변경
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('filter-'+f).classList.add('active');
+  renderThumbList();
+}
+
+// 이전/다음 사진 이동
+function prevImage(){
+  const filtered=getFilteredImages();
+  if(filtered.length===0) return;
+
+  const curPos=filtered.findIndex(x=>x.originalIdx===currentImgIdx);
+  if(curPos===-1){
+    // 현재 사진이 필터에 없으면 첫 번째 선택
+    selectImage(filtered[0].originalIdx);
+    return;
+  }
+  const newPos=curPos===0 ? filtered.length-1 : curPos-1; // 끝에서 처음으로 순환
+  selectImage(filtered[newPos].originalIdx);
+}
+
+function nextImage(){
+  const filtered=getFilteredImages();
+  if(filtered.length===0) return;
+
+  const curPos=filtered.findIndex(x=>x.originalIdx===currentImgIdx);
+  if(curPos===-1){
+    selectImage(filtered[0].originalIdx);
+    return;
+  }
+  const newPos=curPos===filtered.length-1 ? 0 : curPos+1; // 끝에서 처음으로 순환
+  selectImage(filtered[newPos].originalIdx);
+}
+
+// 네비게이션 정보 업데이트 (현재 위치 표시)
+function updateNavInfo(){
+  const filtered=getFilteredImages();
+  const info=document.getElementById('nav-info');
+  if(filtered.length===0){
+    info.style.display='none';
+    return;
+  }
+  const curPos=filtered.findIndex(x=>x.originalIdx===currentImgIdx);
+  if(curPos===-1){
+    info.style.display='none';
+    return;
+  }
+  info.style.display='block';
+  info.textContent=`${curPos+1} / ${filtered.length}`;
+
+  // 1장만 있으면 버튼 비활성화
+  const onlyOne=filtered.length<=1;
+  document.getElementById('btn-prev').disabled=onlyOne;
+  document.getElementById('btn-next').disabled=onlyOne;
 }
 
 function updateProgress(){
@@ -215,8 +334,11 @@ function selectImage(idx){
   const img=myImages[idx];
   currentImg=img;
   document.getElementById('empty-msg').style.display='none';
-  document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
+  document.querySelectorAll('.img-thumb').forEach(el=>el.classList.remove('active'));
+  const activeThumb=document.getElementById('thumb-'+idx);
+  if(activeThumb) activeThumb.classList.add('active');
   renderBoxList();
+  updateNavInfo();
 
   // Drive URL을 lh3 형식으로 변환 (CORS + 캔버스 호환)
   const imgUrl=toDisplayUrl(img.url, img.driveFileId);
@@ -438,14 +560,9 @@ async function saveLabels(){
 }
 
 function updateThumb(){
-  const thumb=document.getElementById('thumb-'+currentImgIdx);
-  if(!thumb) return;
-  const dot=thumb.querySelector('.labeled-dot');
-  if(allBoxes[currentImg.id]?.length){
-    if(!dot){const d=document.createElement('div');d.className='labeled-dot';thumb.appendChild(d);}
-  } else {
-    dot?.remove();
-  }
+  // 라벨링 상태가 바뀌었으니 전체 썸네일 + 필터 카운트 재계산
+  renderThumbList();
+  updateNavInfo();
 }
 
 // YOLO txt 다운로드
@@ -558,6 +675,23 @@ function setupResize(){
   window.addEventListener('resize',()=>{
     if(currentImg?._imageEl) fitImageToCanvas(currentImg._imageEl);
     redrawCanvas(currentImg?._imageEl);
+  });
+
+  // 키보드 단축키: 좌우 화살표로 사진 이동
+  window.addEventListener('keydown',(e)=>{
+    // input/textarea에 포커스 있으면 무시
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+
+    if(e.key==='ArrowLeft'){
+      e.preventDefault();
+      prevImage();
+    } else if(e.key==='ArrowRight'){
+      e.preventDefault();
+      nextImage();
+    } else if(e.key==='s'||e.key==='S'){
+      // S 키로 저장
+      if(currentImg) saveLabels();
+    }
   });
 }
 </script>
