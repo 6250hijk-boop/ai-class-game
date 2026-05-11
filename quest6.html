@@ -142,6 +142,7 @@ const VAL_RATIO = 0.2; // 20% 검증용
 
 let currentUser=null, userData=null;
 let pendingFiles=[];
+let studentId='', charName='', firestoreUid='';
 
 requireAuth(async (user)=>{
   currentUser=user;
@@ -152,20 +153,25 @@ requireAuth(async (user)=>{
     const snap=await db.collection('users').where('id','==',user.id).get();
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
+  // 학생 식별자 계산 (모든 Drive API 호출에서 사용)
+  charName=userData.charName||userData.name||'익명';
+  firestoreUid=currentUser.uid==='student'?('temp_'+charName):currentUser.uid;
+  studentId=charName+'_'+firestoreUid;
+
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
   loadMyUploads();
   loadFolderStats();
-  // classes.txt 자동 동기화
+  // classes.txt 자동 동기화 (학생 폴더에)
   syncClasses();
 });
 
-// ── classes.txt 동기화 ──
+// ── classes.txt 동기화 (학생 폴더에 저장) ──
 async function syncClasses(){
   try{
     const snap=await db.collection('label_classes').orderBy('order').get();
     if(snap.empty) return;
     const content=snap.docs.map(d=>d.data().name).join('\n');
-    await callDriveAPI({action:'saveClasses', content});
+    await callDriveAPI({action:'saveClasses', content, studentId});
   }catch(e){console.warn('classes 동기화 실패:', e);}
 }
 
@@ -182,12 +188,12 @@ async function callDriveAPI(data){
   return result;
 }
 
-// ── 폴더 통계 로드 ──
+// ── 폴더 통계 로드 (학생별) ──
 async function loadFolderStats(){
   try{
     const [trainRes, valRes]=await Promise.all([
-      callDriveAPI({action:'list', subfolder:'train'}),
-      callDriveAPI({action:'list', subfolder:'val'}),
+      callDriveAPI({action:'list', subfolder:'train', studentId}),
+      callDriveAPI({action:'list', subfolder:'val', studentId}),
     ]);
     document.getElementById('train-count').textContent=trainRes.files?.length||0;
     document.getElementById('val-count').textContent=valRes.files?.length||0;
@@ -272,6 +278,7 @@ async function uploadAll(){
 
   const userId=currentUser.id||currentUser.uid||'unknown';
   const userName=userData.name||userData.charName||'익명';
+  // studentId, charName, firestoreUid는 전역 변수 사용 (requireAuth에서 설정됨)
   let done=0; const total=toUpload.length;
 
   const updateStatus=()=>{
@@ -297,14 +304,13 @@ async function uploadAll(){
           fileName, imageBase64:base64,
           mimeType:'image/jpeg',
           isVal: pf.isVal,
+          studentId,       // ⬅ 학생별 폴더 식별자
+          studentName:charName,
         });
 
         // Firestore 저장
-        const firestoreUid=currentUser.uid==='student'
-          ?('temp_'+(userData.charName||'익명'))
-          :currentUser.uid;
         await db.collection('uploads').add({
-          userId:firestoreUid, userName,
+          userId:firestoreUid, userName, studentId,
           fileName, originalName:pf.file.name,
           driveFileId:result.fileId,
           driveLink:result.webViewLink||'',
