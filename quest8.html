@@ -71,19 +71,15 @@
 
     <!-- STEP 1 -->
     <div class="card">
-      <h3><span class="step-badge">STEP 1</span> 📁 Drive 폴더 확인</h3>
+      <h3><span class="step-badge">STEP 1</span> 📁 내 가디언 폴더 확인</h3>
       <div class="step-content">
-        퀘스트 6, 7을 진행했다면 본인 Drive에 다음 폴더가 자동으로 만들어져 있어요:
-        <div class="yaml-box">📂 AI-Class-Data/
-├── 📂 images/
-│   ├── 📂 train/   (학습용 사진)
-│   └── 📂 val/     (검증용 사진)
-├── 📂 labels/
-│   ├── 📂 train/   (학습용 라벨 .txt)
-│   └── 📂 val/     (검증용 라벨 .txt)
-├── 📄 classes.txt  (클래스 목록)
-└── 📄 dataset.yaml (자동 생성됨)</div>
-        <div class="tip-box">💡 폴더 이름이 다르면 아래 코드의 <code>FOLDER_NAME</code> 값을 수정하세요.</div>
+        퀘스트 6, 7에서 만든 데이터는 선생님 Drive의 <strong>내 가디언 전용 폴더</strong>에 저장되어 있어요:
+        <div class="yaml-box" id="folder-structure">불러오는 중...</div>
+        <div class="info-box">
+          📂 <strong>내 가디언 폴더 이름:</strong><br>
+          <code id="my-student-id" style="background:rgba(0,0,0,0.4);padding:6px 12px;border-radius:6px;display:inline-block;margin-top:6px;font-family:monospace;color:#a78bfa;">불러오는 중...</code>
+        </div>
+        <div class="tip-box">💡 아래 코드의 경로가 자동으로 내 가디언 폴더로 설정되어 있어요!</div>
       </div>
     </div>
 
@@ -117,29 +113,7 @@ print("✅ 준비 완료!")</div>
         <div class="step-num">2</div>
         <div class="step-content">
           <strong>데이터셋 확인</strong>
-          <div class="code-block" id="d-code2">import os, glob
-
-# Drive 데이터 폴더 (필요시 수정)
-FOLDER_NAME = 'AI-Class-Data'
-DATA_DIR = f'/content/drive/MyDrive/{FOLDER_NAME}'
-
-# 폴더 구조 확인
-print(f"📂 데이터 폴더: {DATA_DIR}\n")
-
-train_imgs = glob.glob(f'{DATA_DIR}/images/train/*')
-val_imgs   = glob.glob(f'{DATA_DIR}/images/val/*')
-train_lbls = glob.glob(f'{DATA_DIR}/labels/train/*.txt')
-val_lbls   = glob.glob(f'{DATA_DIR}/labels/val/*.txt')
-
-print(f"📷 학습 이미지: {len(train_imgs)}장")
-print(f"📷 검증 이미지: {len(val_imgs)}장")
-print(f"🏷️  학습 라벨:  {len(train_lbls)}개")
-print(f"🏷️  검증 라벨:  {len(val_lbls)}개")
-
-# classes.txt 확인
-with open(f'{DATA_DIR}/classes.txt') as f:
-    classes = [c.strip() for c in f.readlines() if c.strip()]
-print(f"\n📋 클래스 ({len(classes)}개):", classes)</div>
+          <div class="code-block" id="d-code2"><!-- 자동 채워짐 --></div>
           <button class="copy-btn" onclick="copyCode('d-code2')">📋 복사</button>
         </div>
       </div>
@@ -148,23 +122,9 @@ print(f"\n📋 클래스 ({len(classes)}개):", classes)</div>
         <div class="step-num">3</div>
         <div class="step-content">
           <strong>dataset.yaml 자동 생성 (Drive에 저장)</strong>
-          <div class="code-block" id="d-code3">yaml_content = f"""# YOLOv8 dataset.yaml
-path: {DATA_DIR}
-train: images/train
-val:   images/val
-
-nc: {len(classes)}
-names: {classes}
-"""
-
-yaml_path = f'{DATA_DIR}/dataset.yaml'
-with open(yaml_path, 'w') as f:
-    f.write(yaml_content)
-
-print(f"✅ dataset.yaml 생성 완료: {yaml_path}")
-print("\n" + yaml_content)</div>
+          <div class="code-block" id="d-code3"><!-- 자동 채워짐 --></div>
           <button class="copy-btn" onclick="copyCode('d-code3')">📋 복사</button>
-          <div class="tip-box">💡 Apps Script가 이미 만들어 놨다면 덮어쓰기 됩니다 (Colab 환경에 맞춰 자동 조정).</div>
+          <div class="tip-box">💡 Apps Script가 이미 만들어 놨다면 덮어쓰기 됩니다.</div>
         </div>
       </div>
 
@@ -540,14 +500,94 @@ requireAuth(async (user)=>{
   let userData={score:0};
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{score:0};
+    userData=local||{score:0,charName:'AI'};
   } else {
     const snap=await db.collection('users').where('id','==',user.id).get();
     if(!snap.empty) userData=snap.docs[0].data();
   }
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-  loadYaml();
+
+  // 학생 식별자 (quest6와 동일 로직)
+  const charName=userData.charName||userData.name||'익명';
+  const firestoreUid=user.uid==='student'?('temp_'+charName):user.uid;
+  const studentId=charName+'_'+firestoreUid;
+  // 폴더명에 쓸 수 없는 문자 정리 (Apps Script와 동일)
+  const sid=studentId.replace(/[\/\\:*?"<>|]/g, "_").substring(0, 80);
+
+  // UI에 표시
+  document.getElementById('my-student-id').textContent=sid;
+  document.getElementById('folder-structure').textContent=
+`📂 AI-Class-Data/
+└── 📂 students/
+    └── 📂 ${sid}/      ← 내 가디언 폴더!
+        ├── 📂 images/
+        │   ├── 📂 train/  (학습용 사진)
+        │   └── 📂 val/    (검증용 사진)
+        ├── 📂 labels/
+        │   ├── 📂 train/  (학습용 라벨 .txt)
+        │   └── 📂 val/    (검증용 라벨 .txt)
+        ├── 📄 classes.txt
+        └── 📄 dataset.yaml (자동 생성됨)`;
+
+  // 학생별 Colab 코드 자동 생성
+  generateColabCode(sid);
+  loadYaml(sid);
 });
+
+function generateColabCode(sid){
+  const dataDir=`/content/drive/MyDrive/AI-Class-Data/students/${sid}`;
+
+  // 데이터 확인 코드
+  document.getElementById('d-code2').textContent=
+`import os, glob
+
+# ⬇ 내 가디언 폴더 (자동 설정됨)
+DATA_DIR = '${dataDir}'
+
+print(f"📂 데이터 폴더: {DATA_DIR}\\n")
+
+if not os.path.exists(DATA_DIR):
+    print(f"❌ 폴더를 찾을 수 없어요!")
+    print(f"   퀘스트 6에서 사진을 먼저 업로드하세요.")
+else:
+    train_imgs = glob.glob(f'{DATA_DIR}/images/train/*')
+    val_imgs   = glob.glob(f'{DATA_DIR}/images/val/*')
+    train_lbls = glob.glob(f'{DATA_DIR}/labels/train/*.txt')
+    val_lbls   = glob.glob(f'{DATA_DIR}/labels/val/*.txt')
+
+    print(f"📷 학습 이미지: {len(train_imgs)}장")
+    print(f"📷 검증 이미지: {len(val_imgs)}장")
+    print(f"🏷️  학습 라벨:  {len(train_lbls)}개")
+    print(f"🏷️  검증 라벨:  {len(val_lbls)}개")
+
+    # classes.txt 확인
+    classes_file = f'{DATA_DIR}/classes.txt'
+    if os.path.exists(classes_file):
+        with open(classes_file) as f:
+            classes = [c.strip() for c in f.readlines() if c.strip()]
+        print(f"\\n📋 클래스 ({len(classes)}개): {classes}")
+    else:
+        print(f"\\n⚠️ classes.txt가 없어요. 퀘스트 7에서 라벨링을 저장하면 자동 생성돼요.")
+        classes = []`;
+
+  // yaml 생성 코드
+  document.getElementById('d-code3').textContent=
+`yaml_content = f'''# YOLOv8 dataset.yaml (${sid})
+path: {DATA_DIR}
+train: images/train
+val:   images/val
+
+nc: {len(classes)}
+names: {classes}
+'''
+
+yaml_path = f'{DATA_DIR}/dataset.yaml'
+with open(yaml_path, 'w', encoding='utf-8') as f:
+    f.write(yaml_content)
+
+print(f"✅ dataset.yaml 저장됨: {yaml_path}\\n")
+print(yaml_content)`;
+}
 
 function switchTab(name){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -556,13 +596,13 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
 }
 
-async function loadYaml(){
+async function loadYaml(sid){
   try{
     const snap=await db.collection('label_classes').orderBy('order').get();
     const classes=snap.docs.map(d=>d.data().name);
     const nc=classes.length||1;
     const names=classes.length?classes:['object'];
-    const yaml=`# dataset.yaml - /content/dataset/ 폴더에 저장하세요
+    const yaml=`# dataset.yaml (ZIP 방식용 - 임시 폴더 사용)
 path: /content/dataset
 train: images/train
 val:   images/val
