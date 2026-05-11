@@ -518,7 +518,9 @@ function selectBox(i){
 
 async function saveLabels(){
   if(!currentImg) return;
-  const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
+  const charName=userData.charName||userData.name||'익명';
+  const userId=currentUser.uid==='student'?('temp_'+charName):currentUser.uid;
+  const studentId=charName+'_'+userId;
   document.getElementById('save-status').textContent='저장 중...';
   try{
     const boxes=allBoxes[currentImg.id]||[];
@@ -526,14 +528,14 @@ async function saveLabels(){
     // 1. Firestore에 저장
     const snap=await db.collection('labels').where('userId','==',userId).where('imageId','==',currentImg.id).get();
     if(snap.empty){
-      await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});
+      await db.collection('labels').add({userId,studentId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});
     } else {
       await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});
     }
     // uploads labeled 업데이트
     await db.collection('uploads').doc(currentImg.id).update({labeled:boxes.length>0});
 
-    // 2. Google Drive에 txt 저장
+    // 2. Google Drive에 txt 저장 (학생 폴더에)
     if(GDRIVE_CONFIG.APPS_SCRIPT_URL && !GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
       const iw=currentImg.width||600, ih=currentImg.height||600;
       const txtContent=boxes.map(b=>{
@@ -541,7 +543,8 @@ async function saveLabels(){
         const bw=b.w/iw, bh=b.h/ih;
         return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
       }).join('\n');
-      const baseName=(currentImg.originalName||currentImg.fileName||currentImg.id).replace(/\.[^.]+$/,'');
+      // ⚠️ 중요: Drive에 저장된 실제 이미지 파일 이름과 일치시켜야 YOLO가 매칭함
+      const baseName=(currentImg.fileName||currentImg.originalName||currentImg.id).replace(/\.[^.]+$/,'');
       const subfolder=currentImg.subfolder||'train';
       await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
         method:'POST',
@@ -550,8 +553,21 @@ async function saveLabels(){
           fileName: baseName+'.txt',
           content: txtContent,
           subfolder: subfolder,
+          studentId,   // ⬅ 학생 폴더 식별자
         })
       }).catch(()=>{});
+
+      // classes.txt도 학생 폴더에 자동 저장 (dataset.yaml도 함께 생성됨)
+      try{
+        const cs=await db.collection('label_classes').orderBy('order').get();
+        if(!cs.empty){
+          const content=cs.docs.map(d=>d.data().name).join('\n');
+          fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
+            method:'POST',
+            body:JSON.stringify({action:'saveClasses', content, studentId})
+          }).catch(()=>{});
+        }
+      }catch(e){}
     }
 
     document.getElementById('save-status').textContent='✅ 저장됨 (Drive+Firestore)';
@@ -586,8 +602,8 @@ function downloadAllLabels(){
       const bw=b.w/iw, bh=b.h/ih;
       return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
     }).join('\n');
-    // 파일명 처리 (cloudinary public_id에서 파일명 추출)
-    const rawName=img.originalName||img.fileName||imgId;
+    // 파일명 처리 - Drive 이미지 파일명과 일치하도록 fileName 우선
+    const rawName=img.fileName||img.originalName||imgId;
     const fname=rawName.replace(/\.[^.]+$/,'')+'.txt';
     downloadText(fname,content);
   });
@@ -626,8 +642,8 @@ async function downloadZip(){
       const iw=img.width||600;
       const ih=img.height||600;
 
-      // 파일명 처리
-      const rawName=img.originalName||img.fileName||imgId;
+      // 파일명 처리 - Drive 이미지 파일명과 일치하도록 fileName 우선
+      const rawName=img.fileName||img.originalName||imgId;
       const baseName=rawName.replace(/\.[^.]+$/,'');
       const imgExt=rawName.split('.').pop()||'jpg';
 
