@@ -19,7 +19,7 @@ const GDRIVE_CONFIG = {
   API_KEY: "AIzaSyAPfaW3Vb9beLdcgGlus1ZMADRhjIXpmwE",
   SCOPES: "https://www.googleapis.com/auth/drive.file",
   // Apps Script 웹앱 배포 후 URL 입력
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwS-SUY4YDHS3XVoQKh65nAjanllI3-eGXzsI0_QK3b_q4_AQJm1yc5e5NS6pdc33DA5Q/exec",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxhkDkqW7P7hpg9k0syRn_eFg-ajlTTtXukm7a9GI0tiRHbp4i1M-NaGFY6UV6iUcMlGw/exec",
 };
 
 firebase.initializeApp(firebaseConfig);
