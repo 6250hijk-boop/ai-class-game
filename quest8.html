@@ -61,25 +61,25 @@
   <!-- ════════════════════════════════════════ -->
   <!--  방식 1: Drive 직접 사용 (추천)            -->
   <!-- ════════════════════════════════════════ -->
-  <div class="tab-content active" id="tab-drive">
+<div class="tab-content active" id="tab-drive">
 
     <div class="info-box">
-      ✨ <strong>Drive 직접 사용 방식</strong><br>
-      퀘스트 6에서 업로드한 사진과 퀘스트 7에서 만든 라벨이 이미 Drive에 정리되어 있어요.<br>
-      ZIP 다운로드/업로드 없이 Colab에서 바로 사용할 수 있어요!
+      ✨ <strong>Apps Script로 데이터 받기</strong><br>
+      Drive 로그인 없이 Colab에서 바로 내 가디언 데이터를 받아서 학습해요!<br>
+      어느 Google 계정으로 Colab에 로그인해도 작동합니다.
     </div>
 
     <!-- STEP 1 -->
     <div class="card">
-      <h3><span class="step-badge">STEP 1</span> 📁 내 가디언 폴더 확인</h3>
+      <h3><span class="step-badge">STEP 1</span> 📁 내 가디언 정보 확인</h3>
       <div class="step-content">
-        퀘스트 6, 7에서 만든 데이터는 선생님 Drive의 <strong>내 가디언 전용 폴더</strong>에 저장되어 있어요:
+        선생님 Drive에서 내 가디언 폴더는 다음과 같이 만들어져 있어요:
         <div class="yaml-box" id="folder-structure">불러오는 중...</div>
         <div class="info-box">
-          📂 <strong>내 가디언 폴더 이름:</strong><br>
+          📂 <strong>내 가디언 ID:</strong><br>
           <code id="my-student-id" style="background:rgba(0,0,0,0.4);padding:6px 12px;border-radius:6px;display:inline-block;margin-top:6px;font-family:monospace;color:#a78bfa;">불러오는 중...</code>
         </div>
-        <div class="tip-box">💡 아래 코드의 경로가 자동으로 내 가디언 폴더로 설정되어 있어요!</div>
+        <div class="tip-box">💡 아래 코드에 내 ID가 자동으로 들어가 있어요. 그대로 복사해서 사용하세요!</div>
       </div>
     </div>
 
@@ -96,24 +96,18 @@
       <div class="step-item">
         <div class="step-num">1</div>
         <div class="step-content">
-          <strong>Google Drive 마운트 + YOLOv8 설치</strong>
-          <div class="code-block" id="d-code1"># Google Drive 연결
-from google.colab import drive
-drive.mount('/content/drive')
-
-# YOLOv8 설치
-!pip install ultralytics -q
-
-print("✅ 준비 완료!")</div>
+          <strong>YOLOv8 설치 + 내 데이터 받기</strong>
+          <div class="code-block" id="d-code1"><!-- 자동 생성 --></div>
           <button class="copy-btn" onclick="copyCode('d-code1')">📋 복사</button>
+          <div class="tip-box">💡 사진 개수에 따라 1~3분 정도 걸려요.</div>
         </div>
       </div>
 
       <div class="step-item">
         <div class="step-num">2</div>
         <div class="step-content">
-          <strong>데이터셋 확인</strong>
-          <div class="code-block" id="d-code2"><!-- 자동 채워짐 --></div>
+          <strong>dataset.yaml 생성</strong>
+          <div class="code-block" id="d-code2"><!-- 자동 생성 --></div>
           <button class="copy-btn" onclick="copyCode('d-code2')">📋 복사</button>
         </div>
       </div>
@@ -121,76 +115,57 @@ print("✅ 준비 완료!")</div>
       <div class="step-item">
         <div class="step-num">3</div>
         <div class="step-content">
-          <strong>dataset.yaml 자동 생성 (Drive에 저장)</strong>
-          <div class="code-block" id="d-code3"><!-- 자동 채워짐 --></div>
-          <button class="copy-btn" onclick="copyCode('d-code3')">📋 복사</button>
-          <div class="tip-box">💡 Apps Script가 이미 만들어 놨다면 덮어쓰기 됩니다.</div>
-        </div>
-      </div>
+          <strong>🚀 학습 시작!</strong>
+          <div class="code-block" id="d-code3">from ultralytics import YOLO
 
-      <div class="step-item">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <strong>YOLOv8 학습 시작!</strong>
-          <div class="code-block" id="d-code4">from ultralytics import YOLO
+# 학습 설정
+EPOCHS = 50      # 학습 횟수
+BATCH  = 16      # 배치 크기
+IMGSZ  = 640     # 이미지 크기
 
-model = YOLO('yolov8n.pt')  # nano 모델 (가장 빠름)
+model = YOLO('yolov8n.pt')
 
 results = model.train(
-    data=yaml_path,                                # Drive의 yaml 직접 사용
-    epochs=50,                                     # 학습 횟수
-    imgsz=640,                                     # 이미지 크기
-    batch=16,                                      # 배치 크기
-    name='my_model',
-    project=f'{DATA_DIR}/runs',                   # 결과를 Drive에 저장
-    save=True,
+    data    = yaml_path,
+    epochs  = EPOCHS,
+    imgsz   = IMGSZ,
+    batch   = BATCH,
+    name    = 'my_model',
+    project = '/content/runs',
+    save    = True,
+    patience= 20,
 )
 
-print("🎉 학습 완료!")
-print("best.pt 위치:", results.save_dir + '/weights/best.pt')</div>
-          <button class="copy-btn" onclick="copyCode('d-code4')">📋 복사</button>
-          <div class="tip-box">💡 학습 결과(best.pt)가 Drive에 저장되니 다음에 바로 불러올 수 있어요!<br>
-          데이터가 적으면 epochs=30, 많으면 100. 학습 시간: 약 5~15분</div>
+print("\n🎉 학습 완료!")
+print(f"📁 모델 위치: {results.save_dir}/weights/best.pt")</div>
+          <button class="copy-btn" onclick="copyCode('d-code3')">📋 복사</button>
+          <div class="tip-box">💡 5~15분 정도 걸려요. 데이터가 적으면 EPOCHS=30, 많으면 100.</div>
         </div>
       </div>
     </div>
 
-    <!-- STEP 3 -->
+    <!-- STEP 3: 테스트 -->
     <div class="card">
-      <h3><span class="step-badge">STEP 3</span> 🎯 모델 테스트하기</h3>
+      <h3><span class="step-badge">STEP 3</span> 🎯 모델 테스트</h3>
 
       <div class="step-item">
         <div class="step-num">1</div>
         <div class="step-content">
-          <strong>val 폴더 사진으로 테스트</strong>
-          <div class="code-block" id="d-code5">from ultralytics import YOLO
-import PIL.Image
-from IPython.display import display
-import glob
+          <strong>정확도 확인 (mAP 점수)</strong>
+          <div class="code-block" id="d-code4">metrics = model.val(data=yaml_path)
 
-# 학습된 모델 로드 (Drive에서)
-model = YOLO(f'{DATA_DIR}/runs/my_model/weights/best.pt')
+print(f"\n📊 정확도 결과:")
+print(f"  mAP50    : {metrics.box.map50:.1%}")
+print(f"  mAP50-95 : {metrics.box.map:.1%}")
+print(f"  Precision: {metrics.box.mp:.1%}")
+print(f"  Recall   : {metrics.box.mr:.1%}")
 
-# val 폴더의 사진으로 테스트 (학습 안 한 사진!)
-test_imgs = glob.glob(f'{DATA_DIR}/images/val/*')[:5]  # 5장만
-
-if not test_imgs:
-    print("⚠️ val 폴더에 사진이 없어요. train 폴더로 대체합니다.")
-    test_imgs = glob.glob(f'{DATA_DIR}/images/train/*')[:5]
-
-results = model(test_imgs, conf=0.3)
-
-for r in results:
-    img = PIL.Image.fromarray(r.plot()[..., ::-1])
-    display(img)
-    print(f"📸 {r.path.split('/')[-1]}")
-    if r.boxes:
-        for box in r.boxes:
-            cls_name = model.names[int(box.cls)]
-            conf = float(box.conf)
-            print(f"   → {cls_name}: {conf:.1%}")
-    print()</div>
-          <button class="copy-btn" onclick="copyCode('d-code5')">📋 복사</button>
+score = metrics.box.map50
+if score >= 0.75:   print("\n🏆 훌륭한 모델이에요!")
+elif score >= 0.60: print("\n👍 꽤 좋은 모델이에요!")
+elif score >= 0.40: print("\n🤔 데이터를 더 모아보세요.")
+else:               print("\n😢 라벨링을 점검하고 데이터를 더 모으세요.")</div>
+          <button class="copy-btn" onclick="copyCode('d-code4')">📋 복사</button>
         </div>
       </div>
 
@@ -198,15 +173,15 @@ for r in results:
         <div class="step-num">2</div>
         <div class="step-content">
           <strong>새 사진 업로드해서 테스트</strong>
-          <div class="code-block" id="d-code6">from google.colab import files
-import io
+          <div class="code-block" id="d-code5">from google.colab import files
+import io, PIL.Image
+from IPython.display import display
 
 print("📸 테스트할 사진을 업로드하세요!")
 uploaded = files.upload()
 
 for fname, data in uploaded.items():
     results = model(io.BytesIO(data), conf=0.3)
-
     img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
     display(img)
 
@@ -215,50 +190,81 @@ for fname, data in uploaded.items():
         for box in results[0].boxes:
             cls_name = model.names[int(box.cls)]
             conf = float(box.conf)
-            print(f"  → {cls_name}: {conf:.1%} 신뢰도")
+            print(f"  → {cls_name}: {conf:.1%}")
     else:
-        print("  감지된 객체가 없습니다.")</div>
-          <button class="copy-btn" onclick="copyCode('d-code6')">📋 복사</button>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <strong>정확도 확인 (mAP 점수)</strong>
-          <div class="code-block" id="d-code7">metrics = model.val(data=yaml_path)
-
-print(f"\n📊 정확도 결과:")
-print(f"  mAP50    : {metrics.box.map50:.1%}")    # 기본 정확도
-print(f"  mAP50-95 : {metrics.box.map:.1%}")      # 엄격한 정확도
-print(f"  Precision: {metrics.box.mp:.1%}")
-print(f"  Recall   : {metrics.box.mr:.1%}")</div>
-          <button class="copy-btn" onclick="copyCode('d-code7')">📋 복사</button>
+        print("  감지된 객체가 없습니다.")
+    print()</div>
+          <button class="copy-btn" onclick="copyCode('d-code5')">📋 복사</button>
         </div>
       </div>
     </div>
 
-    <!-- 다음에 다시 학습할 때 -->
+    <!-- STEP 4: 결과 저장 -->
     <div class="card">
-      <h3>🔄 나중에 모델 다시 사용하려면?</h3>
+      <h3><span class="step-badge">STEP 4</span> 💾 내 AI 저장하기</h3>
+      <div class="warn-box">
+        ⚠️ <strong>중요!</strong> Colab을 끄면 학습 결과가 사라져요.<br>
+        내 컴퓨터에 다운로드해서 보관하세요!
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <strong>학습된 AI 모델 다운로드</strong>
+          <div class="code-block" id="d-code6">from google.colab import files
+import shutil
+
+# 학습 결과를 ZIP으로 묶기
+model_path = f"{results.save_dir}/weights/best.pt"
+result_zip = '/content/my_ai_model.zip'
+
+shutil.make_archive('/content/my_ai_model', 'zip', results.save_dir)
+
+print(f"📦 내 AI 모델 패키지가 준비됐어요!")
+print(f"   다운로드 시작...")
+
+# 내 컴퓨터에 다운로드
+files.download(result_zip)
+files.download(model_path)  # best.pt만 따로
+
+print("\n✅ 다운로드 완료!")
+print("💡 다음에 사용할 때 이 파일들을 다시 Colab에 업로드하세요.")</div>
+          <button class="copy-btn" onclick="copyCode('d-code6')">📋 복사</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 다음에 다시 사용 -->
+    <div class="card">
+      <h3>🔄 다음에 다시 사용하려면?</h3>
       <div class="step-content">
-        학습 결과가 Drive에 저장되어 있어서 <strong>Colab을 끄고 다시 켜도</strong> 바로 사용할 수 있어요!
-        <div class="code-block" id="d-code-reload">from google.colab import drive
-drive.mount('/content/drive')
+        다운로드한 <strong>best.pt</strong>를 Colab에 업로드하면 학습 없이 바로 테스트할 수 있어요.
+        <div class="code-block" id="d-code-reload">!pip install ultralytics -q
 
-!pip install ultralytics -q
+from google.colab import files
 from ultralytics import YOLO
+import PIL.Image, io
+from IPython.display import display
 
-# 저장된 모델 바로 로드
-DATA_DIR = '/content/drive/MyDrive/AI-Class-Data'
-model = YOLO(f'{DATA_DIR}/runs/my_model/weights/best.pt')
+# best.pt 파일 업로드
+print("📤 학습된 모델(best.pt)을 업로드하세요!")
+uploaded = files.upload()
 
-print("✅ 저장된 모델 로드 완료!")</div>
+model_file = list(uploaded.keys())[0]
+model = YOLO(model_file)
+
+print(f"\n✅ 모델 로드 완료!")
+print(f"📋 인식 가능 클래스: {list(model.names.values())}")
+
+# 이제 사진 업로드해서 테스트 가능
+print("\n📸 이제 STEP 3-2 코드로 테스트하세요!")</div>
         <button class="copy-btn" onclick="copyCode('d-code-reload')">📋 복사</button>
       </div>
     </div>
 
   </div>
+
+  
 
   <!-- ════════════════════════════════════════ -->
   <!--  방식 2: ZIP 다운로드 방식 (기존)          -->
@@ -535,43 +541,83 @@ requireAuth(async (user)=>{
 });
 
 function generateColabCode(sid){
-  const dataDir=`/content/drive/MyDrive/AI-Class-Data/students/${sid}`;
+  const APPS_URL = (typeof GDRIVE_CONFIG !== 'undefined' && GDRIVE_CONFIG.APPS_SCRIPT_URL) || '여기에_APPS_SCRIPT_URL';
 
-  // 데이터 확인 코드
-  document.getElementById('d-code2').textContent=
-`import os, glob
+  // STEP 1 - 데이터 받기
+  document.getElementById('d-code1').textContent =
+`# YOLOv8 설치
+!pip install ultralytics -q
 
-# ⬇ 내 가디언 폴더 (자동 설정됨)
-DATA_DIR = '${dataDir}'
+import requests, base64, os, json
+from pathlib import Path
 
-print(f"📂 데이터 폴더: {DATA_DIR}\\n")
+# ⬇ 자동 설정됨 (수정하지 마세요)
+APPS_SCRIPT_URL = "${APPS_URL}"
+STUDENT_ID = "${sid}"
+DATA_DIR = "/content/my_data"
 
-if not os.path.exists(DATA_DIR):
-    print(f"❌ 폴더를 찾을 수 없어요!")
-    print(f"   퀘스트 6에서 사진을 먼저 업로드하세요.")
-else:
-    train_imgs = glob.glob(f'{DATA_DIR}/images/train/*')
-    val_imgs   = glob.glob(f'{DATA_DIR}/images/val/*')
-    train_lbls = glob.glob(f'{DATA_DIR}/labels/train/*.txt')
-    val_lbls   = glob.glob(f'{DATA_DIR}/labels/val/*.txt')
+print(f"🎯 내 가디언 ID: {STUDENT_ID}")
+print(f"📥 선생님 Drive에서 내 데이터를 받아오는 중...\\n")
 
-    print(f"📷 학습 이미지: {len(train_imgs)}장")
-    print(f"📷 검증 이미지: {len(val_imgs)}장")
-    print(f"🏷️  학습 라벨:  {len(train_lbls)}개")
-    print(f"🏷️  검증 라벨:  {len(val_lbls)}개")
+# 1) 데이터 목록 받기
+res = requests.post(APPS_SCRIPT_URL, json={
+    "action": "getStudentData",
+    "studentId": STUDENT_ID
+})
+data = res.json()
 
-    # classes.txt 확인
-    classes_file = f'{DATA_DIR}/classes.txt'
-    if os.path.exists(classes_file):
-        with open(classes_file) as f:
-            classes = [c.strip() for c in f.readlines() if c.strip()]
-        print(f"\\n📋 클래스 ({len(classes)}개): {classes}")
-    else:
-        print(f"\\n⚠️ classes.txt가 없어요. 퀘스트 7에서 라벨링을 저장하면 자동 생성돼요.")
-        classes = []`;
+if not data.get("ok"):
+    raise Exception(f"❌ 데이터 받기 실패: {data.get('error')}")
 
-  // yaml 생성 코드
-  document.getElementById('d-code3').textContent=
+# 폴더 만들기
+for sub in ["train", "val"]:
+    Path(f"{DATA_DIR}/images/{sub}").mkdir(parents=True, exist_ok=True)
+    Path(f"{DATA_DIR}/labels/{sub}").mkdir(parents=True, exist_ok=True)
+
+# 2) 클래스 저장
+classes = data["classes"]
+with open(f"{DATA_DIR}/classes.txt", "w", encoding="utf-8") as f:
+    f.write("\\n".join(classes))
+print(f"📋 클래스 ({len(classes)}개): {classes}")
+
+# 3) 라벨 저장 (이미 내용 받음)
+for sub in ["train", "val"]:
+    for lbl in data["labels"][sub]:
+        with open(f"{DATA_DIR}/labels/{sub}/{lbl['fileName']}", "w") as f:
+            f.write(lbl["content"])
+
+# 4) 이미지 다운로드 (한 장씩 - Apps Script 응답 크기 제한 때문)
+total_imgs = sum(len(data["images"][s]) for s in ["train", "val"])
+print(f"\\n📷 이미지 다운로드 시작 (총 {total_imgs}장)...")
+
+downloaded = 0
+for sub in ["train", "val"]:
+    for img in data["images"][sub]:
+        try:
+            r = requests.post(APPS_SCRIPT_URL, json={
+                "action": "getFile",
+                "fileId": img["fileId"]
+            })
+            file_data = r.json()
+            if file_data.get("ok"):
+                img_bytes = base64.b64decode(file_data["data"])
+                with open(f"{DATA_DIR}/images/{sub}/{img['fileName']}", "wb") as f:
+                    f.write(img_bytes)
+                downloaded += 1
+                if downloaded % 5 == 0 or downloaded == total_imgs:
+                    print(f"   {downloaded}/{total_imgs} 장 완료...")
+        except Exception as e:
+            print(f"   ⚠️ {img['fileName']} 실패: {e}")
+
+# 결과
+print(f"\\n✅ 다운로드 완료!")
+print(f"   📷 학습용: {len(data['images']['train'])}장")
+print(f"   📷 검증용: {len(data['images']['val'])}장")
+print(f"   🏷️ 학습 라벨: {len(data['labels']['train'])}개")
+print(f"   🏷️ 검증 라벨: {len(data['labels']['val'])}개")`;
+
+  // STEP 2 - yaml 생성
+  document.getElementById('d-code2').textContent =
 `yaml_content = f'''# YOLOv8 dataset.yaml (${sid})
 path: {DATA_DIR}
 train: images/train
@@ -585,7 +631,7 @@ yaml_path = f'{DATA_DIR}/dataset.yaml'
 with open(yaml_path, 'w', encoding='utf-8') as f:
     f.write(yaml_content)
 
-print(f"✅ dataset.yaml 저장됨: {yaml_path}\\n")
+print(f"✅ dataset.yaml 생성 완료!\\n")
 print(yaml_content)`;
 }
 
