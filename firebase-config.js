@@ -66,29 +66,29 @@ function getNextLevel(score) {
 // ── 퀘스트 목록 (미니 스토리 포함) ──
 const QUESTS = [
   { id:1, title:"인공지능 세계의 법률", icon:"⚖️",  done:false,
-    subtitle:"AI 헌법의 수호자가 되어라",
-    story:"AI 의회에 입장하려면 인공지능 헌법을 알아야 한다. 가디언 후보여, 첫 시련을 통과하라." },
+    subtitle:"AI 헌법의 수호자",
+    story:"AI 의회에 입장하려면\n인공지능 헌법을 알아야 한다.\n첫 시련을 통과하라." },
   { id:2, title:"아버지를 찾아서",       icon:"🔍",  done:false,
-    subtitle:"창조자의 흔적을 찾아라",
-    story:"AI의 창조자... 그를 찾아야 한다. 인공지능의 뿌리를 알아야 진정한 가디언이 될 수 있다." },
+    subtitle:"창조자의 흔적",
+    story:"AI의 창조자를 찾아라.\n뿌리를 알아야\n진정한 가디언이 될 수 있다." },
   { id:3, title:"인공지능 수업자료 만들기", icon:"📚", done:false,
     subtitle:"지식을 전파하라",
-    story:"가디언의 임무는 배우는 것에 그치지 않는다. 알게 된 것을 세상에 전해야 한다." },
+    story:"배운 것을 세상에 전하라.\n가디언의 임무는\n혼자 배우는 게 아니다." },
   { id:4, title:"인공지능 공부시키기",   icon:"🎓",  done:false,
-    subtitle:"동료에게 빛을 비추라",
-    story:"가디언은 혼자가 아니다. 다른 이들도 함께 깨우쳐야 모두가 살아남는다." },
+    subtitle:"동료에게 빛을",
+    story:"가디언은 혼자가 아니다.\n다른 이들도 함께 깨워야\n모두가 살아남는다." },
   { id:5, title:"배운내용 확인하기",     icon:"✅",  done:false,
-    subtitle:"기억을 단단히 새겨라",
-    story:"전투를 앞두고 자신의 무기를 점검하라. 흔들리는 지식으로는 AI를 깨울 수 없다." },
+    subtitle:"기억을 새겨라",
+    story:"전투 전 무기를 점검하라.\n흔들리는 지식으로는\nAI를 깨울 수 없다." },
   { id:6, title:"데이터 수집하기",       icon:"📷",  done:false,
-    subtitle:"AI에게 눈을 만들어주어라",
-    story:"AI에게 세상을 보여주려면 눈을 만들어줘야 한다. 가디언이여, 세상을 카메라에 담아라." },
+    subtitle:"AI에게 눈을",
+    story:"AI에게 세상을 보여주려면\n눈을 만들어줘야 한다.\n세상을 카메라에 담아라." },
   { id:7, title:"라벨링하기",            icon:"🏷️",  done:false,
-    subtitle:"사물의 이름을 가르쳐라",
-    story:"AI에게 사물의 이름을 가르쳐라. 가디언의 손길로 AI는 의미를 배운다." },
+    subtitle:"사물의 이름을",
+    story:"AI에게 사물의 이름을\n가르쳐라. 가디언의 손길로\nAI는 의미를 배운다." },
   { id:8, title:"테스트해보기",          icon:"🧪",  done:false,
     subtitle:"AI를 깨워라",
-    story:"당신의 AI가 깨어난다! 마지막 시련을 통과하면 진정한 가디언이 탄생한다." },
+    story:"마지막 시련을 통과하면\n진정한 가디언이 탄생한다.\n당신의 AI가 깨어난다!" },
 ];
 
 // ── 메인 스토리 (오프닝) ──
@@ -177,61 +177,74 @@ function getEarnedTitles(userData, stats) {
 }
 
 // ── 퀘스트 페이지에 미니 스토리 배너 표시 ──
-// 사용법: 퀘스트 페이지 body 시작 부분에서 호출
-//   showQuestStory(7)  // 퀘스트 ID
+// 사용법:
+//   await showQuestStory(7)  // 사용자가 "시작하기" 누를 때까지 대기
 function showQuestStory(questId) {
-  const q = QUESTS.find(x => x.id === questId);
-  if (!q) return;
-  // 이미 본 배너는 다시 안 보이기 (sessionStorage)
-  const seenKey = 'questStorySeen_' + questId;
-  if (sessionStorage.getItem(seenKey)) return;
+  return new Promise((resolve) => {
+    const q = QUESTS.find(x => x.id === questId);
+    if (!q) { resolve(); return; }
 
-  const banner = document.createElement('div');
-  banner.id = 'quest-story-banner';
-  banner.style.cssText = `
-    position:fixed; inset:0; z-index:9999;
-    background:rgba(0,0,0,0.85);
-    display:flex; align-items:center; justify-content:center;
-    padding:24px;
-    animation:fadeIn .4s ease;
-  `;
-  banner.innerHTML = `
-    <div style="
-      background:linear-gradient(135deg,#1a1f3a,#0a0e1a);
-      border:2px solid #a78bfa;
-      border-radius:20px;
-      padding:32px 28px;
-      max-width:480px; width:100%;
-      text-align:center;
-      box-shadow:0 0 80px rgba(167,139,250,0.4);
-      animation:slideUp .5s cubic-bezier(.34,1.56,.64,1);
-    ">
-      <div style="font-size:56px;margin-bottom:12px;">${q.icon}</div>
-      <div style="font-size:11px;color:var(--muted,#aab2d5);letter-spacing:2px;margin-bottom:4px;">시련 ${q.id} / 8</div>
-      <div style="font-family:'Jua',sans-serif;font-size:22px;color:white;margin-bottom:4px;">${q.title}</div>
-      <div style="font-size:14px;color:#a78bfa;font-style:italic;margin-bottom:16px;">"${q.subtitle}"</div>
-      <div style="font-size:13px;color:#cbd5e0;line-height:1.7;border-top:1px dashed rgba(255,255,255,0.15);padding-top:14px;margin-bottom:20px;">
-        ${q.story}
+    // body 전체에 블러 + 스크롤 잠금
+    document.documentElement.style.overflow = 'hidden';
+    if (document.body) document.body.style.overflow = 'hidden';
+
+    const banner = document.createElement('div');
+    banner.id = 'quest-story-banner';
+    banner.style.cssText = `
+      position:fixed; inset:0; z-index:99999;
+      background:rgba(0,0,0,0.95);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      display:flex; align-items:center; justify-content:center;
+      padding:24px;
+      animation:fadeIn .3s ease;
+    `;
+    banner.innerHTML = `
+      <div style="
+        background:linear-gradient(135deg,#1a1f3a,#0a0e1a);
+        border:2px solid #a78bfa;
+        border-radius:20px;
+        padding:32px 28px;
+        max-width:440px; width:100%;
+        text-align:center;
+        box-shadow:0 0 80px rgba(167,139,250,0.4);
+        animation:slideUp .5s cubic-bezier(.34,1.56,.64,1);
+      ">
+        <div style="font-size:56px;margin-bottom:12px;">${q.icon}</div>
+        <div style="font-size:11px;color:#aab2d5;letter-spacing:2px;margin-bottom:4px;">시련 ${q.id} / 8</div>
+        <div style="font-family:'Jua',sans-serif;font-size:22px;color:white;margin-bottom:6px;">${q.title}</div>
+        <div style="font-size:14px;color:#a78bfa;font-style:italic;margin-bottom:18px;">"${q.subtitle}"</div>
+        <div style="font-size:13px;color:#cbd5e0;line-height:1.7;border-top:1px dashed rgba(255,255,255,0.15);padding-top:14px;margin-bottom:22px;white-space:pre-line;">
+${q.story}
+        </div>
+        <button id="quest-story-close" style="
+          background:linear-gradient(135deg,#a78bfa,#7c3aed);
+          color:white; border:none;
+          padding:11px 32px; border-radius:10px;
+          font-weight:700; cursor:pointer;
+          font-family:inherit; font-size:14px;
+          box-shadow:0 4px 12px rgba(167,139,250,0.4);
+          transition:transform .15s;
+        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">시작하기 →</button>
       </div>
-      <button id="quest-story-close" style="
-        background:linear-gradient(135deg,#a78bfa,#7c3aed);
-        color:white; border:none;
-        padding:10px 28px; border-radius:10px;
-        font-weight:700; cursor:pointer;
-        font-family:inherit; font-size:14px;
-      ">시작하기 →</button>
-    </div>
-    <style>
-      @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-      @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
-    </style>
-  `;
-  document.body.appendChild(banner);
-  document.getElementById('quest-story-close').onclick = () => {
-    banner.style.animation = 'fadeIn .3s ease reverse';
-    setTimeout(() => banner.remove(), 280);
-    sessionStorage.setItem(seenKey, '1');
-  };
+      <style>
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+        @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+        @keyframes fadeOut { from{opacity:1;} to{opacity:0;} }
+      </style>
+    `;
+    document.body.appendChild(banner);
+
+    document.getElementById('quest-story-close').onclick = () => {
+      banner.style.animation = 'fadeOut .3s ease forwards';
+      setTimeout(() => {
+        banner.remove();
+        document.documentElement.style.overflow = '';
+        if (document.body) document.body.style.overflow = '';
+        resolve();  // 여기서 비로소 다음 코드 실행됨
+      }, 280);
+    };
+  });
 }
 
 // ── 공통 함수 ──
