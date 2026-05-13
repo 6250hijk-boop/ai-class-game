@@ -505,7 +505,7 @@ print(f"  Recall   : {metrics.box.mr:.1%}")</div>
 <script src="firebase-config.js"></script>
 <script>
 requireAuth(async (user)=>{
-  showQuestStory(8);
+  await showQuestStory(8);
   let userData={score:0};
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
