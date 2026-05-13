@@ -264,6 +264,7 @@ let answered=false, correctCount=0;
 let bestScore=0;
 
 requireAuth(async (user)=>{
+  showQuestStory(5);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
