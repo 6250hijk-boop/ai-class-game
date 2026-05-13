@@ -181,7 +181,8 @@ print("📸 테스트할 사진을 업로드하세요!")
 uploaded = files.upload()
 
 for fname, data in uploaded.items():
-    results = model(io.BytesIO(data), conf=0.3)
+    pil_img = PIL.Image.open(io.BytesIO(data))
+    results = model(pil_img, conf=0.3)
     img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
     display(img)
 
@@ -434,7 +435,8 @@ print("📸 테스트할 사진을 업로드하세요!")
 uploaded = files.upload()
 
 for fname, data in uploaded.items():
-    results = model(io.BytesIO(data), conf=0.3)
+    pil_img = PIL.Image.open(io.BytesIO(data))
+    results = model(pil_img, conf=0.3)
     result_img = results[0].plot()
     img = PIL.Image.fromarray(result_img[..., ::-1])
     display(img)
