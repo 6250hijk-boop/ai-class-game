@@ -63,6 +63,45 @@
     .xp-label{font-size:11px;color:var(--muted);text-align:right;margin-top:3px;}
     .quest-section{margin-bottom:14px;}
     .quest-section h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;}
+
+    /* 칭호 섹션 */
+    .titles-section{margin-bottom:14px;background:rgba(167,139,250,0.04);border:1px solid rgba(167,139,250,0.15);border-radius:12px;padding:10px;}
+    .titles-section h4{font-size:11px;color:#a78bfa;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px 0;display:flex;align-items:center;}
+    .titles-list{display:flex;flex-wrap:wrap;gap:4px;}
+    .title-badge{font-size:18px;cursor:help;transition:transform .2s;display:inline-block;}
+    .title-badge:hover{transform:scale(1.3);}
+    .title-badge.new{animation:bounce 1s ease 3;}
+    @keyframes bounce{0%,100%{transform:scale(1);}50%{transform:scale(1.3);}}
+
+    /* 새 칭호 획득 팝업 */
+    .title-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .title-popup-overlay.show{opacity:1;pointer-events:auto;}
+    .title-popup{background:linear-gradient(135deg,#1a1f3a,#0a0e1a);border:2px solid #a78bfa;border-radius:20px;padding:32px;text-align:center;max-width:340px;width:100%;box-shadow:0 0 80px rgba(167,139,250,0.5);transform:scale(0.7);transition:transform .4s cubic-bezier(.34,1.56,.64,1);}
+    .title-popup-overlay.show .title-popup{transform:scale(1);}
+    .title-popup-icon{font-size:80px;margin-bottom:12px;animation:bounce 1.2s ease infinite;}
+    .title-popup h2{font-family:'Jua',sans-serif;color:#a78bfa;font-size:22px;margin:0 0 8px 0;}
+    .title-popup .title-name{font-size:24px;font-weight:700;color:white;margin:8px 0;}
+    .title-popup .title-desc{font-size:13px;color:#aab2d5;margin-bottom:20px;}
+    .title-popup button{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;border:none;padding:10px 28px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px;}
+
+    /* 퀘스트맵 (메인 영역) */
+    .quest-map{position:relative;padding:32px 16px;}
+    .quest-map-title{font-family:'Jua',sans-serif;font-size:18px;color:#a78bfa;margin-bottom:8px;text-align:center;}
+    .quest-map-subtitle{font-size:13px;color:var(--muted);margin-bottom:32px;text-align:center;}
+    .quest-path{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;position:relative;}
+    .quest-node{background:linear-gradient(135deg,rgba(20,25,55,0.9),rgba(10,14,30,0.9));border:2px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;transition:all .3s;text-decoration:none;color:var(--text);position:relative;overflow:hidden;}
+    .quest-node:hover{transform:translateY(-4px);border-color:var(--primary);box-shadow:0 8px 24px rgba(99,179,237,0.2);}
+    .quest-node.done{border-color:var(--green);background:linear-gradient(135deg,rgba(104,211,145,0.15),rgba(20,25,55,0.9));}
+    .quest-node.done::after{content:'✅';position:absolute;top:8px;right:10px;font-size:18px;}
+    .quest-node .qn-num{font-size:11px;color:var(--muted);letter-spacing:1px;}
+    .quest-node .qn-icon{font-size:36px;margin:8px 0;}
+    .quest-node .qn-title{font-family:'Jua',sans-serif;font-size:15px;font-weight:700;color:white;margin-bottom:4px;}
+    .quest-node .qn-subtitle{font-size:12px;color:#a78bfa;margin-bottom:8px;font-style:italic;}
+    .quest-node .qn-story{font-size:11px;color:var(--muted);line-height:1.5;border-top:1px dashed var(--border);padding-top:8px;margin-top:8px;}
+    .quest-node.done .qn-title{color:#68d391;}
+    /* 점수 카운터 애니메이션 */
+    .score-pop{display:inline-block;animation:scorepop .5s ease;}
+    @keyframes scorepop{0%{transform:scale(1);color:var(--primary);}50%{transform:scale(1.3);color:#fbbf24;}100%{transform:scale(1);color:var(--primary);}}
     .quest-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:13px;border:1px solid transparent;text-decoration:none;color:var(--text);}
     .quest-item:hover{background:rgba(99,179,237,0.08);border-color:var(--border);}
     .quest-item.active{background:rgba(99,179,237,0.12);border-color:var(--primary);color:var(--primary);}
@@ -157,6 +196,14 @@
       <div class="xp-label" id="sb-xp-label">다음 레벨까지 50점</div>
     </div>
 
+    <!-- 칭호 섹션 -->
+    <div class="titles-section">
+      <h4>🏅 내가 얻은 칭호 <span id="titles-count" style="background:rgba(167,139,250,0.2);color:#a78bfa;padding:1px 7px;border-radius:10px;font-size:10px;margin-left:4px;">0</span></h4>
+      <div id="titles-list" class="titles-list">
+        <div style="font-size:11px;color:var(--muted);text-align:center;padding:6px;">아직 칭호가 없어요</div>
+      </div>
+    </div>
+
     <div class="quest-section">
       <h4>📋 퀘스트</h4>
       <div id="quest-list"></div>
@@ -179,12 +226,28 @@
   <main class="main-content">
     <div class="ai-notice-main">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
     <h2 style="font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);margin-bottom:6px;">
-      안녕하세요, <span id="greeting-name"></span> 👋
+      <span id="greeting-name"></span>, 환영합니다 ⚡
     </h2>
-    <p style="color:var(--muted);margin-bottom:24px;font-size:14px;">오늘도 AI를 학습시켜볼까요?</p>
-    <div class="quest-grid" id="quest-cards"></div>
+    <p style="color:var(--muted);margin-bottom:24px;font-size:14px;">8개의 시련이 당신을 기다리고 있습니다.</p>
+
+    <!-- 퀘스트맵 -->
+    <div class="quest-map">
+      <div class="quest-map-title">🗺️ 가디언의 길</div>
+      <div class="quest-map-subtitle">진정한 AI 가디언이 되기 위한 8개의 시련</div>
+      <div class="quest-path" id="quest-cards"></div>
+    </div>
   </main>
 </div>
+
+<!-- 칭호 획득 팝업 -->
+<div class="title-popup-overlay" id="title-popup">
+  <div class="title-popup">
+    <div class="title-popup-icon" id="tp-icon">🏅</div>
+    <h2>🎉 새 칭호 획득!</h2>
+    <div class="title-name" id="tp-name">-</div>
+    <div class="title-desc" id="tp-desc">-</div>
+    <button onclick="closeTitlePopup()">확인</button>
+  </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -193,15 +256,7 @@
 <script>
 let currentUser=null, userData=null, storyStep=0;
 
-const STORY=[
-  "📦 당신에게 특별한 소포가 도착했습니다!",
-  "인류의 문제를 해결하기 위해\n갓 태어난 초보 AI (아기 로봇)가\n당신에게 배달되었습니다! 🤖",
-  "당신은 이제 'AI 멘토'가 되어야 합니다.",
-  "현실 세계의 데이터를 수집하고\n라벨링하여...",
-  "이 AI를 최종 형태인\n'미래형 가디언'으로 진화시켜야 합니다! ⚡",
-  "퀘스트를 완료할수록 AI가 점점 강해집니다. 💪",
-  "자, 먼저 AI에게 이름을 지어주세요! 💫"
-];
+// STORY는 firebase-config.js에서 import됨
 
 requireAuth(async (user) => {
   currentUser=user;
@@ -330,8 +385,11 @@ function initUI(){
   document.getElementById('sb-xp-label').textContent=next?`다음 레벨까지 ${next.minScore-score}점`:'🌟 최고 레벨!';
 
   // 인사
-  const greet=userData.charName?`${userData.name}님 (${userData.charName})`:`${userData.name||''}님`;
-  document.getElementById('greeting-name').textContent=greet;
+  const greet=userData.charName?`<strong style="color:#a78bfa;">${userData.charName}</strong> 가디언`:`${userData.name||'가디언'}`;
+  document.getElementById('greeting-name').innerHTML=greet;
+
+  // 칭호 렌더링 + 새 칭호 체크
+  renderTitles();
 
   // 퀘스트 사이드바
   document.getElementById('quest-list').innerHTML=QUESTS.map(q=>{
@@ -343,22 +401,81 @@ function initUI(){
     </a>`;
   }).join('');
 
-  // 퀘스트 카드 그리드
+  // 퀘스트맵 (메인 영역) - 미니 스토리 포함
   document.getElementById('quest-cards').innerHTML=QUESTS.map(q=>{
     const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-card ${done?'done':''}"
-      style="position:relative;overflow:hidden;">
-      ${done?`<div style="position:absolute;top:10px;right:10px;background:var(--green);
-        color:#0a0e1a;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;">
-        ✅ 완료</div>`:''}
-      <div class="q-icon">${q.icon}</div>
-      <div class="q-num" style="color:var(--muted);font-size:12px;">퀘스트 ${q.id}</div>
-      <div class="q-title" style="font-weight:700;font-size:14px;margin-top:4px;">${q.title}</div>
-      <div class="q-status" style="margin-top:10px;font-size:12px;color:${done?'var(--green)':'rgba(255,255,255,0.35)'};">
-        ${done?'학습 완료 🎓':'🔒 미완료'}
-      </div>
+    return `<a href="quest${q.id}.html" class="quest-node ${done?'done':''}">
+      <div class="qn-num">시련 ${q.id} / 8</div>
+      <div class="qn-icon">${q.icon}</div>
+      <div class="qn-title">${q.title}</div>
+      <div class="qn-subtitle">"${q.subtitle||''}"</div>
+      <div class="qn-story">${q.story||''}</div>
     </a>`;
   }).join('');
+}
+
+// ── 칭호 렌더링 + 새 칭호 알림 ──
+function renderTitles(){
+  // 임시 계정은 charName 기반, 정식 계정은 uid 기반으로 stats를 가져와야 하지만
+  // 현재 단계에서는 userData만 사용 (사진/라벨 수는 quest6/quest7에서 별도 카운트)
+  // 추후 Apps Script stats API로 가져오도록 확장 가능
+  const stats = userData.stats || { totalImages: 0, totalLabels: 0 };
+
+  const earned = getEarnedTitles(userData, stats);
+  const earnedIds = earned.map(t=>t.id);
+
+  // 이전에 본 칭호 목록
+  const seenIds = userData.seenTitles || [];
+  const newTitles = earned.filter(t => !seenIds.includes(t.id));
+
+  // 카운트
+  document.getElementById('titles-count').textContent = earned.length;
+
+  // 사이드바 목록
+  const listEl = document.getElementById('titles-list');
+  if (earned.length === 0) {
+    listEl.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:6px;">아직 칭호가 없어요</div>';
+  } else {
+    listEl.innerHTML = earned.map(t => {
+      const isNew = newTitles.some(n => n.id === t.id);
+      return `<span class="title-badge ${isNew?'new':''}" title="${t.name}\n${t.desc}">${t.icon}</span>`;
+    }).join('');
+  }
+
+  // 새 칭호가 있으면 팝업 표시 (한 번에 하나씩)
+  if (newTitles.length > 0) {
+    showTitlePopup(newTitles[0], earnedIds);
+  }
+}
+
+function showTitlePopup(title, allEarnedIds) {
+  document.getElementById('tp-icon').textContent = title.icon;
+  document.getElementById('tp-name').textContent = title.name;
+  document.getElementById('tp-desc').textContent = title.desc;
+  document.getElementById('title-popup').classList.add('show');
+
+  // 본 칭호 기록 (모든 획득 칭호 저장)
+  userData.seenTitles = allEarnedIds;
+  saveUserData();
+}
+
+function closeTitlePopup() {
+  document.getElementById('title-popup').classList.remove('show');
+  // 다음 새 칭호가 있으면 이어서 보여주기
+  setTimeout(() => renderTitles(), 400);
+}
+
+// userData를 저장 (임시계정은 localStorage, 정식은 Firestore)
+async function saveUserData() {
+  if (currentUser && currentUser.uid === 'student') {
+    localStorage.setItem('tempUserData', JSON.stringify(userData));
+  } else if (currentUser && currentUser.uid !== 'admin') {
+    try {
+      await db.collection('users').doc(currentUser.uid).update({
+        seenTitles: userData.seenTitles || []
+      });
+    } catch(e) { console.warn('칭호 저장 실패:', e); }
+  }
 }
 
 function confirmReset(){
