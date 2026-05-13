@@ -159,6 +159,12 @@ requireAuth(async (user)=>{
   studentId=charName+'_'+firestoreUid;
 
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
+
+  // ⭐ 학생 폴더 미리 생성 (중복 폴더 방지) - 업로드 전에 한 번만
+  try{
+    await callDriveAPI({action:'ensureStudent', studentId});
+  }catch(e){console.warn('학생 폴더 준비 실패:', e);}
+
   loadMyUploads();
   loadFolderStats();
   // classes.txt 자동 동기화 (학생 폴더에)
