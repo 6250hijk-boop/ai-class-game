@@ -255,6 +255,7 @@ let quizShowing=false;
 let slotMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
 requireAuth(async (user) => {
+  showQuestStory(2);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
