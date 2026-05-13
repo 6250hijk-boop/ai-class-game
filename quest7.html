@@ -159,6 +159,7 @@ let scale=1, offsetX=0, offsetY=0;
 let currentFilter='all'; // 'all' | 'todo' | 'done'
 
 requireAuth(async (user)=>{
+  showQuestStory(7);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
