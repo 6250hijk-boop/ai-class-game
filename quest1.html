@@ -213,6 +213,7 @@ let currentQuizSet=null, quizIdx=0, quizScore=0, quizAttempts=0;
 let orderSlots={}, matchMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
 requireAuth(async (user) => {
+  showQuestStory(1);
   currentUser=user;
   if(user.uid==='student'){
     userData={charName:'AI',score:0,quests:{}};
