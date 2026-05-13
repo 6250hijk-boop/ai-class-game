@@ -145,6 +145,9 @@ let pendingFiles=[];
 let studentId='', charName='', firestoreUid='';
 
 requireAuth(async (user)=>{
+  // 미니 스토리 배너 표시 (이번 세션에서 처음 들어왔을 때만)
+  showQuestStory(6);
+
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
