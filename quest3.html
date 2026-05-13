@@ -223,6 +223,7 @@ let msgIdx=0, isTyping=false, typingTimer=null, quizShowing=false;
 let currentStudyImg=null;
 
 requireAuth(async (user) => {
+  showQuestStory(3);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
