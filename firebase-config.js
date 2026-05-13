@@ -33,8 +33,8 @@ const ADMIN_ID = "admin";
 const ADMIN_PW = "20260404";
 
 // ── 임시 학생 계정 ──
-const STUDENT_ID = "student";
-const STUDENT_PW = "20260404";
+const STUDENT_ID = "student01";
+const STUDENT_PW = "123456";
 
 // ── 욕설/비하 필터 ──
 const BAD_WORDS = ["욕1","욕2","바보","멍청","시발","씨발","병신","개새","ㅅㅂ","ㅂㅅ","fuck","shit","damn","bitch"];
