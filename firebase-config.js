@@ -247,20 +247,23 @@ ${q.story}
       event.stopPropagation();
       event.preventDefault();
 
-      banner.style.animation = 'fadeOut .3s ease forwards';
-      // 클릭 이벤트가 다른 곳으로 새지 않도록 즉시 포인터 이벤트 차단
+      // 즉시 포인터 이벤트 차단
       banner.style.pointerEvents = 'none';
+      banner.style.animation = 'fadeOut .25s ease forwards';
 
+      // 즉시 plain DOM 변경하고
       setTimeout(() => {
         banner.remove();
         document.documentElement.style.overflow = '';
         if (document.body) document.body.style.overflow = '';
-        // 플래그를 충분한 시간 후에 OFF (잔여 클릭 이벤트가 처리될 때까지 대기)
-        setTimeout(() => {
-          window.questStoryShowing = false;
-          resolve();
-        }, 200);
-      }, 300);
+      }, 250);
+
+      // 플래그는 짧은 지연 후 해제 (클릭 이벤트가 본문으로 새는 것 방지)
+      // 너무 길면 사용자가 답답하므로 100ms로 짧게
+      setTimeout(() => {
+        window.questStoryShowing = false;
+        resolve();
+      }, 100);
     };
   });
 }
