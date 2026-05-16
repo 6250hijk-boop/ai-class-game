@@ -176,6 +176,10 @@ function getEarnedTitles(userData, stats) {
   });
 }
 
+// 전역 플래그: 퀘스트 스토리 팝업이 떠 있는지 여부
+// 페이지에서 클릭 리스너를 등록할 때 이 플래그를 확인해서 차단 가능
+window.questStoryShowing = false;
+
 // ── 퀘스트 페이지에 미니 스토리 배너 표시 ──
 // 사용법:
 //   await showQuestStory(7)  // 사용자가 "시작하기" 누를 때까지 대기
@@ -183,6 +187,9 @@ function showQuestStory(questId) {
   return new Promise((resolve) => {
     const q = QUESTS.find(x => x.id === questId);
     if (!q) { resolve(); return; }
+
+    // 팝업 표시 플래그 ON (다른 click 리스너가 이걸 보고 차단)
+    window.questStoryShowing = true;
 
     // body 전체에 블러 + 스크롤 잠금
     document.documentElement.style.overflow = 'hidden';
@@ -235,14 +242,25 @@ ${q.story}
     `;
     document.body.appendChild(banner);
 
-    document.getElementById('quest-story-close').onclick = () => {
+    document.getElementById('quest-story-close').onclick = (event) => {
+      // 이벤트 전파 차단 (본문 클릭 리스너로 전달 방지)
+      event.stopPropagation();
+      event.preventDefault();
+
       banner.style.animation = 'fadeOut .3s ease forwards';
+      // 클릭 이벤트가 다른 곳으로 새지 않도록 즉시 포인터 이벤트 차단
+      banner.style.pointerEvents = 'none';
+
       setTimeout(() => {
         banner.remove();
         document.documentElement.style.overflow = '';
         if (document.body) document.body.style.overflow = '';
-        resolve();  // 여기서 비로소 다음 코드 실행됨
-      }, 280);
+        // 플래그를 충분한 시간 후에 OFF (잔여 클릭 이벤트가 처리될 때까지 대기)
+        setTimeout(() => {
+          window.questStoryShowing = false;
+          resolve();
+        }, 200);
+      }, 300);
     };
   });
 }
