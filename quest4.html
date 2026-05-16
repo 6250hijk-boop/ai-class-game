@@ -280,11 +280,13 @@ async function autoSave(){
 }
 
 document.addEventListener('click',(e)=>{
+  if(window.questStoryShowing) return; // 스토리 팝업 중에는 무시
   if(quizShowing) return;
   if(e.target.closest('.dialog-next')||e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
   nextMessage();
 });
 document.addEventListener('keydown',(e)=>{
+  if(window.questStoryShowing) return;
   if(quizShowing) return;
   if(e.code==='Space'||e.code==='Enter') nextMessage();
   if(e.code==='ArrowLeft') prevMessage();
