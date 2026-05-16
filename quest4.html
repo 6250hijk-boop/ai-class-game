@@ -88,12 +88,12 @@
 
     /* 퀴즈 확인 팝업 */
     .quiz-confirm-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-confirm-box{background:#111827;border:2px solid rgba(a78bfa,0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(a78bfa,0.2);animation:slideUp .4s ease;}
+    .quiz-confirm-box{background:linear-gradient(135deg,#0a0e1a,#1a1f3a);border:2px solid rgba(251,191,36,0.5);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(251,191,36,0.25),0 20px 40px rgba(0,0,0,0.6);animation:slideUp .4s ease;}
     .quiz-confirm-emoji{font-size:clamp(44px,8vw,64px);margin-bottom:14px;}
-    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:a78bfa_VAR;margin-bottom:8px;}
+    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:#fbbf24;font-size:clamp(20px,4.5vw,28px);text-shadow:0 2px 8px rgba(251,191,36,0.5),0 0 20px rgba(251,191,36,0.3);font-weight:700;margin-bottom:8px;}
     .quiz-confirm-desc{font-size:clamp(13px,2.5vw,15px);color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;}
     .quiz-confirm-btns{display:flex;gap:10px;}
-    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,a78bfa_BTN);border:none;border-radius:12px;color:white;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
+    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;border-radius:12px;color:#1a1f3a;font-size:clamp(15px,3.2vw,17px);font-weight:900;box-shadow:0 4px 16px rgba(251,191,36,0.4);cursor:pointer;font-family:inherit;transition:all .3s;}
     .quiz-confirm-ok:hover{transform:translateY(-2px);}
     .quiz-confirm-cancel{padding:clamp(12px,2.5vw,14px) clamp(16px,3vw,20px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:clamp(13px,2.5vw,15px);cursor:pointer;font-family:inherit;}
   </style>
@@ -485,7 +485,7 @@ function showComplete(){
   overlay.innerHTML=`
     <div style="background:#111827;border:2px solid rgba(167,139,250,0.4);border-radius:24px;
          padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;
-         box-shadow:0 0 60px rgba(167,139,250,0.2);animation:slideUp .4s ease;">
+         box-shadow:0 0 60px rgba(251,191,36,0.25),0 20px 40px rgba(0,0,0,0.6);animation:slideUp .4s ease;">
       <div style="font-size:56px;margin-bottom:12px;">🏅</div>
       <h2 style="font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);color:#a78bfa;margin-bottom:6px;">퀘스트 4 완료!</h2>
       <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;">
