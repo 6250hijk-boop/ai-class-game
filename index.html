@@ -114,6 +114,30 @@
       .tabs{gap:2px;}
       .tab{font-size:10px;padding:7px 2px;}
     }
+    /* 개인정보 동의 */
+    .privacy-consent{margin:14px 0;background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;padding:12px;}
+    .consent-row{display:flex;align-items:center;gap:8px;font-size:clamp(11px,2.2vw,13px);color:rgba(255,255,255,0.8);margin-bottom:8px;cursor:pointer;line-height:1.4;}
+    .consent-row:last-child{margin-bottom:0;}
+    .consent-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:#63b3ed;cursor:pointer;}
+    .consent-row .required{color:#fc8181;font-size:0.9em;}
+    .view-policy-btn{margin-left:auto;background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3);border-radius:6px;color:#63b3ed;font-size:11px;padding:3px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap;}
+    .view-policy-btn:hover{background:rgba(99,179,237,0.3);}
+
+    /* 개인정보 정책 팝업 */
+    .policy-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px;}
+    .policy-overlay.show{display:flex;}
+    .policy-box{background:#0f1420;border:2px solid rgba(99,179,237,0.4);border-radius:16px;max-width:520px;width:100%;max-height:85vh;display:flex;flex-direction:column;}
+    .policy-head{padding:18px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,0.1));display:flex;align-items:center;justify-content:space-between;}
+    .policy-head h3{margin:0;font-size:16px;color:#63b3ed;font-family:'Jua',sans-serif;}
+    .policy-close{background:none;border:none;color:rgba(255,255,255,0.6);font-size:24px;cursor:pointer;line-height:1;}
+    .policy-body{padding:18px 20px;overflow-y:auto;font-size:12.5px;line-height:1.7;color:rgba(255,255,255,0.85);}
+    .policy-body h4{color:#90cdf4;font-size:13px;margin:16px 0 6px 0;}
+    .policy-body h4:first-child{margin-top:0;}
+    .policy-body ul{margin:4px 0;padding-left:18px;}
+    .policy-body li{margin-bottom:3px;}
+    .policy-body .note{font-size:11px;color:rgba(255,255,255,0.5);font-style:italic;}
+    .policy-body table{width:100%;border-collapse:collapse;margin:6px 0;font-size:11.5px;}
+    .policy-body td{border:1px solid rgba(255,255,255,0.15);padding:5px 8px;}
   </style>
 </head>
 <body>
@@ -150,6 +174,20 @@
     <div class="f"><label>이메일</label><input id="su-email" type="email" placeholder="example@gmail.com" autocomplete="off" inputmode="email"></div>
     <div class="f"><label>비밀번호 (6자 이상)</label><input id="su-pw" type="password" placeholder="비밀번호" autocomplete="new-password"></div>
     <div class="f"><label>비밀번호 확인</label><input id="su-pw2" type="password" placeholder="비밀번호 확인" autocomplete="new-password"></div>
+
+    <!-- 개인정보 동의 -->
+    <div class="privacy-consent">
+      <label class="consent-row">
+        <input type="checkbox" id="su-agree-privacy">
+        <span>개인정보 수집·이용에 동의합니다 <span class="required">(필수)</span></span>
+        <button type="button" class="view-policy-btn" onclick="showPrivacyPolicy()">전문보기</button>
+      </label>
+      <label class="consent-row">
+        <input type="checkbox" id="su-agree-guardian">
+        <span>만 14세 미만인 경우, 보호자 동의를 받았습니다 <span class="required">(필수)</span></span>
+      </label>
+    </div>
+
     <button class="btn bp" id="signup-btn" onclick="doSignup()">가입하기 →</button>
   </div>
 
@@ -182,6 +220,69 @@
   </div>
 </div>
 
+<!-- 개인정보 처리방침 전문 팝업 -->
+<div class="policy-overlay" id="policy-overlay">
+  <div class="policy-box">
+    <div class="policy-head">
+      <h3>🔒 개인정보 수집·이용 안내</h3>
+      <button class="policy-close" onclick="closePrivacyPolicy()">×</button>
+    </div>
+    <div class="policy-body">
+      <p>「AI 가디언」은 학생의 인공지능 학습 활동을 위해 아래와 같이 개인정보를 수집·이용합니다.</p>
+
+      <h4>① 수집·이용 목적</h4>
+      <ul>
+        <li>학습자 식별 및 로그인 관리</li>
+        <li>게임형 학습 진행상황(점수·레벨·퀘스트) 저장</li>
+        <li>학습 결과물(사진·라벨링 데이터) 관리</li>
+        <li>아이디 분실 시 본인 확인 및 안내</li>
+      </ul>
+
+      <h4>② 수집 항목 (필수)</h4>
+      <ul>
+        <li>이름, 학번, 아이디, 비밀번호(암호화 저장)</li>
+        <li>이메일 주소 (아이디 찾기용)</li>
+        <li>게임 캐릭터 이름(닉네임)</li>
+        <li>학습 진행 정보 (점수, 레벨, 퀘스트 완료 여부)</li>
+        <li>학습 중 업로드한 사진 및 라벨링 데이터</li>
+      </ul>
+      <p class="note">※ 사진은 학습용 사물 이미지이며, 타인의 얼굴 등 민감정보는 올리지 않도록 지도합니다.</p>
+
+      <h4>③ 보유·이용 기간</h4>
+      <ul>
+        <li>졸업 시 또는 회원 탈퇴 시까지</li>
+        <li>기간 경과 후 지체 없이 파기 (사진·데이터는 교사가 일괄 삭제)</li>
+      </ul>
+
+      <h4>④ 안전성 확보 조치</h4>
+      <ul>
+        <li>비밀번호는 암호화(해시)하여 저장</li>
+        <li>담당 교사만 개인정보 열람 가능</li>
+        <li>보안 클라우드(Google Firebase·Drive)에 저장, 외부 제공·판매 안 함</li>
+      </ul>
+
+      <h4>⑤ 정보주체의 권리</h4>
+      <ul>
+        <li>학생·보호자는 본인 정보의 열람·정정·삭제·처리정지를 요구할 수 있습니다.</li>
+        <li>요청 방법: 담당 교사에게 직접 요청 → 즉시 확인·처리</li>
+      </ul>
+
+      <h4>⑥ 만 14세 미만 아동</h4>
+      <ul>
+        <li>본 서비스는 학교 교육 활동의 일부로 운영됩니다.</li>
+        <li>만 14세 미만 학생은 법정대리인(보호자)의 동의가 필요합니다.</li>
+      </ul>
+
+      <h4>⑦ 개인정보 보호책임자</h4>
+      <table>
+        <tr><td>책임자</td><td>김지형 교사 (자율주행)</td></tr>
+        <tr><td>소속</td><td>전주공동실습소</td></tr>
+        <tr><td>연락처</td><td>063-210-9531</td></tr>
+        <tr><td>이메일</td><td>jihyung526@naver.com</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -257,12 +358,16 @@ async function doSignup(){
   const email=document.getElementById('su-email').value.trim();
   const pw=document.getElementById('su-pw').value;
   const pw2=document.getElementById('su-pw2').value;
+  const agreePrivacy=document.getElementById('su-agree-privacy').checked;
+  const agreeGuardian=document.getElementById('su-agree-guardian').checked;
   if(!id||!name||!stunum||!email||!pw||!pw2) return setAlert('signup-alert','⚠️ 모든 항목을 입력해주세요.');
   if(!/^[a-zA-Z0-9]{4,20}$/.test(id)) return setAlert('signup-alert','⚠️ 아이디는 영문/숫자 4~20자로 입력하세요.');
   if(!/^\d+$/.test(stunum)) return setAlert('signup-alert','⚠️ 학번은 숫자만 입력하세요.');
   if(!/^[\w\.-]+@[\w\.-]+\.\w+$/.test(email)) return setAlert('signup-alert','⚠️ 올바른 이메일을 입력하세요.');
   if(pw.length<6) return setAlert('signup-alert','⚠️ 비밀번호는 6자 이상이어야 합니다.');
   if(pw!==pw2) return setAlert('signup-alert','⚠️ 비밀번호가 일치하지 않습니다.');
+  if(!agreePrivacy) return setAlert('signup-alert','⚠️ 개인정보 수집·이용에 동의해주세요.');
+  if(!agreeGuardian) return setAlert('signup-alert','⚠️ 보호자 동의 항목을 확인해주세요.');
   setLoading('signup-btn',true);
   setAlert('signup-alert','⏳ 처리 중...','i');
   try{
@@ -270,11 +375,21 @@ async function doSignup(){
     if(!idSnap.empty){setLoading('signup-btn',false,'가입하기 →');return setAlert('signup-alert','❌ 이미 사용 중인 아이디입니다.');}
     const emailSnap=await db.collection('users').where('email','==',email).get();
     if(!emailSnap.empty){setLoading('signup-btn',false,'가입하기 →');return setAlert('signup-alert','❌ 이미 사용 중인 이메일입니다.');}
-    await db.collection('users').add({id,name,stunum,email,password:await hashPW(pw),score:0,level:1,quests:{},charName:null,created_at:new Date().toISOString()});
+    await db.collection('users').add({id,name,stunum,email,password:await hashPW(pw),score:0,level:1,quests:{},charName:null,
+      privacyConsent:true, guardianConsent:true, consentDate:new Date().toISOString(),
+      created_at:new Date().toISOString()});
     setLoading('signup-btn',false,'가입하기 →');
     setAlert('signup-alert','✅ 가입 완료! 로그인하세요.','s');
     setTimeout(()=>showTab('login'),1800);
   }catch(e){setLoading('signup-btn',false,'가입하기 →');setAlert('signup-alert','❌ 가입 실패: '+e.message);}
+}
+
+// ── 개인정보 정책 팝업 ──
+function showPrivacyPolicy(){
+  document.getElementById('policy-overlay').classList.add('show');
+}
+function closePrivacyPolicy(){
+  document.getElementById('policy-overlay').classList.remove('show');
 }
 
 async function doFind(){
