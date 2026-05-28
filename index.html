@@ -116,21 +116,21 @@
     }
     /* 개인정보 동의 */
     .privacy-consent{margin:14px 0;background:rgba(255,255,255,0.03);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;padding:12px;}
-    .consent-row{display:flex;align-items:center;gap:8px;font-size:clamp(11px,2.2vw,13px);color:rgba(255,255,255,0.8);margin-bottom:8px;cursor:pointer;line-height:1.4;}
-    .consent-row:last-child{margin-bottom:0;}
-    .consent-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:#63b3ed;cursor:pointer;}
-    .consent-row .required{color:#fc8181;font-size:0.9em;}
-    .view-policy-btn{margin-left:auto;background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3);border-radius:6px;color:#63b3ed;font-size:11px;padding:3px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap;}
-    .view-policy-btn:hover{background:rgba(99,179,237,0.3);}
+    .consent-status{display:flex;align-items:center;gap:8px;font-size:clamp(12px,2.3vw,14px);color:rgba(255,255,255,0.85);margin-bottom:10px;}
+    .consent-status .required{color:#fc8181;font-size:0.9em;}
+    .consent-status.done{color:#68d391;}
+    .consent-open-btn{width:100%;background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.4);border-radius:8px;color:#90cdf4;font-size:clamp(12px,2.4vw,14px);padding:10px;cursor:pointer;font-family:inherit;font-weight:700;transition:all .2s;}
+    .consent-open-btn:hover{background:rgba(99,179,237,0.3);}
+    .consent-open-btn.done{background:rgba(104,211,145,0.15);border-color:rgba(104,211,145,0.4);color:#68d391;}
 
     /* 개인정보 정책 팝업 */
     .policy-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px;}
     .policy-overlay.show{display:flex;}
-    .policy-box{background:#0f1420;border:2px solid rgba(99,179,237,0.4);border-radius:16px;max-width:520px;width:100%;max-height:85vh;display:flex;flex-direction:column;}
-    .policy-head{padding:18px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,0.1));display:flex;align-items:center;justify-content:space-between;}
+    .policy-box{background:#0f1420;border:2px solid rgba(99,179,237,0.4);border-radius:16px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;}
+    .policy-head{padding:16px 20px;border-bottom:1px solid var(--border,rgba(255,255,255,0.1));display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
     .policy-head h3{margin:0;font-size:16px;color:#63b3ed;font-family:'Jua',sans-serif;}
     .policy-close{background:none;border:none;color:rgba(255,255,255,0.6);font-size:24px;cursor:pointer;line-height:1;}
-    .policy-body{padding:18px 20px;overflow-y:auto;font-size:12.5px;line-height:1.7;color:rgba(255,255,255,0.85);}
+    .policy-body{padding:18px 20px;overflow-y:auto;font-size:12.5px;line-height:1.7;color:rgba(255,255,255,0.85);flex:1;}
     .policy-body h4{color:#90cdf4;font-size:13px;margin:16px 0 6px 0;}
     .policy-body h4:first-child{margin-top:0;}
     .policy-body ul{margin:4px 0;padding-left:18px;}
@@ -138,6 +138,22 @@
     .policy-body .note{font-size:11px;color:rgba(255,255,255,0.5);font-style:italic;}
     .policy-body table{width:100%;border-collapse:collapse;margin:6px 0;font-size:11.5px;}
     .policy-body td{border:1px solid rgba(255,255,255,0.15);padding:5px 8px;}
+    .policy-table th{border:1px solid rgba(255,255,255,0.2);padding:5px 8px;background:rgba(99,179,237,0.15);color:#90cdf4;font-weight:700;text-align:left;}
+    .policy-callout{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.35);border-radius:8px;padding:10px 12px;margin:12px 0;font-size:12px;line-height:1.6;color:#fcd34d;}
+    .policy-callout strong{color:#fbbf24;}
+    .policy-end-mark{text-align:center;color:#63b3ed;font-size:12px;margin-top:20px;padding-top:12px;border-top:1px dashed rgba(99,179,237,0.3);}
+
+    /* 팝업 하단 동의 영역 */
+    .policy-foot{padding:14px 20px;border-top:1px solid var(--border,rgba(255,255,255,0.1));flex-shrink:0;background:rgba(0,0,0,0.3);border-radius:0 0 14px 14px;}
+    .policy-scroll-hint{text-align:center;font-size:12px;color:#fbbf24;margin-bottom:10px;animation:hintBlink 1.5s ease infinite;}
+    @keyframes hintBlink{0%,100%{opacity:0.5;}50%{opacity:1;}}
+    .policy-scroll-hint.hidden{display:none;}
+    .consent-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(255,255,255,0.85);margin-bottom:10px;cursor:pointer;}
+    .consent-check input{width:18px;height:18px;flex-shrink:0;accent-color:#63b3ed;cursor:pointer;}
+    .consent-check input:disabled{opacity:0.4;cursor:not-allowed;}
+    .policy-agree-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);}
+    .policy-agree-btn:disabled{cursor:not-allowed;}
+    .policy-agree-btn.ready{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1f3a;box-shadow:0 4px 16px rgba(251,191,36,0.4);}
   </style>
 </head>
 <body>
@@ -177,15 +193,13 @@
 
     <!-- 개인정보 동의 -->
     <div class="privacy-consent">
-      <label class="consent-row">
-        <input type="checkbox" id="su-agree-privacy">
-        <span>개인정보 수집·이용에 동의합니다 <span class="required">(필수)</span></span>
-        <button type="button" class="view-policy-btn" onclick="showPrivacyPolicy()">전문보기</button>
-      </label>
-      <label class="consent-row">
-        <input type="checkbox" id="su-agree-guardian">
-        <span>만 14세 미만인 경우, 보호자 동의를 받았습니다 <span class="required">(필수)</span></span>
-      </label>
+      <div class="consent-status" id="consent-status">
+        <span id="consent-icon">⬜</span>
+        <span id="consent-text">개인정보 수집·이용 동의 <span class="required">(필수)</span></span>
+      </div>
+      <button type="button" class="consent-open-btn" id="consent-open-btn" onclick="showPrivacyPolicy()">
+        📄 동의서 전문 보고 동의하기
+      </button>
     </div>
 
     <button class="btn bp" id="signup-btn" onclick="doSignup()">가입하기 →</button>
@@ -228,58 +242,83 @@
       <button class="policy-close" onclick="closePrivacyPolicy()">×</button>
     </div>
     <div class="policy-body">
-      <p>「AI 가디언」은 학생의 인공지능 학습 활동을 위해 아래와 같이 개인정보를 수집·이용합니다.</p>
+      <p>「AI 가디언」(이하 '본 서비스')은 「개인정보 보호법」에 따라 학생의 인공지능(AI) 학습 활동에 필요한 최소한의 개인정보만을 수집·이용합니다. 아래 내용을 끝까지 확인하신 후 동의해 주세요.</p>
 
-      <h4>① 수집·이용 목적</h4>
+      <div class="policy-callout">
+        📌 본 서비스는 학교 정규 교육과정 운영을 위한 <strong>만 14세 이상 학생</strong> 대상 학습지원 소프트웨어입니다. 만 14세 미만 학생은 학교를 통해 배부된 <strong>보호자(법정대리인) 서면 동의서</strong>를 제출한 경우에만 이용할 수 있습니다.
+      </div>
+
+      <h4>① 개인정보의 수집·이용 목적</h4>
+      <p>본 서비스는 다음의 목적을 위해 최소한의 개인정보를 처리하며, 명시된 목적 외의 용도로는 이용하지 않습니다.</p>
       <ul>
-        <li>학습자 식별 및 로그인 관리</li>
-        <li>게임형 학습 진행상황(점수·레벨·퀘스트) 저장</li>
-        <li>학습 결과물(사진·라벨링 데이터) 관리</li>
+        <li>회원 식별 및 로그인 인증, 회원자격 유지·관리</li>
+        <li>AI 학습 게임 진행상황(점수·레벨·퀘스트 완료 여부) 저장 및 표시</li>
+        <li>AI 학습 실습을 위한 사진 데이터 수집 및 라벨링(이름 붙이기) 결과 관리</li>
         <li>아이디 분실 시 본인 확인 및 안내</li>
+        <li>만 14세 미만 아동의 경우 법정대리인 동의 여부 확인</li>
       </ul>
 
-      <h4>② 수집 항목 (필수)</h4>
+      <h4>② 수집 항목 및 처리·보유 기간</h4>
+      <table class="policy-table">
+        <tr><th>구분</th><th>처리 항목</th><th>보유 기간</th></tr>
+        <tr><td>회원 관리</td><td>이름, 학번, 아이디, 비밀번호(암호화 저장), 이메일</td><td rowspan="3">졸업 시 또는<br>회원 탈퇴 시까지</td></tr>
+        <tr><td>학습 진행</td><td>캐릭터 이름(닉네임), 점수·레벨·퀘스트 완료 여부</td></tr>
+        <tr><td>AI 실습</td><td>학습용으로 업로드한 사진, 라벨링 데이터</td></tr>
+      </table>
+      <p class="note">※ 보유기간 경과 또는 목적 달성 후에는 지체 없이 파기하며, 사진·실습 데이터는 수업 종료 후 교사가 일괄 삭제합니다.</p>
+      <p class="note">※ 사진은 학습용 사물 이미지이며, 타인의 얼굴 등 민감정보는 수집하지 않도록 지도합니다.</p>
+
+      <h4>③ 개인정보의 안전성 확보 조치</h4>
       <ul>
-        <li>이름, 학번, 아이디, 비밀번호(암호화 저장)</li>
-        <li>이메일 주소 (아이디 찾기용)</li>
-        <li>게임 캐릭터 이름(닉네임)</li>
-        <li>학습 진행 정보 (점수, 레벨, 퀘스트 완료 여부)</li>
-        <li>학습 중 업로드한 사진 및 라벨링 데이터</li>
+        <li><strong>관리적 조치</strong>: 접근 권한을 담당 교사로 제한, 개인정보 취급 최소화</li>
+        <li><strong>기술적 조치</strong>: 비밀번호 암호화(해시) 저장, 보안 인증된 클라우드(Google Firebase·Google Drive) 이용, 접근 통제</li>
+        <li><strong>물리적 조치</strong>: 데이터는 외부에 제공·판매하지 않으며 보안 서버에 보관</li>
       </ul>
-      <p class="note">※ 사진은 학습용 사물 이미지이며, 타인의 얼굴 등 민감정보는 올리지 않도록 지도합니다.</p>
 
-      <h4>③ 보유·이용 기간</h4>
+      <h4>④ 정보주체의 권리 및 행사 방법</h4>
       <ul>
-        <li>졸업 시 또는 회원 탈퇴 시까지</li>
-        <li>기간 경과 후 지체 없이 파기 (사진·데이터는 교사가 일괄 삭제)</li>
+        <li>학생 및 법정대리인(보호자)은 언제든지 본인 개인정보의 <strong>열람·정정·삭제·처리정지·동의 철회</strong>를 요구할 수 있습니다.</li>
+        <li>요청 방법: 아래 ⑥의 개인정보 보호책임자에게 직접(전화·이메일) 요청</li>
+        <li>처리 기한: 열람 요구는 <strong>요청일로부터 10일 이내</strong>, 정정·삭제·처리정지는 검토 후 지체 없이 처리하고 결과를 안내합니다.</li>
+        <li class="note">※ 만 14세 미만 아동의 권리 행사는 법정대리인이 직접 할 수 있습니다.</li>
       </ul>
 
-      <h4>④ 안전성 확보 조치</h4>
+      <h4>⑤ 만 14세 미만 아동의 개인정보 처리</h4>
       <ul>
-        <li>비밀번호는 암호화(해시)하여 저장</li>
-        <li>담당 교사만 개인정보 열람 가능</li>
-        <li>보안 클라우드(Google Firebase·Drive)에 저장, 외부 제공·판매 안 함</li>
+        <li>본 서비스는 만 14세 이상 학생을 대상으로 합니다.</li>
+        <li>만 14세 미만 학생은 「개인정보 보호법」 제22조의2에 따라 학교를 통해 배부된 <strong>보호자(법정대리인) 서면 동의서</strong>를 제출해야 이용할 수 있습니다.</li>
+        <li>법정대리인 동의 이력은 학교에서 기록·보관합니다.</li>
       </ul>
 
-      <h4>⑤ 정보주체의 권리</h4>
-      <ul>
-        <li>학생·보호자는 본인 정보의 열람·정정·삭제·처리정지를 요구할 수 있습니다.</li>
-        <li>요청 방법: 담당 교사에게 직접 요청 → 즉시 확인·처리</li>
-      </ul>
-
-      <h4>⑥ 만 14세 미만 아동</h4>
-      <ul>
-        <li>본 서비스는 학교 교육 활동의 일부로 운영됩니다.</li>
-        <li>만 14세 미만 학생은 법정대리인(보호자)의 동의가 필요합니다.</li>
-      </ul>
-
-      <h4>⑦ 개인정보 보호책임자</h4>
-      <table>
+      <h4>⑥ 개인정보 보호책임자</h4>
+      <p>개인정보 처리에 관한 문의·불만·권리행사는 아래로 연락해 주세요.</p>
+      <table class="policy-table">
         <tr><td>책임자</td><td>김지형 교사 (자율주행)</td></tr>
         <tr><td>소속</td><td>전주공동실습소</td></tr>
         <tr><td>연락처</td><td>063-210-9531</td></tr>
         <tr><td>이메일</td><td>jihyung526@naver.com</td></tr>
       </table>
+
+      <h4>⑦ 개인정보의 제3자 제공 및 처리위탁</h4>
+      <ul>
+        <li>본 서비스는 수집한 개인정보를 제3자에게 제공하지 않습니다.</li>
+        <li>다만 서비스 운영을 위해 데이터 저장을 Google Firebase·Google Drive(Google LLC)에 위탁하며, 관련 법령에 따라 안전하게 관리합니다.</li>
+      </ul>
+
+      <p class="note" style="margin-top:14px;">본 동의를 거부할 권리가 있으나, 필수 항목 동의를 거부하면 서비스 이용이 제한될 수 있습니다.</p>
+
+      <div class="policy-end-mark" id="policy-end-mark">― 동의서 끝 ―</div>
+    </div>
+
+    <div class="policy-foot">
+      <div class="policy-scroll-hint" id="policy-scroll-hint">⬇️ 전문을 끝까지 읽어주세요</div>
+      <label class="consent-check" id="consent-check-guardian">
+        <input type="checkbox" id="su-agree-guardian" disabled>
+        <span>본인은 만 14세 이상이거나, 만 14세 미만인 경우 보호자(법정대리인) 서면 동의서를 학교에 제출하였습니다.</span>
+      </label>
+      <button class="policy-agree-btn" id="policy-agree-btn" onclick="agreePrivacy()" disabled>
+        위 내용에 동의함
+      </button>
     </div>
   </div>
 </div>
@@ -358,16 +397,13 @@ async function doSignup(){
   const email=document.getElementById('su-email').value.trim();
   const pw=document.getElementById('su-pw').value;
   const pw2=document.getElementById('su-pw2').value;
-  const agreePrivacy=document.getElementById('su-agree-privacy').checked;
-  const agreeGuardian=document.getElementById('su-agree-guardian').checked;
   if(!id||!name||!stunum||!email||!pw||!pw2) return setAlert('signup-alert','⚠️ 모든 항목을 입력해주세요.');
   if(!/^[a-zA-Z0-9]{4,20}$/.test(id)) return setAlert('signup-alert','⚠️ 아이디는 영문/숫자 4~20자로 입력하세요.');
   if(!/^\d+$/.test(stunum)) return setAlert('signup-alert','⚠️ 학번은 숫자만 입력하세요.');
   if(!/^[\w\.-]+@[\w\.-]+\.\w+$/.test(email)) return setAlert('signup-alert','⚠️ 올바른 이메일을 입력하세요.');
   if(pw.length<6) return setAlert('signup-alert','⚠️ 비밀번호는 6자 이상이어야 합니다.');
   if(pw!==pw2) return setAlert('signup-alert','⚠️ 비밀번호가 일치하지 않습니다.');
-  if(!agreePrivacy) return setAlert('signup-alert','⚠️ 개인정보 수집·이용에 동의해주세요.');
-  if(!agreeGuardian) return setAlert('signup-alert','⚠️ 보호자 동의 항목을 확인해주세요.');
+  if(!window.privacyAgreed) return setAlert('signup-alert','⚠️ 개인정보 동의서를 읽고 동의해주세요.');
   setLoading('signup-btn',true);
   setAlert('signup-alert','⏳ 처리 중...','i');
   try{
@@ -384,13 +420,65 @@ async function doSignup(){
   }catch(e){setLoading('signup-btn',false,'가입하기 →');setAlert('signup-alert','❌ 가입 실패: '+e.message);}
 }
 
-// ── 개인정보 정책 팝업 ──
+// ── 개인정보 동의 팝업 ──
+window.privacyAgreed = false;
+
 function showPrivacyPolicy(){
   document.getElementById('policy-overlay').classList.add('show');
+  // 팝업 열 때마다 스크롤 위치/상태 초기화
+  const body = document.querySelector('.policy-body');
+  setTimeout(()=>{ if(body) body.scrollTop = 0; checkScrollEnd(); }, 50);
 }
+
 function closePrivacyPolicy(){
   document.getElementById('policy-overlay').classList.remove('show');
 }
+
+// 전문을 끝까지 읽었는지 감지
+function checkScrollEnd(){
+  const body = document.querySelector('.policy-body');
+  if(!body) return;
+  // 스크롤이 거의 끝에 도달했는지 (여유 20px)
+  const reachedEnd = body.scrollTop + body.clientHeight >= body.scrollHeight - 20;
+  // 스크롤이 필요 없을 만큼 내용이 짧은 경우도 통과
+  const noScrollNeeded = body.scrollHeight <= body.clientHeight + 5;
+
+  if(reachedEnd || noScrollNeeded){
+    // 동의 버튼 + 보호자 체크박스 활성화
+    const btn = document.getElementById('policy-agree-btn');
+    const guardian = document.getElementById('su-agree-guardian');
+    const hint = document.getElementById('policy-scroll-hint');
+    btn.disabled = false;
+    btn.classList.add('ready');
+    guardian.disabled = false;
+    if(hint) hint.classList.add('hidden');
+  }
+}
+
+// "동의함" 버튼 클릭
+function agreePrivacy(){
+  const guardian = document.getElementById('su-agree-guardian');
+  if(!guardian.checked){
+    alert('만 14세 미만인 경우 보호자 동의 항목을 체크해주세요.');
+    return;
+  }
+  window.privacyAgreed = true;
+
+  // 회원가입 폼의 동의 상태 업데이트
+  document.getElementById('consent-icon').textContent = '✅';
+  document.getElementById('consent-text').innerHTML = '개인정보 수집·이용에 동의했습니다';
+  document.getElementById('consent-status').classList.add('done');
+  document.getElementById('consent-open-btn').textContent = '✅ 동의 완료 (다시 보기)';
+  document.getElementById('consent-open-btn').classList.add('done');
+
+  closePrivacyPolicy();
+}
+
+// 스크롤 이벤트 등록
+document.addEventListener('DOMContentLoaded', ()=>{
+  const body = document.querySelector('.policy-body');
+  if(body) body.addEventListener('scroll', checkScrollEnd);
+});
 
 async function doFind(){
   const email=document.getElementById('find-email').value.trim();
