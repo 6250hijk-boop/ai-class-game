@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-  <title>퀘스트 8: AI 학습 & 테스트</title>
+  <title>퀘스트 8: AI로 영상 분석하기</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     *{box-sizing:border-box;}
@@ -14,8 +14,8 @@
     .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px);margin-bottom:16px;}
     .card h3{font-size:clamp(15px,2.8vw,17px);margin-bottom:12px;display:flex;align-items:center;gap:8px;margin-top:0;}
     .step-badge{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;border-radius:8px;padding:2px 10px;font-size:12px;font-weight:700;flex-shrink:0;}
-    .code-block{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;font-family:'Courier New',monospace;font-size:clamp(11px,1.8vw,13px);color:#a78bfa;overflow-x:auto;margin:10px 0;white-space:pre;line-height:1.6;position:relative;}
-    .copy-btn{background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:4px 10px;color:#a78bfa;font-size:11px;cursor:pointer;font-family:inherit;}
+    .code-block{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;font-family:'Courier New',monospace;font-size:clamp(11px,1.8vw,13px);color:#a78bfa;overflow-x:auto;margin:10px 0;white-space:pre;line-height:1.6;}
+    .copy-btn{background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.4);border-radius:6px;padding:4px 10px;color:#a78bfa;font-size:11px;cursor:pointer;font-family:inherit;margin-top:4px;display:inline-block;}
     .copy-btn:hover{background:rgba(167,139,250,0.35);}
     .copy-btn.copied{background:rgba(104,211,145,0.2);border-color:#68d391;color:#68d391;}
     .tip-box{background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:10px;padding:12px 14px;font-size:13px;color:rgba(99,179,237,0.9);margin:10px 0;line-height:1.6;}
@@ -26,17 +26,20 @@
     .step-content{flex:1;font-size:clamp(13px,2.3vw,14px);line-height:1.7;color:var(--text);}
     .btn{display:inline-flex;align-items:center;gap:6px;padding:clamp(10px,2vw,13px) clamp(14px,3vw,22px);border:none;border-radius:11px;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;text-decoration:none;}
     .btn-primary{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(167,139,250,0.4);}
-    .btn-colab{background:#F9AB00;color:#000;}
+    .btn-primary:hover{transform:translateY(-2px);}
+    .btn-colab{background:#F9AB00;color:#000;font-weight:700;}
     .btn-colab:hover{background:#f0a500;transform:translateY(-2px);}
-    .yaml-box{background:rgba(0,0,0,0.4);border:1px solid rgba(104,211,145,0.2);border-radius:10px;padding:14px;font-family:monospace;font-size:13px;color:#68d391;white-space:pre;overflow-x:auto;margin:10px 0;position:relative;}
 
-    /* 탭 */
-    .tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border);}
-    .tab-btn{background:transparent;border:none;color:var(--muted);padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;transition:all .2s;}
-    .tab-btn.active{color:#a78bfa;border-bottom-color:#a78bfa;}
-    .tab-content{display:none;}
-    .tab-content.active{display:block;}
+    /* 예시 이미지 그리드 */
+    .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(100px,20vw,150px),1fr));gap:10px;margin:12px 0;}
+    .img-item{border-radius:10px;overflow:hidden;border:2px solid var(--border);aspect-ratio:1;cursor:pointer;transition:all .2s;}
+    .img-item:hover{border-color:#a78bfa;transform:scale(1.03);}
+    .img-item img{width:100%;height:100%;object-fit:cover;display:block;}
+    .img-item.selected{border-color:#a78bfa;box-shadow:0 0 12px rgba(167,139,250,0.5);}
+
+    /* 클래스 뱃지 */
+    .class-badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+    .class-badge{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;}
 
     @media(max-width:480px){.page-wrap{padding:12px;}.code-block{font-size:10px;}}
   </style>
@@ -49,452 +52,260 @@
     <div id="hud-score" style="background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:4px 12px;font-size:13px;color:#a78bfa;font-weight:700;margin-left:auto;">0 점</div>
   </div>
 
-  <div class="page-title">🧪 퀘스트 8: AI 학습 & 테스트</div>
-  <div class="page-desc">라벨링한 데이터로 AI를 학습시키고 테스트해봐요!<br>Google Colab에서 무료 GPU로 YOLOv8을 학습시킬 수 있어요.</div>
-
-  <!-- 방식 선택 탭 -->
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-btn-drive" onclick="switchTab('drive')">⭐ Drive 직접 사용 (추천)</button>
-    <button class="tab-btn" id="tab-btn-zip" onclick="switchTab('zip')">📦 ZIP 다운로드 방식</button>
+  <div class="page-title">🎯 퀘스트 8: AI로 영상 분석하기</div>
+  <div class="page-desc">
+    이미 학습된 AI 모델(<strong>bestv6.pt</strong>)로<br>
+    킥보드 🛴, 헬멧 ⛑️, 사람 🧍을 인식해봐요!
   </div>
 
-  <!-- ════════════════════════════════════════ -->
-  <!--  방식 1: Drive 직접 사용 (추천)            -->
-  <!-- ════════════════════════════════════════ -->
-<div class="tab-content active" id="tab-drive">
-
+  <!-- 모델 소개 -->
+  <div class="card">
+    <h3>🤖 사용할 AI 모델: bestv6.pt</h3>
+    <div class="class-badges">
+      <span class="class-badge" style="background:rgba(252,129,129,0.15);border:1px solid #fc8181;color:#fc8181;">🛴 킥보드</span>
+      <span class="class-badge" style="background:rgba(99,179,237,0.15);border:1px solid #63b3ed;color:#63b3ed;">⛑️ 헬멧</span>
+      <span class="class-badge" style="background:rgba(104,211,145,0.15);border:1px solid #68d391;color:#68d391;">🧍 사람</span>
+    </div>
     <div class="info-box">
-      ✨ <strong>Apps Script로 데이터 받기</strong><br>
-      Drive 로그인 없이 Colab에서 바로 내 가디언 데이터를 받아서 학습해요!<br>
-      어느 Google 계정으로 Colab에 로그인해도 작동합니다.
+      ✅ <strong>YOLOv8 기반 모델</strong><br>
+      킥보드 이용자의 안전모 착용 여부와 사람, 킥보드를 실시간으로 감지할 수 있어요!
     </div>
-
-    <!-- STEP 1 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 1</span> 📁 내 가디언 정보 확인</h3>
-      <div class="step-content">
-        선생님 Drive에서 내 가디언 폴더는 다음과 같이 만들어져 있어요:
-        <div class="yaml-box" id="folder-structure">불러오는 중...</div>
-        <div class="info-box">
-          📂 <strong>내 가디언 ID:</strong><br>
-          <code id="my-student-id" style="background:rgba(0,0,0,0.4);padding:6px 12px;border-radius:6px;display:inline-block;margin-top:6px;font-family:monospace;color:#a78bfa;">불러오는 중...</code>
-        </div>
-        <div class="tip-box">💡 아래 코드에 내 ID가 자동으로 들어가 있어요. 그대로 복사해서 사용하세요!</div>
-      </div>
-    </div>
-
-    <!-- STEP 2 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 2</span> 🤖 Colab에서 AI 학습하기</h3>
-      <div style="margin-bottom:14px;">
-        <a href="https://colab.research.google.com" target="_blank" class="btn btn-colab">
-          🔗 Google Colab 열기
-        </a>
-      </div>
-      <div class="warn-box">⚠️ 런타임 → 런타임 유형 변경 → <strong>T4 GPU</strong> 선택 후 시작!</div>
-
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <strong>YOLOv8 설치 + 내 데이터 받기</strong>
-          <div class="code-block" id="d-code1"><!-- 자동 생성 --></div>
-          <button class="copy-btn" onclick="copyCode('d-code1')">📋 복사</button>
-          <div class="tip-box">💡 사진 개수에 따라 1~3분 정도 걸려요.</div>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <strong>dataset.yaml 생성</strong>
-          <div class="code-block" id="d-code2"><!-- 자동 생성 --></div>
-          <button class="copy-btn" onclick="copyCode('d-code2')">📋 복사</button>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <strong>🚀 학습 시작!</strong>
-          <div class="code-block" id="d-code3">from ultralytics import YOLO
-
-# 학습 설정
-EPOCHS = 50      # 학습 횟수
-BATCH  = 16      # 배치 크기
-IMGSZ  = 640     # 이미지 크기
-
-model = YOLO('yolov8n.pt')
-
-results = model.train(
-    data    = yaml_path,
-    epochs  = EPOCHS,
-    imgsz   = IMGSZ,
-    batch   = BATCH,
-    name    = 'my_model',
-    project = '/content/runs',
-    save    = True,
-    patience= 20,
-)
-
-print("\n🎉 학습 완료!")
-print(f"📁 모델 위치: {results.save_dir}/weights/best.pt")</div>
-          <button class="copy-btn" onclick="copyCode('d-code3')">📋 복사</button>
-          <div class="tip-box">💡 5~15분 정도 걸려요. 데이터가 적으면 EPOCHS=30, 많으면 100.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 3: 테스트 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 3</span> 🎯 모델 테스트</h3>
-
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <strong>정확도 확인 (mAP 점수)</strong>
-          <div class="code-block" id="d-code4">metrics = model.val(data=yaml_path)
-
-print(f"\n📊 정확도 결과:")
-print(f"  mAP50    : {metrics.box.map50:.1%}")
-print(f"  mAP50-95 : {metrics.box.map:.1%}")
-print(f"  Precision: {metrics.box.mp:.1%}")
-print(f"  Recall   : {metrics.box.mr:.1%}")
-
-score = metrics.box.map50
-if score >= 0.75:   print("\n🏆 훌륭한 모델이에요!")
-elif score >= 0.60: print("\n👍 꽤 좋은 모델이에요!")
-elif score >= 0.40: print("\n🤔 데이터를 더 모아보세요.")
-else:               print("\n😢 라벨링을 점검하고 데이터를 더 모으세요.")</div>
-          <button class="copy-btn" onclick="copyCode('d-code4')">📋 복사</button>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <strong>새 사진 업로드해서 테스트</strong>
-          <div class="code-block" id="d-code5">from google.colab import files
-import io, PIL.Image
-from IPython.display import display
-
-print("📸 테스트할 사진을 업로드하세요!")
-uploaded = files.upload()
-
-for fname, data in uploaded.items():
-    pil_img = PIL.Image.open(io.BytesIO(data))
-    results = model(pil_img, conf=0.3)
-    img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
-    display(img)
-
-    print(f"\n📋 감지된 객체 ({fname}):")
-    if results[0].boxes:
-        for box in results[0].boxes:
-            cls_name = model.names[int(box.cls)]
-            conf = float(box.conf)
-            print(f"  → {cls_name}: {conf:.1%}")
-    else:
-        print("  감지된 객체가 없습니다.")
-    print()</div>
-          <button class="copy-btn" onclick="copyCode('d-code5')">📋 복사</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- STEP 4: 결과 저장 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 4</span> 💾 내 AI 저장하기</h3>
-      <div class="warn-box">
-        ⚠️ <strong>중요!</strong> Colab을 끄면 학습 결과가 사라져요.<br>
-        내 컴퓨터에 다운로드해서 보관하세요!
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <strong>학습된 AI 모델 다운로드</strong>
-          <div class="code-block" id="d-code6">from google.colab import files
-import shutil
-
-# 학습 결과를 ZIP으로 묶기
-model_path = f"{results.save_dir}/weights/best.pt"
-result_zip = '/content/my_ai_model.zip'
-
-shutil.make_archive('/content/my_ai_model', 'zip', results.save_dir)
-
-print(f"📦 내 AI 모델 패키지가 준비됐어요!")
-print(f"   다운로드 시작...")
-
-# 내 컴퓨터에 다운로드
-files.download(result_zip)
-files.download(model_path)  # best.pt만 따로
-
-print("\n✅ 다운로드 완료!")
-print("💡 다음에 사용할 때 이 파일들을 다시 Colab에 업로드하세요.")</div>
-          <button class="copy-btn" onclick="copyCode('d-code6')">📋 복사</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 다음에 다시 사용 -->
-    <div class="card">
-      <h3>🔄 다음에 다시 사용하려면?</h3>
-      <div class="step-content">
-        다운로드한 <strong>best.pt</strong>를 Colab에 업로드하면 학습 없이 바로 테스트할 수 있어요.
-        <div class="code-block" id="d-code-reload">!pip install ultralytics -q
-
-from google.colab import files
-from ultralytics import YOLO
-import PIL.Image, io
-from IPython.display import display
-
-# best.pt 파일 업로드
-print("📤 학습된 모델(best.pt)을 업로드하세요!")
-uploaded = files.upload()
-
-model_file = list(uploaded.keys())[0]
-model = YOLO(model_file)
-
-print(f"\n✅ 모델 로드 완료!")
-print(f"📋 인식 가능 클래스: {list(model.names.values())}")
-
-# 이제 사진 업로드해서 테스트 가능
-print("\n📸 이제 STEP 3-2 코드로 테스트하세요!")</div>
-        <button class="copy-btn" onclick="copyCode('d-code-reload')">📋 복사</button>
-      </div>
-    </div>
-
   </div>
 
-  
-
-  <!-- ════════════════════════════════════════ -->
-  <!--  방식 2: ZIP 다운로드 방식 (기존)          -->
-  <!-- ════════════════════════════════════════ -->
-  <div class="tab-content" id="tab-zip">
-
-    <div class="warn-box">
-      📦 <strong>ZIP 다운로드 방식</strong><br>
-      퀘스트 7에서 ZIP을 다운로드하고 Drive에 직접 업로드하는 방식이에요.<br>
-      Drive 폴더 구조가 안 맞거나, 데이터를 따로 보관하고 싶을 때 사용하세요.
+  <!-- STEP 1: Colab 준비 -->
+  <div class="card">
+    <h3><span class="step-badge">STEP 1</span> 🔗 Google Colab 준비</h3>
+    <div style="margin-bottom:12px;">
+      <a href="https://colab.research.google.com" target="_blank" class="btn btn-colab">
+        🔗 Google Colab 열기
+      </a>
     </div>
+    <div class="warn-box">⚠️ 런타임 → 런타임 유형 변경 → <strong>T4 GPU</strong> 선택!</div>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>YOLOv8 설치 + 모델 다운로드</strong>
+        <div class="code-block" id="code1">!pip install ultralytics -q
 
-    <!-- STEP 1 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 1</span> 📦 ZIP 파일 준비하기</h3>
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          퀘스트 7에서 <strong>📦 이미지+txt ZIP</strong> 버튼을 눌러 ZIP 파일을 다운로드하세요.
-          <div class="tip-box">💡 ZIP 안에 images/, labels/, classes.txt 가 있으면 완벽해요!</div>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          다운로드한 ZIP 파일을 <strong>Google Drive</strong>에 업로드하세요.<br>
-          위치 예시: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">내 드라이브 / ai-class / dataset.zip</code>
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          아래 <strong>dataset.yaml</strong> 내용을 확인하세요. (자동 생성, Colab에서 사용됨)
-          <div class="yaml-box" id="yaml-content"></div>
-          <button class="copy-btn" onclick="copyYaml()">📋 yaml 복사</button>
-        </div>
+# bestv6.pt 모델 다운로드 (킥보드/헬멧/사람 인식)
+import urllib.request
+MODEL_URL = "https://6250hijk-boop.github.io/ai-class-game/bestv6.pt"
+urllib.request.urlretrieve(MODEL_URL, "bestv6.pt")
+
+from ultralytics import YOLO
+model = YOLO("bestv6.pt")
+
+print("✅ 모델 로드 완료!")
+print(f"📋 인식 가능 클래스: {list(model.names.values())}")</div>
+        <button class="copy-btn" onclick="copyCode('code1')">📋 복사</button>
       </div>
     </div>
+  </div>
 
-    <!-- STEP 2 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 2</span> 🤖 Colab에서 AI 학습하기</h3>
-      <div style="margin-bottom:14px;">
-        <a href="https://colab.research.google.com" target="_blank" class="btn btn-colab">
-          🔗 Google Colab 열기
-        </a>
-      </div>
-      <div class="warn-box">⚠️ 런타임 → 런타임 유형 변경 → <strong>T4 GPU</strong> 선택 후 시작!</div>
+  <!-- STEP 2: 예시 사진 분석 -->
+  <div class="card">
+    <h3><span class="step-badge">STEP 2</span> 🖼️ 예시 사진으로 테스트하기</h3>
+    <div class="tip-box">💡 pmimage 예시 사진으로 먼저 AI가 잘 작동하는지 확인해봐요!</div>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>예시 사진 다운로드 + 분석</strong>
+        <div class="code-block" id="code2">import urllib.request
+from IPython.display import display
+import PIL.Image
 
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <strong>Google Drive 연결</strong>
-          <div class="code-block" id="z-code1"># Google Drive 마운트
-from google.colab import drive
-drive.mount('/content/drive')</div>
-          <button class="copy-btn" onclick="copyCode('z-code1')">📋 복사</button>
-        </div>
-      </div>
+# 예시 사진 목록 (pmimage)
+SAMPLE_IMGS = [
+    "https://6250hijk-boop.github.io/ai-class-game/images/pmimage/pm1.jpg",
+    "https://6250hijk-boop.github.io/ai-class-game/images/pmimage/pm2.jpg",
+    "https://6250hijk-boop.github.io/ai-class-game/images/pmimage/pm3.jpg",
+]
 
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <strong>YOLOv8 설치 & 데이터 준비</strong>
-          <div class="code-block" id="z-code2">!pip install ultralytics -q
+print("📸 예시 사진 분석 시작!")
+print("="*50)
 
-import zipfile, os
+for i, url in enumerate(SAMPLE_IMGS):
+    try:
+        # 사진 다운로드
+        fname = f"sample_{i+1}.jpg"
+        urllib.request.urlretrieve(url, fname)
 
-# ZIP 파일 경로 (본인 Drive 경로로 수정)
-zip_path = '/content/drive/MyDrive/ai-class/dataset.zip'
-extract_path = '/content/dataset'
+        # AI 분석
+        results = model(fname, conf=0.3)
+        result_img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
+        display(result_img)
 
-# ZIP 압축 해제
-with zipfile.ZipFile(zip_path, 'r') as z:
-    z.extractall(extract_path)
-
-print("✅ 데이터 준비 완료!")
-print(os.listdir(extract_path))</div>
-          <button class="copy-btn" onclick="copyCode('z-code2')">📋 복사</button>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <strong>학습 데이터 train/val 분리</strong>
-          <div class="code-block" id="z-code3">import shutil, random
-
-img_dir = '/content/dataset/images'
-lbl_dir = '/content/dataset/labels'
-
-# train/val 폴더 생성
-for d in ['images/train','images/val','labels/train','labels/val']:
-    os.makedirs(f'/content/dataset/{d}', exist_ok=True)
-
-# 이미지 목록
-imgs = [f for f in os.listdir(img_dir)
-        if f.lower().endswith(('.jpg','.jpeg','.png','.webp'))
-        and os.path.isfile(f'{img_dir}/{f}')]
-random.shuffle(imgs)
-
-# 80% train, 20% val
-split = int(len(imgs) * 0.8)
-train_imgs = imgs[:split]
-val_imgs   = imgs[split:]
-
-for fname in train_imgs:
-    shutil.move(f'{img_dir}/{fname}', f'/content/dataset/images/train/{fname}')
-    base = os.path.splitext(fname)[0]
-    txt  = f'{lbl_dir}/{base}.txt'
-    if os.path.exists(txt):
-        shutil.move(txt, f'/content/dataset/labels/train/{base}.txt')
-
-for fname in val_imgs:
-    shutil.move(f'{img_dir}/{fname}', f'/content/dataset/images/val/{fname}')
-    base = os.path.splitext(fname)[0]
-    txt  = f'{lbl_dir}/{base}.txt'
-    if os.path.exists(txt):
-        shutil.move(txt, f'/content/dataset/labels/val/{base}.txt')
-
-print(f"✅ train: {len(train_imgs)}장 / val: {len(val_imgs)}장")</div>
-          <button class="copy-btn" onclick="copyCode('z-code3')">📋 복사</button>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <strong>YOLOv8 학습 시작!</strong>
-          <div class="code-block" id="z-code4">from ultralytics import YOLO
-
-model = YOLO('yolov8n.pt')
-
-results = model.train(
-    data='/content/dataset/dataset.yaml',
-    epochs=50,
-    imgsz=640,
-    batch=16,
-    name='my_model',
-    project='/content/drive/MyDrive/ai-class/runs',
-    save=True,
-)
-
-print("🎉 학습 완료!")
-print("best.pt 위치:", results.save_dir + '/weights/best.pt')</div>
-          <button class="copy-btn" onclick="copyCode('z-code4')">📋 복사</button>
-          <div class="tip-box">💡 데이터가 적으면 epochs=30으로 줄이세요. 학습 시간: 약 5~15분</div>
-        </div>
+        # 결과 출력
+        print(f"\n📋 예시 사진 {i+1} 분석 결과:")
+        if results[0].boxes:
+            for box in results[0].boxes:
+                cls_name = model.names[int(box.cls)]
+                conf = float(box.conf)
+                emoji = "🛴" if "킥보드" in cls_name else "⛑️" if "헬멧" in cls_name else "🧍"
+                print(f"  {emoji} {cls_name}: {conf:.1%}")
+        else:
+            print("  감지된 객체가 없습니다.")
+        print("-"*30)
+    except Exception as e:
+        print(f"  ⚠️ 사진 {i+1} 처리 실패: {e}")</div>
+        <button class="copy-btn" onclick="copyCode('code2')">📋 복사</button>
       </div>
     </div>
+  </div>
 
-    <!-- STEP 3 -->
-    <div class="card">
-      <h3><span class="step-badge">STEP 3</span> 🎯 Colab에서 바로 테스트하기</h3>
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <strong>테스트할 사진 업로드 & 결과 확인</strong>
-          <div class="code-block" id="z-code5">from ultralytics import YOLO
-from google.colab import files
+  <!-- STEP 3: 내 사진 분석 -->
+  <div class="card">
+    <h3><span class="step-badge">STEP 3</span> 📸 내 사진 업로드해서 분석하기</h3>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>사진 1장 업로드 + 분석</strong>
+        <div class="code-block" id="code3">from google.colab import files
 from IPython.display import display
 import PIL.Image, io
 
-model = YOLO('/content/drive/MyDrive/ai-class/runs/my_model/weights/best.pt')
-
-print("📸 테스트할 사진을 업로드하세요!")
+print("📤 분석할 사진을 업로드하세요!")
 uploaded = files.upload()
 
 for fname, data in uploaded.items():
+    print(f"\n🔍 '{fname}' 분석 중...")
     pil_img = PIL.Image.open(io.BytesIO(data))
     results = model(pil_img, conf=0.3)
-    result_img = results[0].plot()
-    img = PIL.Image.fromarray(result_img[..., ::-1])
-    display(img)
 
-    print(f"\n📋 감지된 객체 ({fname}):")
+    # 결과 이미지 표시
+    result_img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
+    display(result_img)
+
+    # 감지 결과 출력
+    print(f"\n📋 분석 결과:")
     if results[0].boxes:
+        counts = {}
         for box in results[0].boxes:
             cls_name = model.names[int(box.cls)]
             conf = float(box.conf)
-            print(f"  → {cls_name}: {conf:.1%} 신뢰도")
+            counts[cls_name] = counts.get(cls_name, 0) + 1
+            emoji = "🛴" if "킥보드" in cls_name else "⛑️" if "헬멧" in cls_name else "🧍"
+            print(f"  {emoji} {cls_name}: {conf:.1%}")
+
+        print(f"\n📊 요약: {dict(counts)}")
+
+        # 안전모 착용 여부 판단
+        if "킥보드" in str(counts) or "사람" in str(counts):
+            if "헬멧" in str(counts):
+                print("✅ 헬멧 착용이 감지되었습니다!")
+            else:
+                print("⚠️ 헬멧 미착용이 의심됩니다!")
     else:
         print("  감지된 객체가 없습니다.")</div>
-          <button class="copy-btn" onclick="copyCode('z-code5')">📋 복사</button>
-        </div>
-      </div>
-
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <strong>정확도 확인 (mAP 점수)</strong>
-          <div class="code-block" id="z-code7">metrics = model.val(data='/content/dataset/dataset.yaml')
-
-print(f"\n📊 정확도 결과:")
-print(f"  mAP50   : {metrics.box.map50:.1%}")
-print(f"  mAP50-95: {metrics.box.map:.1%}")
-print(f"  Precision: {metrics.box.mp:.1%}")
-print(f"  Recall   : {metrics.box.mr:.1%}")</div>
-          <button class="copy-btn" onclick="copyCode('z-code7')">📋 복사</button>
-        </div>
+        <button class="copy-btn" onclick="copyCode('code3')">📋 복사</button>
       </div>
     </div>
 
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>여러 장 한번에 분석</strong>
+        <div class="code-block" id="code4">from google.colab import files
+from IPython.display import display
+import PIL.Image, io
+
+print("📤 여러 사진을 한번에 업로드하세요!")
+uploaded = files.upload()
+
+total = len(uploaded)
+helmet_count = 0
+no_helmet_count = 0
+
+print(f"\n총 {total}장 분석 시작!")
+print("="*50)
+
+for i, (fname, data) in enumerate(uploaded.items()):
+    print(f"\n[{i+1}/{total}] {fname}")
+    pil_img = PIL.Image.open(io.BytesIO(data))
+    results = model(pil_img, conf=0.3)
+
+    result_img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
+    display(result_img)
+
+    classes_found = [model.names[int(b.cls)] for b in results[0].boxes]
+    has_person_or_kickboard = any("킥보드" in c or "사람" in c for c in classes_found)
+    has_helmet = any("헬멧" in c for c in classes_found)
+
+    if has_person_or_kickboard:
+        if has_helmet:
+            helmet_count += 1
+            print("  ✅ 헬멧 착용")
+        else:
+            no_helmet_count += 1
+            print("  ⚠️ 헬멧 미착용")
+
+print(f"\n{'='*50}")
+print(f"📊 최종 결과:")
+print(f"  ✅ 헬멧 착용: {helmet_count}건")
+print(f"  ⚠️ 헬멧 미착용: {no_helmet_count}건")</div>
+        <button class="copy-btn" onclick="copyCode('code4')">📋 복사</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 정확도 기준 (공통) -->
+  <!-- STEP 4: 결과 저장 -->
   <div class="card">
-    <h3>📊 정확도 기준표</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
-      <div style="background:rgba(252,129,129,0.1);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:12px;text-align:center;">
-        <div style="font-size:20px;margin-bottom:4px;">😢</div>
-        <div style="font-size:13px;font-weight:700;color:#fc8181;">0~40%</div>
-        <div style="font-size:11px;color:var(--muted);">데이터가 부족해요</div>
+    <h3><span class="step-badge">STEP 4</span> 💾 결과 이미지 저장하기</h3>
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>분석된 이미지 내 컴퓨터로 다운로드</strong>
+        <div class="code-block" id="code5">from google.colab import files
+import os
+
+print("📤 분석할 사진을 업로드하세요!")
+uploaded = files.upload()
+
+saved_files = []
+for fname, data in uploaded.items():
+    pil_img = PIL.Image.open(io.BytesIO(data))
+    results = model(pil_img, conf=0.3)
+
+    # 결과 이미지 저장
+    result_img = PIL.Image.fromarray(results[0].plot()[..., ::-1])
+    save_name = f"result_{fname}"
+    result_img.save(save_name)
+    saved_files.append(save_name)
+    display(result_img)
+    print(f"  ✅ {save_name} 저장됨")
+
+# 다운로드
+print("\n📥 결과 이미지 다운로드 중...")
+for f in saved_files:
+    files.download(f)
+print("✅ 완료!")</div>
+        <button class="copy-btn" onclick="copyCode('code5')">📋 복사</button>
       </div>
-      <div style="background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.3);border-radius:10px;padding:12px;text-align:center;">
-        <div style="font-size:20px;margin-bottom:4px;">🤔</div>
-        <div style="font-size:13px;font-weight:700;color:#f6ad55;">40~60%</div>
-        <div style="font-size:11px;color:var(--muted);">더 많은 데이터 필요</div>
+    </div>
+  </div>
+
+  <!-- 클래스 설명 -->
+  <div class="card">
+    <h3>📋 AI가 인식하는 것들</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;">
+      <div style="background:rgba(252,129,129,0.1);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">🛴</div>
+        <div style="font-weight:700;color:#fc8181;margin-bottom:4px;">킥보드</div>
+        <div style="font-size:12px;color:var(--muted);">전동킥보드를 감지해요</div>
       </div>
-      <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:12px;text-align:center;">
-        <div style="font-size:20px;margin-bottom:4px;">👍</div>
-        <div style="font-size:13px;font-weight:700;color:#63b3ed;">60~75%</div>
-        <div style="font-size:11px;color:var(--muted);">나쁘지 않아요!</div>
+      <div style="background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">⛑️</div>
+        <div style="font-weight:700;color:#63b3ed;margin-bottom:4px;">헬멧</div>
+        <div style="font-size:12px;color:var(--muted);">안전모 착용 여부를 확인해요</div>
       </div>
-      <div style="background:rgba(104,211,145,0.1);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:12px;text-align:center;">
-        <div style="font-size:20px;margin-bottom:4px;">🏆</div>
-        <div style="font-size:13px;font-weight:700;color:#68d391;">75% 이상</div>
-        <div style="font-size:11px;color:var(--muted);">훌륭한 모델이에요!</div>
+      <div style="background:rgba(104,211,145,0.1);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:8px;">🧍</div>
+        <div style="font-weight:700;color:#68d391;margin-bottom:4px;">사람</div>
+        <div style="font-size:12px;color:var(--muted);">킥보드 탑승자를 감지해요</div>
       </div>
+    </div>
+    <div class="info-box" style="margin-top:12px;">
+      💡 <strong>활용 예시:</strong> 킥보드 + 사람이 감지되었는데 헬멧이 없으면 → 안전모 미착용 경고!
     </div>
   </div>
 </div>
@@ -505,183 +316,21 @@ print(f"  Recall   : {metrics.box.mr:.1%}")</div>
 <script src="firebase-config.js"></script>
 <script>
 requireAuth(async (user)=>{
-  await showQuestStory(8);
   let userData={score:0};
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{score:0,charName:'AI'};
+    userData=local||{score:0};
   } else {
     const snap=await db.collection('users').where('id','==',user.id).get();
     if(!snap.empty) userData=snap.docs[0].data();
   }
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-
-  // 학생 식별자 (quest6와 동일 로직)
-  const charName=userData.charName||userData.name||'익명';
-  const firestoreUid=user.uid==='student'?('temp_'+charName):user.uid;
-  const studentId=charName+'_'+firestoreUid;
-  // 폴더명에 쓸 수 없는 문자 정리 (Apps Script와 동일)
-  const sid=studentId.replace(/[\/\\:*?"<>|]/g, "_").substring(0, 80);
-
-  // UI에 표시
-  document.getElementById('my-student-id').textContent=sid;
-  document.getElementById('folder-structure').textContent=
-`📂 AI-Class-Data/
-└── 📂 students/
-    └── 📂 ${sid}/      ← 내 가디언 폴더!
-        ├── 📂 images/
-        │   ├── 📂 train/  (학습용 사진)
-        │   └── 📂 val/    (검증용 사진)
-        ├── 📂 labels/
-        │   ├── 📂 train/  (학습용 라벨 .txt)
-        │   └── 📂 val/    (검증용 라벨 .txt)
-        ├── 📄 classes.txt
-        └── 📄 dataset.yaml (자동 생성됨)`;
-
-  // 학생별 Colab 코드 자동 생성
-  generateColabCode(sid);
-  loadYaml(sid);
 });
-
-function generateColabCode(sid){
-  const APPS_URL = (typeof GDRIVE_CONFIG !== 'undefined' && GDRIVE_CONFIG.APPS_SCRIPT_URL) || '여기에_APPS_SCRIPT_URL';
-
-  // STEP 1 - 데이터 받기
-  document.getElementById('d-code1').textContent =
-`# YOLOv8 설치
-!pip install ultralytics -q
-
-import requests, base64, os, json
-from pathlib import Path
-
-# ⬇ 자동 설정됨 (수정하지 마세요)
-APPS_SCRIPT_URL = "${APPS_URL}"
-STUDENT_ID = "${sid}"
-DATA_DIR = "/content/my_data"
-
-print(f"🎯 내 가디언 ID: {STUDENT_ID}")
-print(f"📥 선생님 Drive에서 내 데이터를 받아오는 중...\\n")
-
-# 1) 데이터 목록 받기
-res = requests.post(APPS_SCRIPT_URL, json={
-    "action": "getStudentData",
-    "studentId": STUDENT_ID
-})
-data = res.json()
-
-if not data.get("ok"):
-    raise Exception(f"❌ 데이터 받기 실패: {data.get('error')}")
-
-# 폴더 만들기
-for sub in ["train", "val"]:
-    Path(f"{DATA_DIR}/images/{sub}").mkdir(parents=True, exist_ok=True)
-    Path(f"{DATA_DIR}/labels/{sub}").mkdir(parents=True, exist_ok=True)
-
-# 2) 클래스 저장
-classes = data["classes"]
-with open(f"{DATA_DIR}/classes.txt", "w", encoding="utf-8") as f:
-    f.write("\\n".join(classes))
-print(f"📋 클래스 ({len(classes)}개): {classes}")
-
-# 3) 라벨 저장 (이미 내용 받음)
-for sub in ["train", "val"]:
-    for lbl in data["labels"][sub]:
-        with open(f"{DATA_DIR}/labels/{sub}/{lbl['fileName']}", "w") as f:
-            f.write(lbl["content"])
-
-# 4) 이미지 다운로드 (한 장씩 - Apps Script 응답 크기 제한 때문)
-total_imgs = sum(len(data["images"][s]) for s in ["train", "val"])
-print(f"\\n📷 이미지 다운로드 시작 (총 {total_imgs}장)...")
-
-downloaded = 0
-for sub in ["train", "val"]:
-    for img in data["images"][sub]:
-        try:
-            r = requests.post(APPS_SCRIPT_URL, json={
-                "action": "getFile",
-                "fileId": img["fileId"]
-            })
-            file_data = r.json()
-            if file_data.get("ok"):
-                img_bytes = base64.b64decode(file_data["data"])
-                with open(f"{DATA_DIR}/images/{sub}/{img['fileName']}", "wb") as f:
-                    f.write(img_bytes)
-                downloaded += 1
-                if downloaded % 5 == 0 or downloaded == total_imgs:
-                    print(f"   {downloaded}/{total_imgs} 장 완료...")
-        except Exception as e:
-            print(f"   ⚠️ {img['fileName']} 실패: {e}")
-
-# 결과
-print(f"\\n✅ 다운로드 완료!")
-print(f"   📷 학습용: {len(data['images']['train'])}장")
-print(f"   📷 검증용: {len(data['images']['val'])}장")
-print(f"   🏷️ 학습 라벨: {len(data['labels']['train'])}개")
-print(f"   🏷️ 검증 라벨: {len(data['labels']['val'])}개")`;
-
-  // STEP 2 - yaml 생성
-  document.getElementById('d-code2').textContent =
-`yaml_content = f'''# YOLOv8 dataset.yaml (${sid})
-path: {DATA_DIR}
-train: images/train
-val:   images/val
-
-nc: {len(classes)}
-names: {classes}
-'''
-
-yaml_path = f'{DATA_DIR}/dataset.yaml'
-with open(yaml_path, 'w', encoding='utf-8') as f:
-    f.write(yaml_content)
-
-print(f"✅ dataset.yaml 생성 완료!\\n")
-print(yaml_content)`;
-}
-
-function switchTab(name){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById('tab-btn-'+name).classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
-}
-
-async function loadYaml(sid){
-  try{
-    const snap=await db.collection('label_classes').orderBy('order').get();
-    const classes=snap.docs.map(d=>d.data().name);
-    const nc=classes.length||1;
-    const names=classes.length?classes:['object'];
-    const yaml=`# dataset.yaml (ZIP 방식용 - 임시 폴더 사용)
-path: /content/dataset
-train: images/train
-val:   images/val
-
-nc: ${nc}
-names: [${names.map(c=>"'"+c+"'").join(', ')}]`;
-    document.getElementById('yaml-content').textContent=yaml;
-  }catch(e){
-    document.getElementById('yaml-content').textContent=
-`# dataset.yaml
-path: /content/dataset
-train: images/train
-val:   images/val
-
-nc: 1
-names: ['object']`;
-  }
-}
-
-function copyYaml(){
-  const text=document.getElementById('yaml-content').textContent;
-  navigator.clipboard.writeText(text).then(()=>alert('📋 yaml 복사됨!'));
-}
 
 function copyCode(id){
   const el=document.getElementById(id);
-  const text=el.textContent;
-  navigator.clipboard.writeText(text).then(()=>{
-    // 같은 부모 안에서 .copy-btn 찾기
-    const btn=el.parentElement.querySelector('.copy-btn');
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const btn=el.nextElementSibling;
     if(btn){
       const orig=btn.textContent;
       btn.textContent='✅ 복사됨!';
