@@ -33,8 +33,8 @@ const ADMIN_ID = "admin";
 const ADMIN_PW = "20260404";
 
 // ── 임시 학생 계정 ──
-const STUDENT_ID = "student01";
-const STUDENT_PW = "123465";
+const STUDENT_ID = "student";
+const STUDENT_PW = "20260404";
 
 // ── 욕설/비하 필터 ──
 const BAD_WORDS = ["욕1","욕2","바보","멍청","시발","씨발","병신","개새","ㅅㅂ","ㅂㅅ","fuck","shit","damn","bitch"];
@@ -63,210 +63,17 @@ function getNextLevel(score) {
   return null;
 }
 
-// ── 퀘스트 목록 (미니 스토리 포함) ──
+// ── 퀘스트 목록 ──
 const QUESTS = [
-  { id:1, title:"인공지능 세계의 법률", icon:"⚖️",  done:false,
-    subtitle:"AI 헌법의 수호자",
-    story:"AI 의회에 입장하려면\n인공지능 헌법을 알아야 한다.\n첫 시련을 통과하라." },
-  { id:2, title:"아버지를 찾아서",       icon:"🔍",  done:false,
-    subtitle:"창조자의 흔적",
-    story:"AI의 창조자를 찾아라.\n뿌리를 알아야\n진정한 가디언이 될 수 있다." },
-  { id:3, title:"인공지능 수업자료 만들기", icon:"📚", done:false,
-    subtitle:"지식을 전파하라",
-    story:"배운 것을 세상에 전하라.\n가디언의 임무는\n혼자 배우는 게 아니다." },
-  { id:4, title:"인공지능 공부시키기",   icon:"🎓",  done:false,
-    subtitle:"동료에게 빛을",
-    story:"가디언은 혼자가 아니다.\n다른 이들도 함께 깨워야\n모두가 살아남는다." },
-  { id:5, title:"배운내용 확인하기",     icon:"✅",  done:false,
-    subtitle:"기억을 새겨라",
-    story:"전투 전 무기를 점검하라.\n흔들리는 지식으로는\nAI를 깨울 수 없다." },
-  { id:6, title:"데이터 수집하기",       icon:"📷",  done:false,
-    subtitle:"AI에게 눈을",
-    story:"AI에게 세상을 보여주려면\n눈을 만들어줘야 한다.\n세상을 카메라에 담아라." },
-  { id:7, title:"라벨링하기",            icon:"🏷️",  done:false,
-    subtitle:"사물의 이름을",
-    story:"AI에게 사물의 이름을\n가르쳐라. 가디언의 손길로\nAI는 의미를 배운다." },
-  { id:8, title:"테스트해보기",          icon:"🧪",  done:false,
-    subtitle:"AI를 깨워라",
-    story:"마지막 시련을 통과하면\n진정한 가디언이 탄생한다.\n당신의 AI가 깨어난다!" },
+  { id:1, title:"인공지능 세계의 법률", icon:"⚖️",  done:false },
+  { id:2, title:"아버지를 찾아서",       icon:"🔍",  done:false },
+  { id:3, title:"인공지능 수업자료 만들기", icon:"📚", done:false },
+  { id:4, title:"인공지능 공부시키기",   icon:"🎓",  done:false },
+  { id:5, title:"배운내용 확인하기",     icon:"✅",  done:false },
+  { id:6, title:"데이터 수집하기",       icon:"📷",  done:false },
+  { id:7, title:"라벨링하기",            icon:"🏷️",  done:false },
+  { id:8, title:"테스트해보기",          icon:"🧪",  done:false },
 ];
-
-// ── 메인 스토리 (오프닝) ──
-const STORY = [
-  "🌌 2050년, 인공지능 세계가 위험에 빠졌다...",
-  "혼란에 빠진 AI 세계를 구할 수 있는 건\n오직 미래에서 온 'AI 가디언'뿐.",
-  "당신이 바로 그 가디언이 될 운명입니다. ⚡",
-  "8개의 시련을 통과하면\n진정한 가디언으로 거듭납니다.",
-  "데이터를 수집하고, AI를 가르치고,\n세상에 진정한 AI를 깨워내십시오!",
-  "자, 먼저 당신의 AI 가디언에게\n이름을 지어주세요! 💫"
-];
-
-// ── 칭호(업적) 시스템 ──
-// condition은 userData + stats 객체를 받아서 boolean 반환
-const TITLES = [
-  {
-    id: 'first_step',
-    icon: '🥇',
-    name: '첫 발걸음',
-    desc: '첫 퀘스트를 완료한 자',
-    condition: (u) => {
-      const quests = u.quests || {};
-      return Object.keys(quests).some(k => k.endsWith('_done') && quests[k]);
-    }
-  },
-  {
-    id: 'collector',
-    icon: '📸',
-    name: '수집가',
-    desc: '사진 10장을 모은 자',
-    condition: (u, s) => (s.totalImages || 0) >= 10
-  },
-  {
-    id: 'expert',
-    icon: '🏆',
-    name: '전문가',
-    desc: '사진 50장을 모은 자',
-    condition: (u, s) => (s.totalImages || 0) >= 50
-  },
-  {
-    id: 'sharp_eye',
-    icon: '🎯',
-    name: '정확한 눈',
-    desc: '라벨링 50개를 완료한 자',
-    condition: (u, s) => (s.totalLabels || 0) >= 50
-  },
-  {
-    id: 'accuracy_master',
-    icon: '🚀',
-    name: '정확도 마스터',
-    desc: 'mAP 70% 이상 달성한 자',
-    condition: (u) => (u.bestMAP || 0) >= 0.70
-  },
-  {
-    id: 'wise_guardian',
-    icon: '🦉',
-    name: '지혜의 가디언',
-    desc: '모든 퀘스트를 완료한 자',
-    condition: (u) => {
-      const quests = u.quests || {};
-      return [1,2,3,4,5,6,7,8].every(id => quests[`q${id}_done`]);
-    }
-  },
-  {
-    id: 'perfect_expert',
-    icon: '💯',
-    name: '완벽한 전문가',
-    desc: '모든 퀴즈를 정답으로 푼 자',
-    condition: (u) => {
-      const quizzes = u.quizzes || {};
-      // q1, q5 등 퀴즈가 있는 퀘스트들의 정답률이 모두 100%
-      const ids = Object.keys(quizzes);
-      if (ids.length === 0) return false;
-      return ids.every(id => quizzes[id] && quizzes[id].score === quizzes[id].total);
-    }
-  },
-];
-
-// 학생이 획득한 칭호 목록 반환
-function getEarnedTitles(userData, stats) {
-  const u = userData || {};
-  const s = stats || {};
-  return TITLES.filter(t => {
-    try { return t.condition(u, s); } catch(e) { return false; }
-  });
-}
-
-// 전역 플래그: 퀘스트 스토리 팝업이 떠 있는지 여부
-// 페이지에서 클릭 리스너를 등록할 때 이 플래그를 확인해서 차단 가능
-window.questStoryShowing = false;
-
-// ── 퀘스트 페이지에 미니 스토리 배너 표시 ──
-// 사용법:
-//   await showQuestStory(7)  // 사용자가 "시작하기" 누를 때까지 대기
-function showQuestStory(questId) {
-  return new Promise((resolve) => {
-    const q = QUESTS.find(x => x.id === questId);
-    if (!q) { resolve(); return; }
-
-    // 팝업 표시 플래그 ON (다른 click 리스너가 이걸 보고 차단)
-    window.questStoryShowing = true;
-
-    // body 전체에 블러 + 스크롤 잠금
-    document.documentElement.style.overflow = 'hidden';
-    if (document.body) document.body.style.overflow = 'hidden';
-
-    const banner = document.createElement('div');
-    banner.id = 'quest-story-banner';
-    banner.style.cssText = `
-      position:fixed; inset:0; z-index:99999;
-      background:rgba(0,0,0,0.95);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      display:flex; align-items:center; justify-content:center;
-      padding:24px;
-      animation:fadeIn .3s ease;
-    `;
-    banner.innerHTML = `
-      <div style="
-        background:linear-gradient(135deg,#1a1f3a,#0a0e1a);
-        border:2px solid #a78bfa;
-        border-radius:20px;
-        padding:32px 28px;
-        max-width:440px; width:100%;
-        text-align:center;
-        box-shadow:0 0 80px rgba(167,139,250,0.4);
-        animation:slideUp .5s cubic-bezier(.34,1.56,.64,1);
-      ">
-        <div style="font-size:56px;margin-bottom:12px;">${q.icon}</div>
-        <div style="font-size:11px;color:#aab2d5;letter-spacing:2px;margin-bottom:4px;">시련 ${q.id} / 8</div>
-        <div style="font-family:'Jua',sans-serif;font-size:22px;color:white;margin-bottom:6px;">${q.title}</div>
-        <div style="font-size:14px;color:#a78bfa;font-style:italic;margin-bottom:18px;">"${q.subtitle}"</div>
-        <div style="font-size:13px;color:#cbd5e0;line-height:1.7;border-top:1px dashed rgba(255,255,255,0.15);padding-top:14px;margin-bottom:22px;white-space:pre-line;">
-${q.story}
-        </div>
-        <button id="quest-story-close" style="
-          background:linear-gradient(135deg,#a78bfa,#7c3aed);
-          color:white; border:none;
-          padding:11px 32px; border-radius:10px;
-          font-weight:700; cursor:pointer;
-          font-family:inherit; font-size:14px;
-          box-shadow:0 4px 12px rgba(167,139,250,0.4);
-          transition:transform .15s;
-        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">시작하기 →</button>
-      </div>
-      <style>
-        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-        @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
-        @keyframes fadeOut { from{opacity:1;} to{opacity:0;} }
-      </style>
-    `;
-    document.body.appendChild(banner);
-
-    document.getElementById('quest-story-close').onclick = (event) => {
-      // 이벤트 전파 차단 (본문 클릭 리스너로 전달 방지)
-      event.stopPropagation();
-      event.preventDefault();
-
-      // 즉시 포인터 이벤트 차단
-      banner.style.pointerEvents = 'none';
-      banner.style.animation = 'fadeOut .25s ease forwards';
-
-      // 즉시 plain DOM 변경하고
-      setTimeout(() => {
-        banner.remove();
-        document.documentElement.style.overflow = '';
-        if (document.body) document.body.style.overflow = '';
-      }, 250);
-
-      // 플래그는 짧은 지연 후 해제 (클릭 이벤트가 본문으로 새는 것 방지)
-      // 너무 길면 사용자가 답답하므로 100ms로 짧게
-      setTimeout(() => {
-        window.questStoryShowing = false;
-        resolve();
-      }, 100);
-    };
-  });
-}
 
 // ── 공통 함수 ──
 function requireAuth(cb) {
@@ -362,4 +169,93 @@ async function updateBoardPostXP(collectionName, docId, post, newXp, targetUid) 
   if (!post.isTemp && targetUid && diff !== 0) {
     await addScore(targetUid, diff, `게시글 점수 조정 (${collectionName})`);
   }
+}
+
+// ══════════════════════════════════════════
+//  🔊 사운드 시스템
+// ══════════════════════════════════════════
+const SOUNDS = {
+  BGM: {
+    main:     'sounds/bgm_main.mp3',
+    quest:    'sounds/bgm_quest.mp3',
+  },
+  SFX: {
+    click:    'sounds/sfx_click.mp3',
+    correct:  'sounds/sfx_correct.mp3',
+    wrong:    'sounds/sfx_wrong.mp3',
+    levelup:  'sounds/sfx_levelup.mp3',
+    complete: 'sounds/sfx_complete.mp3',
+  }
+};
+
+// 설정 로드 (localStorage)
+function getSoundSettings() {
+  return {
+    bgm: localStorage.getItem('sound_bgm') !== 'off',
+    sfx: localStorage.getItem('sound_sfx') !== 'off',
+  };
+}
+function setSoundSettings(bgm, sfx) {
+  localStorage.setItem('sound_bgm', bgm ? 'on' : 'off');
+  localStorage.setItem('sound_sfx', sfx ? 'on' : 'off');
+}
+
+// BGM 관리
+let _bgmAudio = null;
+let _currentBgm = null;
+
+function playBGM(key) {
+  const settings = getSoundSettings();
+  if (!settings.bgm) return;
+  const src = SOUNDS.BGM[key];
+  if (!src) return;
+  if (_currentBgm === key && _bgmAudio && !_bgmAudio.paused) return;
+  stopBGM();
+  _bgmAudio = new Audio(src);
+  _bgmAudio.loop = true;
+  _bgmAudio.volume = 0.35;
+  _bgmAudio.play().catch(()=>{});
+  _currentBgm = key;
+}
+
+function stopBGM() {
+  if (_bgmAudio) {
+    _bgmAudio.pause();
+    _bgmAudio.currentTime = 0;
+    _bgmAudio = null;
+    _currentBgm = null;
+  }
+}
+
+function toggleBGM() {
+  const s = getSoundSettings();
+  setSoundSettings(!s.bgm, s.sfx);
+  if (!getSoundSettings().bgm) {
+    stopBGM();
+  } else {
+    if (_currentBgm) playBGM(_currentBgm);
+  }
+  return getSoundSettings().bgm;
+}
+
+function toggleSFX() {
+  const s = getSoundSettings();
+  setSoundSettings(s.bgm, !s.sfx);
+  return getSoundSettings().sfx;
+}
+
+// 효과음 재생
+function playSFX(key) {
+  const settings = getSoundSettings();
+  if (!settings.sfx) return;
+  const src = SOUNDS.SFX[key];
+  if (!src) return;
+  const audio = new Audio(src);
+  audio.volume = 0.6;
+  audio.play().catch(()=>{});
+}
+
+// BGM 볼륨 업데이트
+function updateBGMVolume(vol) {
+  if (_bgmAudio) _bgmAudio.volume = vol;
 }
