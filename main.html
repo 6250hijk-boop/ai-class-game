@@ -137,12 +137,41 @@
 <!-- 캐릭터 이름 짓기 -->
 <div id="name-screen" class="name-overlay" style="display:none;">
   <div class="name-box">
-    <div style="font-size:clamp(40px,10vw,60px);margin-bottom:12px;">🤖</div>
-    <h2>AI에게 이름을 지어주세요!</h2>
-    <p>당신의 AI 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
-    <div id="name-alert"></div>
-    <input class="name-input" id="char-name-input" placeholder="예: 스타봇, 루나AI ...">
-    <button class="btn btn-primary" onclick="saveName()">이름 확정하기 ✨</button>
+    <!-- 캐릭터 선택 -->
+    <div id="char-pick-section">
+      <div style="font-size:clamp(16px,3vw,20px);font-weight:700;margin-bottom:14px;color:var(--text);">🤖 캐릭터를 선택하세요!</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div class="char-pick-card" id="pick-robot" onclick="pickCharTrack('robot')"
+          style="border:2px solid rgba(99,179,237,0.3);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(99,179,237,0.06);">
+          <img src="images/robot_1.png" style="width:clamp(60px,12vw,80px);height:clamp(60px,12vw,80px);object-fit:contain;margin-bottom:8px;"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div style="display:none;font-size:40px;margin-bottom:8px;">🤖</div>
+          <div style="font-weight:700;font-size:14px;color:#63b3ed;">로봇</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">robot_1 → robot_2 → robot_3</div>
+        </div>
+        <div class="char-pick-card" id="pick-wizard" onclick="pickCharTrack('wizard')"
+          style="border:2px solid rgba(167,139,250,0.3);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(167,139,250,0.06);">
+          <img src="images/wizard_1.png" style="width:clamp(60px,12vw,80px);height:clamp(60px,12vw,80px);object-fit:contain;margin-bottom:8px;"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div style="display:none;font-size:40px;margin-bottom:8px;">🧙</div>
+          <div style="font-weight:700;font-size:14px;color:#a78bfa;">마법사</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">wizard_1 → ... → wizard_5</div>
+        </div>
+      </div>
+      <div id="pick-alert" style="font-size:13px;color:#fc8181;min-height:18px;margin-bottom:10px;"></div>
+    </div>
+
+    <!-- 이름 입력 -->
+    <div id="name-input-section" style="display:none;">
+      <div id="selected-char-preview" style="font-size:clamp(40px,10vw,60px);margin-bottom:12px;">🤖</div>
+      <h2>AI에게 이름을 지어주세요!</h2>
+      <p>당신의 AI 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
+      <div id="name-alert"></div>
+      <input class="name-input" id="char-name-input" placeholder="예: 스타봇, 루나AI ...">
+    </div>
+
+    <!-- 버튼 -->
+    <button class="btn btn-primary" id="name-confirm-btn" onclick="handleNameConfirm()">다음 →</button>
   </div>
 </div>
 
@@ -179,15 +208,6 @@
           style="padding:7px 18px;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;">
         </button>
       </div>
-    </div>
-
-    <!-- 캐릭터 변경 -->
-    <div style="margin-bottom:20px;">
-      <h4 style="font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🤖 캐릭터</h4>
-      <div id="char-select-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
-        <!-- JS로 생성 -->
-      </div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;text-align:center;">레벨에 맞는 캐릭터만 선택 가능해요</div>
     </div>
 
     <button onclick="closeSettings()" style="width:100%;padding:12px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">확인</button>
@@ -339,7 +359,7 @@ function nextStory(){
   if (storyStep>=STORY.length){
     document.getElementById('story-screen').style.display='none';
     document.getElementById('name-screen').style.display='flex';
-    stopBGM();
+    // BGM 계속 재생 (이름 짓기 화면에서도)
     return;
   }
   const btn=document.getElementById('story-btn');
@@ -359,16 +379,21 @@ async function saveName(){
   if (name.length<2||name.length>10) return showNameAlert('2~10자 사이로 입력하세요.');
   if (filterName(name)) return showNameAlert('⚠️ 사용할 수 없는 이름입니다.');
 
+  const track = selectedTrack || 'robot';
+
   if (currentUser.uid==='student'){
     userData.charName=name;
+    userData.charTrack=track;
     localStorage.setItem('tempUserData', JSON.stringify(userData));
   } else {
-    await db.collection('users').doc(currentUser.uid).update({charName:name});
+    await db.collection('users').doc(currentUser.uid).update({charName:name, charTrack:track});
     userData.charName=name;
+    userData.charTrack=track;
   }
   currentUser.charName=name;
   sessionStorage.setItem('gameUser',JSON.stringify(currentUser));
   document.getElementById('name-screen').style.display='none';
+  playSFX('levelup');
   initUI();
 }
 
@@ -378,8 +403,9 @@ function showNameAlert(msg){
 
 function initUI(){
   const score=userData.score||0;
-  const lv=getLevelByScore(score);
-  const next=getNextLevel(score);
+  const track=userData.charTrack||'robot';
+  const lv=getLevelByScore(score, track);
+  const next=getNextLevel(score, track);
 
   // 사이드바 캐릭터
   const imgEl=document.getElementById('sb-char-img');
@@ -468,11 +494,56 @@ function toggleStoryBGM(){
   updateStoryBGMBtn();
 }
 
-// ── 설정 모달 ──
+// ── 캐릭터 트랙 선택 ──
+let selectedTrack = null;
+
+function pickCharTrack(track){
+  playSFX('click');
+  selectedTrack = track;
+  // 선택된 카드 강조
+  document.getElementById('pick-robot').style.borderColor =
+    track==='robot' ? '#63b3ed' : 'rgba(99,179,237,0.3)';
+  document.getElementById('pick-robot').style.background =
+    track==='robot' ? 'rgba(99,179,237,0.2)' : 'rgba(99,179,237,0.06)';
+  document.getElementById('pick-wizard').style.borderColor =
+    track==='wizard' ? '#a78bfa' : 'rgba(167,139,250,0.3)';
+  document.getElementById('pick-wizard').style.background =
+    track==='wizard' ? 'rgba(167,139,250,0.2)' : 'rgba(167,139,250,0.06)';
+  document.getElementById('pick-alert').textContent = '';
+}
+
+function handleNameConfirm(){
+  playSFX('click');
+  const charPickSection = document.getElementById('char-pick-section');
+  const nameInputSection = document.getElementById('name-input-section');
+
+  // 1단계: 캐릭터 선택
+  if(charPickSection.style.display !== 'none' && nameInputSection.style.display === 'none'){
+    if(!selectedTrack){
+      document.getElementById('pick-alert').textContent = '캐릭터를 선택해주세요!';
+      return;
+    }
+    // 선택 완료 → 이름 입력 화면으로
+    charPickSection.style.display = 'none';
+    nameInputSection.style.display = 'block';
+    // 선택한 캐릭터 미리보기
+    const track = CHAR_TRACKS[selectedTrack];
+    const firstImg = track[0].img;
+    const previewEl = document.getElementById('selected-char-preview');
+    previewEl.innerHTML = `<img src="${firstImg}" style="width:clamp(50px,10vw,70px);height:clamp(50px,10vw,70px);object-fit:contain;"
+      onerror="this.outerHTML='${track[0].emoji}'">`;
+    document.getElementById('name-confirm-btn').textContent = '이름 확정하기 ✨';
+    return;
+  }
+
+  // 2단계: 이름 확정
+  saveName();
+}
+
+// ── 설정에서 캐릭터 관련 함수 제거 ──
 function openSettings(){
   document.getElementById('settings-modal').style.display='flex';
   updateSettingsBtns();
-  renderCharSelect();
   toggleSidebar();
 }
 function closeSettings(){
