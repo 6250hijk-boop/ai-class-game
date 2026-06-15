@@ -43,24 +43,42 @@ function filterName(name) {
   return BAD_WORDS.some(w => lower.includes(w));
 }
 
-// ── 레벨 설정 ──
-const LEVELS = [
-  { level:1, name:"아기 로봇",       minScore:0,    img:"images/robot_1.png", emoji:"🤖" },
-  { level:2, name:"초보 AI",         minScore:50,   img:"images/robot_2.png", emoji:"🦾" },
-  { level:3, name:"학습 AI",         minScore:150,  img:"images/robot_3.png", emoji:"🧠" },
-  { level:4, name:"지능형 AI",       minScore:300,  img:"images/robot_4.png", emoji:"⚡" },
-  { level:5, name:"미래형 가디언",   minScore:500,  img:"images/robot_5.png", emoji:"🌟" },
-];
+// ── 캐릭터 트랙 ──
+const CHAR_TRACKS = {
+  robot: [
+    { level:1, name:"아기 로봇",     minScore:0,   img:"images/robot_1.png", emoji:"🤖" },
+    { level:2, name:"초보 AI",       minScore:50,  img:"images/robot_2.png", emoji:"🦾" },
+    { level:3, name:"미래형 가디언", minScore:200, img:"images/robot_3.png", emoji:"🌟" },
+  ],
+  wizard: [
+    { level:1, name:"견습 마법사",   minScore:0,   img:"images/wizard_1.png", emoji:"🧙" },
+    { level:2, name:"마법사",        minScore:50,  img:"images/wizard_2.png", emoji:"✨" },
+    { level:3, name:"상급 마법사",   minScore:100, img:"images/wizard_3.png", emoji:"🔮" },
+    { level:4, name:"대마법사",      minScore:200, img:"images/wizard_4.png", emoji:"⚡" },
+    { level:5, name:"아크메이지",    minScore:350, img:"images/wizard_5.png", emoji:"🌟" },
+  ],
+};
 
-function getLevelByScore(score) {
-  let lv = LEVELS[0];
-  for (const l of LEVELS) { if (score >= l.minScore) lv = l; }
+// 기존 LEVELS는 호환성 유지 (robot 기본)
+const LEVELS = CHAR_TRACKS.robot;
+
+function getLevelByScore(score, track) {
+  const levels = CHAR_TRACKS[track||'robot'] || CHAR_TRACKS.robot;
+  let lv = levels[0];
+  for (const l of levels) { if (score >= l.minScore) lv = l; }
   return lv;
 }
 
-function getNextLevel(score) {
-  for (const l of LEVELS) { if (score < l.minScore) return l; }
+function getNextLevel(score, track) {
+  const levels = CHAR_TRACKS[track||'robot'] || CHAR_TRACKS.robot;
+  for (const l of levels) { if (score < l.minScore) return l; }
   return null;
+}
+
+function getCurrentCharImg(userData) {
+  const score = userData.score || 0;
+  const track = userData.charTrack || 'robot';
+  return getLevelByScore(score, track).img;
 }
 
 // ── 퀘스트 목록 ──
