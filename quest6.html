@@ -29,24 +29,18 @@
     .preview-item img{width:100%;height:100%;object-fit:cover;display:block;}
     .remove-btn{position:absolute;top:4px;right:4px;background:rgba(252,129,129,0.9);border:none;border-radius:50%;width:22px;height:22px;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
     .status-badge{position:absolute;bottom:0;left:0;right:0;padding:3px 4px;font-size:10px;text-align:center;font-weight:600;}
-    .status-train{background:rgba(99,179,237,0.9);color:#0a0e1a;}
-    .status-val{background:rgba(246,173,85,0.9);color:#0a0e1a;}
+    .status-pending{background:rgba(246,173,85,0.9);color:#0a0e1a;}
     .status-done{background:rgba(104,211,145,0.9);color:#0a0e1a;}
     .status-error{background:rgba(252,129,129,0.9);color:white;}
     .progress-wrap{background:rgba(255,255,255,0.08);border-radius:20px;height:clamp(8px,2vw,12px);overflow:hidden;margin:10px 0;}
     .progress-bar{height:100%;background:linear-gradient(90deg,#a78bfa,#63b3ed);border-radius:20px;transition:width .2s;}
     .progress-text{font-size:clamp(12px,2.2vw,13px);color:var(--muted);min-height:18px;margin-top:4px;}
-    .folder-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
-    .folder-stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
-    .folder-stat .num{font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,28px);color:var(--primary);}
-    .folder-stat .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
     .uploaded-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;}
     .uploaded-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0;}
     .del-btn{background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;flex-shrink:0;}
-    .alert{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;line-height:1.5;}
+    .alert{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;}
     .alert-success{background:rgba(104,211,145,0.12);border:1px solid #68d391;color:#68d391;}
     .alert-error{background:rgba(252,129,129,0.12);border:1px solid #fc8181;color:#fc8181;}
-    .alert-warn{background:rgba(246,173,85,0.12);border:1px solid #f6ad55;color:#f6ad55;}
     @media(max-width:480px){.page-wrap{padding:12px;}}
   </style>
 </head>
@@ -59,45 +53,17 @@
   </div>
 
   <div class="page-title">📁 퀘스트 6: 데이터 수집하기</div>
-  <div class="page-desc">
-    AI 학습에 사용할 사진을 Google Drive에 업로드하세요.<br>
-    사진은 자동으로 <strong>학습용(80%)</strong>과 <strong>검증용(20%)</strong>으로 나뉩니다!
-  </div>
+  <div class="page-desc">AI 학습에 사용할 사진을 업로드하세요.<br>사진은 자동으로 600×600px로 변환됩니다!</div>
   <div id="main-alert"></div>
 
-  <!-- Drive 구조 안내 -->
-  <div class="card">
-    <h3>📂 Google Drive 저장 구조</h3>
-    <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:12px;font-family:monospace;font-size:clamp(11px,2vw,13px);color:#a78bfa;line-height:1.8;">
-      AI-Class-Data/<br>
-      ├── <span style="color:#63b3ed;">images/train/</span>  ← 학습용 사진 (80%)<br>
-      ├── <span style="color:#f6ad55;">images/val/</span>    ← 검증용 사진 (20%)<br>
-      ├── <span style="color:#63b3ed;">labels/train/</span>  ← 학습용 라벨 txt<br>
-      ├── <span style="color:#f6ad55;">labels/val/</span>    ← 검증용 라벨 txt<br>
-      ├── classes.txt   ← 클래스 목록<br>
-      └── dataset.yaml  ← YOLOv8 설정 (자동생성)
-    </div>
-  </div>
-
-  <!-- 업로드 -->
   <div class="card">
     <h3>📸 사진 업로드</h3>
-    <div class="folder-stats">
-      <div class="folder-stat">
-        <div class="num" id="train-count">0</div>
-        <div class="lbl">🔵 학습용 (train)</div>
-      </div>
-      <div class="folder-stat">
-        <div class="num" id="val-count">0</div>
-        <div class="lbl">🟡 검증용 (val)</div>
-      </div>
-    </div>
     <div class="upload-zone" id="upload-zone"
       onclick="document.getElementById('file-input').click()"
       ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
       <div class="icon">📸</div>
       <h3>사진을 여기에 드래그하거나 클릭하세요</h3>
-      <p>JPG, PNG, WEBP · 자동 600×600 변환 · 최대 20장 · 20%는 검증용으로 자동 분리</p>
+      <p>JPG, PNG, WEBP · 자동 600×600 변환 · 최대 20장</p>
     </div>
     <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
 
@@ -105,7 +71,7 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
         <span style="font-size:13px;color:var(--muted);">대기: <strong id="pending-count">0</strong>장</span>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" id="upload-btn" onclick="uploadAll()" style="padding:8px 16px;font-size:13px;">☁️ Drive에 업로드</button>
+          <button class="btn btn-primary" id="upload-btn" onclick="uploadAll()" style="padding:8px 16px;font-size:13px;">☁️ 업로드</button>
           <button class="btn btn-ghost" onclick="clearPending()" style="padding:8px 12px;font-size:12px;">초기화</button>
         </div>
       </div>
@@ -117,10 +83,9 @@
     </div>
   </div>
 
-  <!-- 최근 업로드 -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;">☁️ 최근 업로드 (<span id="my-count">0</span>장)</h3>
+      <h3 style="margin:0;">☁️ 내가 올린 사진 (<span id="my-count">0</span>장)</h3>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="loadMyUploads()">🔄</button>
         <a href="quest7.html" class="btn btn-primary" style="font-size:12px;padding:6px 12px;">라벨링하러 가기 →</a>
@@ -135,19 +100,17 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
+// Cloudinary 설정
+const CLOUDINARY_NAME   = 'dbthgzdfu';
+const CLOUDINARY_PRESET = 'vxhz699w';
 const TARGET_SIZE = 600;
-const QUALITY = 0.75;
-const PARALLEL = 3;
-const VAL_RATIO = 0.2; // 20% 검증용
+const QUALITY     = 0.75;
+const PARALLEL    = 5;
 
 let currentUser=null, userData=null;
 let pendingFiles=[];
-let studentId='', charName='', firestoreUid='';
 
 requireAuth(async (user)=>{
-  // 미니 스토리 배너 표시 (이번 세션에서 처음 들어왔을 때만)
-  await showQuestStory(6);
-
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
@@ -156,81 +119,46 @@ requireAuth(async (user)=>{
     const snap=await db.collection('users').where('id','==',user.id).get();
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
-  // 학생 식별자 계산 (모든 Drive API 호출에서 사용)
-  charName=userData.charName||userData.name||'익명';
-  firestoreUid=currentUser.uid==='student'?('temp_'+charName):currentUser.uid;
-  studentId=charName+'_'+firestoreUid;
-
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-
-  // ⭐ 학생 폴더 미리 생성 (중복 폴더 방지) - 업로드 전에 한 번만
-  try{
-    await callDriveAPI({action:'ensureStudent', studentId});
-  }catch(e){console.warn('학생 폴더 준비 실패:', e);}
-
   loadMyUploads();
-  loadFolderStats();
-  // classes.txt 자동 동기화 (학생 폴더에)
-  syncClasses();
 });
 
-// ── classes.txt 동기화 (학생 폴더에 저장) ──
-async function syncClasses(){
-  try{
-    const snap=await db.collection('label_classes').orderBy('order').get();
-    if(snap.empty) return;
-    const content=snap.docs.map(d=>d.data().name).join('\n');
-    await callDriveAPI({action:'saveClasses', content, studentId});
-  }catch(e){console.warn('classes 동기화 실패:', e);}
-}
-
-// ── Drive API 호출 ──
-async function callDriveAPI(data){
-  if(!GDRIVE_CONFIG.APPS_SCRIPT_URL||GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
-    throw new Error('Apps Script URL이 설정되지 않았습니다!');
-  }
-  const res=await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
-    method:'POST', body:JSON.stringify(data),
-  });
-  const result=await res.json();
-  if(!result.ok) throw new Error(result.error||'서버 오류');
-  return result;
-}
-
-// ── 폴더 통계 로드 (학생별) ──
-async function loadFolderStats(){
-  try{
-    const [trainRes, valRes]=await Promise.all([
-      callDriveAPI({action:'list', subfolder:'train', studentId}),
-      callDriveAPI({action:'list', subfolder:'val', studentId}),
-    ]);
-    document.getElementById('train-count').textContent=trainRes.files?.length||0;
-    document.getElementById('val-count').textContent=valRes.files?.length||0;
-  }catch(e){ console.warn('통계 로드 실패:', e); }
-}
-
-// ── 리사이징 ──
-function resizeToBase64(file){
-  return new Promise((resolve)=>{
+// ── 600×600 리사이징 → Blob ──
+function resizeToBlob(file){
+  return new Promise(resolve=>{
     const img=new Image();
     const url=URL.createObjectURL(file);
     img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      canvas.width=TARGET_SIZE; canvas.height=TARGET_SIZE;
-      const ctx=canvas.getContext('2d');
-      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,TARGET_SIZE,TARGET_SIZE);
-      const scale=Math.min(TARGET_SIZE/img.width, TARGET_SIZE/img.height);
-      const dw=img.width*scale, dh=img.height*scale;
+      const c=document.createElement('canvas');
+      c.width=c.height=TARGET_SIZE;
+      const ctx=c.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,TARGET_SIZE,TARGET_SIZE);
+      const s=Math.min(TARGET_SIZE/img.width,TARGET_SIZE/img.height);
+      const dw=img.width*s, dh=img.height*s;
       ctx.drawImage(img,(TARGET_SIZE-dw)/2,(TARGET_SIZE-dh)/2,dw,dh);
       URL.revokeObjectURL(url);
-      const base64=canvas.toDataURL('image/jpeg',QUALITY).split(',')[1];
-      resolve(base64);
+      c.toBlob(blob=>resolve(blob),'image/jpeg',QUALITY);
     };
     img.onerror=()=>{URL.revokeObjectURL(url);resolve(null);};
     img.src=url;
   });
 }
 
+// ── Cloudinary 업로드 ──
+async function uploadToCloudinary(blob, fileName){
+  const form=new FormData();
+  form.append('file',blob,fileName);
+  form.append('upload_preset',CLOUDINARY_PRESET);
+  form.append('folder',`ai-class/${currentUser.id||currentUser.uid||'unknown'}`);
+  const res=await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME}/image/upload`,
+    {method:'POST',body:form}
+  );
+  if(!res.ok) throw new Error('Cloudinary 오류: '+res.status);
+  return await res.json();
+}
+
+// ── 드래그앤드롭 ──
 function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('dragover');}
 function dragLeave(e){document.getElementById('upload-zone').classList.remove('dragover');}
 function dropFiles(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('dragover');handleFiles(e.dataTransfer.files);}
@@ -239,18 +167,15 @@ function handleFiles(files){
   const arr=Array.from(files).filter(f=>f.type.startsWith('image/'));
   if(!arr.length){showAlert('이미지 파일만 가능합니다.','error');return;}
   if(pendingFiles.length+arr.length>20){showAlert('최대 20장까지 가능합니다.','error');return;}
-
-  // 20% val 분리 결정
-  arr.forEach((file,i)=>{
+  arr.forEach(file=>{
     const id='f'+Date.now()+Math.random().toString(36).slice(2);
-    const isVal=Math.random()<VAL_RATIO;
-    pendingFiles.push({id,file,status:'pending',base64:null,isVal});
+    pendingFiles.push({id,file,status:'pending',blob:null});
   });
   renderPreview();
   document.getElementById('pending-card').style.display='block';
-  // 백그라운드 리사이징
-  pendingFiles.filter(f=>!f.base64&&f.status==='pending').forEach(async pf=>{
-    pf.base64=await resizeToBase64(pf.file);
+  // 선택 즉시 백그라운드 리사이징
+  pendingFiles.filter(f=>!f.blob&&f.status==='pending').forEach(async pf=>{
+    pf.blob=await resizeToBlob(pf.file);
   });
 }
 
@@ -258,12 +183,9 @@ function renderPreview(){
   document.getElementById('pending-count').textContent=pendingFiles.length;
   document.getElementById('preview-grid').innerHTML=pendingFiles.map(pf=>{
     const url=URL.createObjectURL(pf.file);
-    let sc='', st='';
-    if(pf.status==='done'){sc='status-done';st='✅';}
-    else if(pf.status==='error'){sc='status-error';st='❌';}
-    else if(pf.isVal){sc='status-val';st='🟡 검증용';}
-    else{sc='status-train';st='🔵 학습용';}
-    return `<div class="preview-item" id="prev-${pf.id}">
+    const sc=pf.status==='done'?'status-done':pf.status==='error'?'status-error':'status-pending';
+    const st=pf.status==='done'?'✅ 완료':pf.status==='error'?'❌ 오류':'⏳ 대기';
+    return `<div class="preview-item">
       <img src="${url}">
       ${pf.status==='pending'?`<button class="remove-btn" onclick="removeFile('${pf.id}')">✕</button>`:''}
       <div class="status-badge ${sc}" id="badge-${pf.id}">${st}</div>
@@ -285,9 +207,10 @@ async function uploadAll(){
   btn.disabled=true;
   document.getElementById('progress-wrap').style.display='block';
 
-  const userId=currentUser.id||currentUser.uid||'unknown';
+  const userId=currentUser.uid==='student'
+    ?('temp_'+(userData.charName||'익명'))
+    :currentUser.uid;
   const userName=userData.name||userData.charName||'익명';
-  // studentId, charName, firestoreUid는 전역 변수 사용 (requireAuth에서 설정됨)
   let done=0; const total=toUpload.length;
 
   const updateStatus=()=>{
@@ -302,43 +225,29 @@ async function uploadAll(){
     await Promise.all(chunk.map(async pf=>{
       try{
         const badge=document.getElementById('badge-'+pf.id);
-        if(badge){badge.textContent='⚙️';}
-        const base64=pf.base64||await resizeToBase64(pf.file);
-        if(!base64) throw new Error('변환 실패');
-        if(badge){badge.textContent='☁️';}
-
-        const fileName=`${userId}_${Date.now()}_${pf.file.name.replace(/\s/g,'_')}`;
-        const result=await callDriveAPI({
-          action:'upload',
-          fileName, imageBase64:base64,
-          mimeType:'image/jpeg',
-          isVal: pf.isVal,
-          studentId,       // ⬅ 학생별 폴더 식별자
-          studentName:charName,
-        });
-
+        if(badge){badge.className='status-badge status-pending';badge.textContent='⚙️ 변환중';}
+        const blob=pf.blob||await resizeToBlob(pf.file);
+        if(!blob) throw new Error('변환 실패');
+        if(badge){badge.textContent='☁️ 업로드';}
+        const fileName=`${Date.now()}_${pf.file.name.replace(/\s/g,'_')}`;
+        const result=await uploadToCloudinary(blob,fileName);
         // Firestore 저장
         await db.collection('uploads').add({
-          userId:firestoreUid, userName, studentId,
-          fileName, originalName:pf.file.name,
-          driveFileId:result.fileId,
-          driveLink:result.webViewLink||'',
-          url:result.url,
-          subfolder:result.subfolder, // train or val
+          userId, userName,
+          fileName:result.public_id,
+          originalName:pf.file.name,
+          url:result.secure_url,
+          cloudinaryId:result.public_id,
           labeled:false,
           width:TARGET_SIZE, height:TARGET_SIZE,
           created_at:new Date().toISOString(),
         });
-
         pf.status='done';
-        if(badge){
-          badge.className='status-badge status-done';
-          badge.textContent=result.subfolder==='val'?'✅ 검증용':'✅ 학습용';
-        }
+        if(badge){badge.className='status-badge status-done';badge.textContent='✅ 완료';}
       }catch(e){
         pf.status='error';
         const badge=document.getElementById('badge-'+pf.id);
-        if(badge){badge.className='status-badge status-error';badge.textContent='❌';}
+        if(badge){badge.className='status-badge status-error';badge.textContent='❌ 오류';}
         console.error(e);
       }
       done++; updateStatus();
@@ -349,7 +258,6 @@ async function uploadAll(){
   document.getElementById('progress-bar').style.width='100%';
   btn.disabled=false;
   loadMyUploads();
-  loadFolderStats();
 
   if(currentUser.uid!=='student'){
     const q=(userData.quests||{});
@@ -361,26 +269,14 @@ async function uploadAll(){
   }
 }
 
-// Drive URL을 외부 임베드 가능한 lh3 URL로 변환
-function toDisplayUrl(url, fileId){
-  if(!url && !fileId) return '';
-  if(url && url.includes('lh3.googleusercontent.com')) return url;
-  if(url && url.includes('drive.google.com')){
-    const m=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if(m) return 'https://lh3.googleusercontent.com/d/'+m[1]+'=w800';
-  }
-  if(fileId) return 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
-  return url||'';
-}
-
 async function loadMyUploads(){
-  const uid=currentUser.uid==='student'
+  const userId=currentUser.uid==='student'
     ?('temp_'+(userData.charName||'익명'))
     :currentUser.uid;
   try{
     const snap=await db.collection('uploads')
-      .where('userId','==',uid)
-      .orderBy('created_at','desc').limit(20).get();
+      .where('userId','==',userId)
+      .orderBy('created_at','desc').get();
     document.getElementById('my-count').textContent=snap.size;
     if(snap.empty){
       document.getElementById('my-uploads').innerHTML=
@@ -390,19 +286,18 @@ async function loadMyUploads(){
     document.getElementById('my-uploads').innerHTML=snap.docs.map(doc=>{
       const d=doc.data();
       const date=d.created_at?.slice(0,16).replace('T',' ')||'';
-      const isVal=d.subfolder==='val';
       return `<div class="uploaded-item">
-        <img class="uploaded-thumb" src="${toDisplayUrl(d.url, d.driveFileId)}" onerror="this.style.opacity='0.3'">
+        <img class="uploaded-thumb" src="${d.url}" onerror="this.style.opacity='0.3'">
         <div style="flex:1;min-width:80px;overflow:hidden;">
-          <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.originalName||d.fileName||'파일'}</div>
-          <div style="font-size:10px;color:var(--muted);">
-            ${isVal?'🟡 검증용':'🔵 학습용'}
-            ${d.labeled?'· ✅ 라벨완료':'· ⏳ 미완료'}
-            ${d.driveLink?`· <a href="${d.driveLink}" target="_blank" style="color:var(--primary);">Drive ↗</a>`:''}
-          </div>
+          <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.originalName||'파일'}</div>
+          <div style="font-size:10px;color:var(--muted);">${d.width||600}×${d.height||600}px</div>
+        </div>
+        <div style="font-size:11px;padding:2px 8px;border-radius:5px;flex-shrink:0;
+          ${d.labeled?'background:rgba(104,211,145,0.15);color:#68d391;':'background:rgba(246,173,85,0.15);color:#f6ad55;'}">
+          ${d.labeled?'✅ 완료':'⏳ 미완료'}
         </div>
         <div style="font-size:11px;color:var(--muted);flex-shrink:0;">${date}</div>
-        <button class="del-btn" onclick="deleteUpload('${doc.id}','${d.driveFileId||''}')">🗑️</button>
+        <button class="del-btn" onclick="deleteUpload('${doc.id}','${d.cloudinaryId||''}')">🗑️</button>
       </div>`;
     }).join('');
   }catch(e){
@@ -411,17 +306,16 @@ async function loadMyUploads(){
   }
 }
 
-async function deleteUpload(docId, driveFileId){
-  if(!confirm('삭제할까요?')) return;
+async function deleteUpload(docId){
+  if(!confirm('이 사진을 삭제할까요?')) return;
   try{
-    if(driveFileId) await callDriveAPI({action:'delete',fileId:driveFileId}).catch(()=>{});
     await db.collection('uploads').doc(docId).delete();
-    loadMyUploads(); loadFolderStats();
+    loadMyUploads();
   }catch(e){alert('삭제 실패: '+e.message);}
 }
 
 function showAlert(msg,type='info'){
-  const c={success:'alert-success',error:'alert-error',warn:'alert-warn'};
+  const c={success:'alert-success',error:'alert-error'};
   document.getElementById('main-alert').innerHTML=`<div class="alert ${c[type]||''}">${msg}</div>`;
   setTimeout(()=>{const el=document.getElementById('main-alert');if(el)el.innerHTML='';},5000);
 }
