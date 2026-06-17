@@ -19,6 +19,7 @@
         <div style="font-weight:700;margin-top:6px;">관리자</div>
       </div>
       <a href="#tab-students" class="quest-item active" onclick="showTab('students')">👥 학생 현황</a>
+      <a href="#tab-create" class="quest-item" onclick="showTab('create')">➕ 학생 일괄 생성</a>
       <a href="#tab-quiz" class="quest-item" onclick="showTab('quiz')">📝 퀴즈 결과</a>
       <a href="#tab-board" class="quest-item" onclick="showTab('board')">📋 게시판 관리</a>
       <a href="#tab-classes" class="quest-item" onclick="showTab('classes')">🏷️ 라벨 클래스 관리</a>
@@ -145,6 +146,67 @@
       </div>
     </div>
 
+    <!-- 학생 일괄 생성 탭 -->
+    <div id="tab-create" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
+        <h3 style="margin-bottom:6px;">➕ 학생 일괄 생성</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+          엑셀에서 <strong>이름 · 학번 · 학교</strong> 열을 복사해서 아래에 붙여넣으세요.<br>
+          아이디: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">학교+학번</code> &nbsp;
+          초기 비밀번호: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">학번</code>
+        </p>
+
+        <!-- 예시 -->
+        <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#a78bfa;margin-bottom:14px;">
+          이름&nbsp;&nbsp;&nbsp;학번&nbsp;&nbsp;&nbsp;학교<br>
+          김철수&nbsp;&nbsp;0101&nbsp;&nbsp;&nbsp;한빛중학교<br>
+          이영희&nbsp;&nbsp;0102&nbsp;&nbsp;&nbsp;한빛중학교<br>
+          박민수&nbsp;&nbsp;0201&nbsp;&nbsp;&nbsp;한빛중학교
+        </div>
+
+        <textarea id="excel-paste" placeholder="여기에 엑셀 데이터를 붙여넣으세요..."
+          style="width:100%;height:180px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:monospace;font-size:13px;resize:vertical;outline:none;"
+          oninput="parseExcel()"></textarea>
+
+        <!-- 미리보기 -->
+        <div id="preview-table" style="margin-top:14px;display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong style="font-size:14px;">📋 생성 미리보기 (<span id="preview-count">0</span>명)</strong>
+            <button onclick="createStudents()" class="btn btn-primary btn-sm" id="create-btn">✅ 계정 생성</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background:rgba(255,255,255,0.05);">
+                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">이름</th>
+                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학번</th>
+                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학교</th>
+                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">아이디</th>
+                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">초기 비밀번호</th>
+                </tr>
+              </thead>
+              <tbody id="preview-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 결과 -->
+        <div id="create-result" style="margin-top:12px;"></div>
+      </div>
+
+      <!-- 생성된 계정 목록 다운로드 -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="margin:0;">👥 생성된 학생 계정</h3>
+          <div style="display:flex;gap:8px;">
+            <button onclick="loadStudentAccounts()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
+            <button onclick="downloadAccounts()" class="btn btn-primary btn-sm">⬇️ 명단 다운로드</button>
+          </div>
+        </div>
+        <div id="student-accounts"><div style="text-align:center;padding:20px;color:var(--muted);">로딩 중...</div></div>
+      </div>
+    </div>
+
     <!-- 전체 통계 탭 -->
     <div id="tab-stats" style="display:none;">
       <div class="chat-box" style="max-width:500px;">
@@ -267,16 +329,203 @@ async function loadData() {
 }
 
 function showTab(t) {
-  ['students','quiz','board','classes','uploads','stats'].forEach(id => {
+  ['students','create','quiz','board','classes','uploads','stats'].forEach(id => {
     const el=document.getElementById('tab-'+id);
     if(el) el.style.display = id===t?'block':'none';
   });
   document.querySelectorAll('.sidebar .quest-item').forEach((el,i) => {
-    el.classList.toggle('active', ['students','quiz','board','classes','uploads','stats'][i]===t);
+    el.classList.toggle('active', ['students','create','quiz','board','classes','uploads','stats'][i]===t);
   });
   if(t==='board') loadBoardAdmin('board_q1');
   if(t==='classes') loadClasses();
   if(t==='uploads') loadUploads();
+  if(t==='create') loadStudentAccounts();
+}
+
+// ── 엑셀 파싱 ──
+let parsedStudents = [];
+
+function parseExcel(){
+  const raw = document.getElementById('excel-paste').value.trim();
+  if(!raw){ document.getElementById('preview-table').style.display='none'; return; }
+
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  parsedStudents = [];
+
+  for(const line of lines){
+    // 탭 또는 공백으로 분리
+    const cols = line.split(/\t|  +/).map(c=>c.trim()).filter(c=>c);
+    if(cols.length < 3) continue;
+
+    // 첫 행이 헤더면 스킵
+    if(cols[0]==='이름'||cols[0]==='name'||cols[0]==='성명') continue;
+
+    const name   = cols[0];
+    const stunum = cols[1];
+    const school = cols[2];
+
+    if(!name||!stunum||!school) continue;
+
+    // 아이디: 학교+학번 (공백/특수문자 제거)
+    const id = (school + stunum).replace(/\s/g,'');
+    const pw = stunum; // 초기 비밀번호 = 학번
+
+    parsedStudents.push({name, stunum, school, id, pw});
+  }
+
+  const tbody = document.getElementById('preview-tbody');
+  if(!parsedStudents.length){
+    tbody.innerHTML=`<tr><td colspan="5" style="padding:12px;text-align:center;color:var(--muted);">파싱된 데이터가 없습니다. 형식을 확인해주세요.</td></tr>`;
+    document.getElementById('preview-table').style.display='block';
+    document.getElementById('preview-count').textContent='0';
+    return;
+  }
+
+  document.getElementById('preview-count').textContent=parsedStudents.length;
+  tbody.innerHTML=parsedStudents.map(s=>`
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+      <td style="padding:8px 12px;">${s.name}</td>
+      <td style="padding:8px 12px;">${s.stunum}</td>
+      <td style="padding:8px 12px;">${s.school}</td>
+      <td style="padding:8px 12px;color:#63b3ed;font-family:monospace;">${s.id}</td>
+      <td style="padding:8px 12px;color:#f6ad55;font-family:monospace;">${s.pw}</td>
+    </tr>`).join('');
+  document.getElementById('preview-table').style.display='block';
+}
+
+// ── 학생 계정 일괄 생성 ──
+async function createStudents(){
+  if(!parsedStudents.length) return;
+  const btn=document.getElementById('create-btn');
+  btn.disabled=true; btn.textContent='생성 중...';
+  const resultEl=document.getElementById('create-result');
+
+  let success=0, fail=0, dup=0;
+
+  for(const s of parsedStudents){
+    try{
+      // 중복 확인
+      const existing=await db.collection('users').where('id','==',s.id).get();
+      if(!existing.empty){ dup++; continue; }
+
+      // 비밀번호 해시
+      const hashedPw=await hashPW(s.pw);
+
+      // Firestore 저장
+      await db.collection('users').add({
+        id:       s.id,
+        name:     s.name,
+        stunum:   s.stunum,
+        school:   s.school,
+        password: hashedPw,
+        score:    0,
+        quests:   {},
+        charName: null,
+        charTrack: 'robot',
+        isStudent: true,
+        created_at: new Date().toISOString(),
+      });
+      success++;
+    }catch(e){
+      console.error(s.id, e);
+      fail++;
+    }
+  }
+
+  btn.disabled=false; btn.textContent='✅ 계정 생성';
+  resultEl.innerHTML=`
+    <div style="background:rgba(104,211,145,0.1);border:1px solid #68d391;border-radius:10px;padding:12px 16px;font-size:14px;">
+      ✅ 생성 완료!<br>
+      성공: <strong>${success}명</strong> &nbsp;
+      중복 스킵: <strong>${dup}명</strong> &nbsp;
+      실패: <strong>${fail}명</strong>
+    </div>`;
+  loadStudentAccounts();
+}
+
+// ── 학생 계정 목록 ──
+async function loadStudentAccounts(){
+  const el=document.getElementById('student-accounts');
+  if(!el) return;
+  el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);">로딩 중...</div>`;
+  try{
+    const snap=await db.collection('users').where('isStudent','==',true).get();
+    if(snap.empty){
+      el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);">생성된 학생 계정이 없습니다.</div>`;
+      return;
+    }
+    // 전역 저장 (다운로드용)
+    window._studentList=snap.docs.map(d=>({docId:d.id,...d.data()}));
+    el.innerHTML=`<div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:rgba(255,255,255,0.05);">
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">이름</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학번</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학교</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">아이디</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">점수</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">캐릭터</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">관리</th>
+        </tr></thead>
+        <tbody>${window._studentList.map(s=>`
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:8px 12px;">${s.name||'-'}</td>
+            <td style="padding:8px 12px;">${s.stunum||'-'}</td>
+            <td style="padding:8px 12px;">${s.school||'-'}</td>
+            <td style="padding:8px 12px;color:#63b3ed;font-family:monospace;">${s.id||'-'}</td>
+            <td style="padding:8px 12px;color:#f6ad55;font-weight:700;">${s.score||0}점</td>
+            <td style="padding:8px 12px;">${s.charName||'미설정'}</td>
+            <td style="padding:8px 12px;display:flex;gap:6px;">
+              <button onclick="resetPassword('${s.docId}','${s.stunum}')"
+                style="background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3);border-radius:6px;padding:3px 8px;color:#63b3ed;font-size:11px;cursor:pointer;font-family:inherit;">
+                🔑 비번초기화
+              </button>
+              <button onclick="deleteStudent('${s.docId}','${s.name}')"
+                style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">
+                🗑️ 삭제
+              </button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  }catch(e){
+    el.innerHTML=`<div style="color:var(--red);padding:16px;">오류: ${e.message}</div>`;
+  }
+}
+
+// ── 비밀번호 초기화 (학번으로) ──
+async function resetPassword(docId, stunum){
+  if(!confirm(`비밀번호를 학번(${stunum})으로 초기화할까요?`)) return;
+  const hashed=await hashPW(stunum);
+  await db.collection('users').doc(docId).update({password:hashed});
+  alert('✅ 비밀번호가 초기화되었습니다.');
+}
+
+// ── 학생 삭제 ──
+async function deleteStudent(docId, name){
+  if(!confirm(`'${name}' 학생을 삭제할까요?`)) return;
+  await db.collection('users').doc(docId).delete();
+  loadStudentAccounts();
+}
+
+// ── 명단 CSV 다운로드 ──
+function downloadAccounts(){
+  const list=window._studentList||[];
+  if(!list.length){alert('학생 목록이 없습니다.');return;}
+  const header='이름,학번,학교,아이디,초기비밀번호(학번),점수';
+  const rows=list.map(s=>`${s.name},${s.stunum},${s.school},${s.id},${s.stunum},${s.score||0}`);
+  const csv='\uFEFF'+[header,...rows].join('\n'); // BOM 추가 (엑셀 한글 깨짐 방지)
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`학생계정_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── 비밀번호 해시 ──
+async function hashPW(pw){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
 // ── 클래스 관리 ──
