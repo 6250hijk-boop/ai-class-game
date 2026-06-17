@@ -143,14 +143,18 @@
       <p>물체를 감싸는 <strong>직사각형 박스</strong>를 바운딩박스라고 해요.<br>
       마우스로 드래그해서 물체를 감싸도록 박스를 그리면 돼요.</p>
       <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
-        <svg width="100%" viewBox="0 0 300 200" style="max-width:300px;">
-          <rect width="300" height="200" fill="#1a2235" rx="8"/>
-          <text x="150" y="100" text-anchor="middle" font-size="60" dy=".3em">🛴</text>
-          <rect x="60" y="50" width="180" height="110" fill="none" stroke="#fc8181" stroke-width="3" stroke-dasharray="6,3"/>
-          <rect x="60" y="38" width="80" height="18" fill="#fc8181" rx="3"/>
-          <text x="68" y="51" fill="white" font-size="11" font-family="sans-serif">🛴 킥보드 92%</text>
-        </svg>
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;">킥보드를 감싸는 바운딩박스 예시</div>
+        <img src="images/pm0.jpg" style="max-width:100%;border-radius:8px;border:1px solid var(--border);"
+          onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block'">
+        <div id="pm0-fallback" style="display:none;">
+          <svg width="100%" viewBox="0 0 300 200" style="max-width:300px;">
+            <rect width="300" height="200" fill="#1a2235" rx="8"/>
+            <text x="150" y="100" text-anchor="middle" font-size="60" dy=".3em">🛴</text>
+            <rect x="60" y="50" width="180" height="110" fill="none" stroke="#fc8181" stroke-width="3" stroke-dasharray="6,3"/>
+            <rect x="60" y="38" width="80" height="18" fill="#fc8181" rx="3"/>
+            <text x="68" y="51" fill="white" font-size="11" font-family="sans-serif">🛴 킥보드 92%</text>
+          </svg>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">바운딩박스 예시 사진</div>
       </div>
     </div>
 
@@ -330,7 +334,7 @@ let practiceStartX=0, practiceStartY=0, practiceCurrentBox=null;
 let practiceScale=1, practiceOffsetX=0, practiceOffsetY=0;
 let practiceImage=null;
 
-const PRACTICE_IMG='images/pm3.jpg'; // 연습용 사진
+const PRACTICE_IMG='images/pm2.jpg'; // 연습용 사진
 
 async function initPractice(){
   // 클래스 로드
