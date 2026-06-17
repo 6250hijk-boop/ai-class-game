@@ -207,13 +207,25 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-requireAdmin(async () => { loadData(); });
+requireAdmin(async () => { 
+  try { await loadData(); } 
+  catch(e) { console.error('loadData 오류:', e); }
+});
 
 async function loadData() {
-  const [usersSnap, quizSnap] = await Promise.all([
-    db.collection('users').orderBy('created_at','desc').get(),
-    db.collection('quiz_results').get()
-  ]);
+  let usersSnap, quizSnap;
+  try {
+    [usersSnap, quizSnap] = await Promise.all([
+      db.collection('users').orderBy('created_at','desc').get(),
+      db.collection('quiz_results').get()
+    ]);
+  } catch(e) {
+    // 인덱스 없으면 정렬 없이 시도
+    [usersSnap, quizSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('quiz_results').get()
+    ]);
+  }
 
   const users = usersSnap.docs.map(d => ({...d.data(), _id: d.id}));
   const quizMap = {};
@@ -236,7 +248,7 @@ async function loadData() {
   document.getElementById('student-tbody').innerHTML = users.length === 0
     ? '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
     : users.map(u => {
-        const lv = getLevelByScore(u.score||0);
+        const lv = getLevelByScore(u.score||0, u.charTrack||'robot');
         const questDone = Object.keys(u.quests||{}).filter(k=>k.endsWith('_done')).length;
         return `<tr>
           <td>${u.stunum||'-'}</td>
