@@ -151,52 +151,43 @@
       <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
         <h3 style="margin-bottom:6px;">➕ 학생 일괄 생성</h3>
         <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
-          엑셀에서 <strong>이름 · 학번 · 학교</strong> 열을 복사해서 아래에 붙여넣으세요.<br>
+          아래 표에 학생 정보를 직접 입력하거나 엑셀에서 복사해서 붙여넣으세요.<br>
           아이디: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">학교+학번</code> &nbsp;
           초기 비밀번호: <code style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">학번</code>
         </p>
 
-        <!-- 예시 -->
-        <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:12px;color:#a78bfa;margin-bottom:14px;">
-          이름&nbsp;&nbsp;&nbsp;학번&nbsp;&nbsp;&nbsp;학교<br>
-          김철수&nbsp;&nbsp;0101&nbsp;&nbsp;&nbsp;한빛중학교<br>
-          이영희&nbsp;&nbsp;0102&nbsp;&nbsp;&nbsp;한빛중학교<br>
-          박민수&nbsp;&nbsp;0201&nbsp;&nbsp;&nbsp;한빛중학교
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button onclick="addRow()" class="btn btn-ghost btn-sm">+ 행 추가</button>
+          <button onclick="clearTable()" class="btn btn-ghost btn-sm">🗑️ 전체 지우기</button>
+          <button onclick="createStudents()" class="btn btn-primary btn-sm" id="create-btn">✅ 계정 생성</button>
         </div>
 
-        <textarea id="excel-paste" placeholder="여기에 엑셀 데이터를 붙여넣으세요..."
-          style="width:100%;height:180px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:monospace;font-size:13px;resize:vertical;outline:none;"
-          oninput="parseExcel()"></textarea>
-
-        <!-- 미리보기 -->
-        <div id="preview-table" style="margin-top:14px;display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <strong style="font-size:14px;">📋 생성 미리보기 (<span id="preview-count">0</span>명)</strong>
-            <button onclick="createStudents()" class="btn btn-primary btn-sm" id="create-btn">✅ 계정 생성</button>
-          </div>
-          <div style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-              <thead>
-                <tr style="background:rgba(255,255,255,0.05);">
-                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">이름</th>
-                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학번</th>
-                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학교</th>
-                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">아이디</th>
-                  <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">초기 비밀번호</th>
-                </tr>
-              </thead>
-              <tbody id="preview-tbody"></tbody>
-            </table>
-          </div>
+        <!-- 입력 표 -->
+        <div style="overflow-x:auto;">
+          <table id="student-input-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.07);">
+                <th style="padding:10px 12px;text-align:left;border:1px solid var(--border);width:36px;">#</th>
+                <th style="padding:10px 12px;text-align:left;border:1px solid var(--border);">학교</th>
+                <th style="padding:10px 12px;text-align:left;border:1px solid var(--border);">학번</th>
+                <th style="padding:10px 12px;text-align:left;border:1px solid var(--border);">이름</th>
+                <th style="padding:10px 12px;text-align:left;border:1px solid var(--border);">아이디 (자동)</th>
+                <th style="padding:10px 12px;text-align:left;border:1px solid var(--border);">초기 비번 (자동)</th>
+                <th style="padding:10px 12px;border:1px solid var(--border);width:36px;"></th>
+              </tr>
+            </thead>
+            <tbody id="student-tbody">
+              <!-- 기본 5행 -->
+            </tbody>
+          </table>
         </div>
 
-        <!-- 결과 -->
         <div id="create-result" style="margin-top:12px;"></div>
       </div>
 
-      <!-- 생성된 계정 목록 다운로드 -->
+      <!-- 생성된 계정 목록 -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
           <h3 style="margin:0;">👥 생성된 학생 계정</h3>
           <div style="display:flex;gap:8px;">
             <button onclick="loadStudentAccounts()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
@@ -339,106 +330,161 @@ function showTab(t) {
   if(t==='board') loadBoardAdmin('board_q1');
   if(t==='classes') loadClasses();
   if(t==='uploads') loadUploads();
-  if(t==='create') loadStudentAccounts();
+  if(t==='create'){
+    if(!document.getElementById('student-tbody').rows.length) initTable();
+    loadStudentAccounts();
+  }
 }
 
-// ── 엑셀 파싱 ──
-let parsedStudents = [];
+// ── 입력 표 관리 ──
+const CELL_STYLE = `padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);font-size:13px;font-family:inherit;outline:none;width:100%;`;
 
-function parseExcel(){
-  const raw = document.getElementById('excel-paste').value.trim();
-  if(!raw){ document.getElementById('preview-table').style.display='none'; return; }
+function initTable(){
+  for(let i=0;i<5;i++) addRow();
+}
 
-  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
-  parsedStudents = [];
+function addRow(){
+  const tbody=document.getElementById('student-tbody');
+  const idx=tbody.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;color:var(--muted);font-size:12px;">${idx}</td>
+    <td style="border:1px solid var(--border);padding:0;">
+      <input type="text" class="cell-school" placeholder="한빛중학교"
+        style="${CELL_STYLE}" onpaste="handlePaste(event,this)" oninput="updateRowId(this)" onkeydown="handleKey(event,this)">
+    </td>
+    <td style="border:1px solid var(--border);padding:0;">
+      <input type="text" class="cell-stunum" placeholder="0101"
+        style="${CELL_STYLE}" oninput="updateRowId(this)" onkeydown="handleKey(event,this)">
+    </td>
+    <td style="border:1px solid var(--border);padding:0;">
+      <input type="text" class="cell-name" placeholder="홍길동"
+        style="${CELL_STYLE}" onkeydown="handleKey(event,this)">
+    </td>
+    <td style="padding:6px 10px;border:1px solid var(--border);font-family:monospace;font-size:12px;color:#63b3ed;" class="cell-id-preview">-</td>
+    <td style="padding:6px 10px;border:1px solid var(--border);font-family:monospace;font-size:12px;color:#f6ad55;" class="cell-pw-preview">-</td>
+    <td style="padding:4px;border:1px solid var(--border);text-align:center;">
+      <button onclick="removeRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;">✕</button>
+    </td>`;
+  tbody.appendChild(tr);
+}
 
-  for(const line of lines){
-    // 탭 또는 공백으로 분리
-    const cols = line.split(/\t|  +/).map(c=>c.trim()).filter(c=>c);
-    if(cols.length < 3) continue;
+function removeRow(btn){
+  const tbody=document.getElementById('student-tbody');
+  if(tbody.rows.length<=1) return;
+  btn.closest('tr').remove();
+  // 번호 재정렬
+  Array.from(tbody.rows).forEach((r,i)=>r.cells[0].textContent=i+1);
+}
 
-    // 첫 행이 헤더면 스킵
-    if(cols[0]==='이름'||cols[0]==='name'||cols[0]==='성명') continue;
+function clearTable(){
+  document.getElementById('student-tbody').innerHTML='';
+  for(let i=0;i<5;i++) addRow();
+}
 
-    const name   = cols[0];
-    const stunum = cols[1];
-    const school = cols[2];
+function updateRowId(input){
+  const tr=input.closest('tr');
+  const school=tr.querySelector('.cell-school').value.trim();
+  const stunum=tr.querySelector('.cell-stunum').value.trim();
+  const id=(school+stunum).replace(/\s/g,'');
+  tr.querySelector('.cell-id-preview').textContent=id||'-';
+  tr.querySelector('.cell-pw-preview').textContent=stunum||'-';
+}
 
-    if(!name||!stunum||!school) continue;
-
-    // 아이디: 학교+학번 (공백/특수문자 제거)
-    const id = (school + stunum).replace(/\s/g,'');
-    const pw = stunum; // 초기 비밀번호 = 학번
-
-    parsedStudents.push({name, stunum, school, id, pw});
+// 탭키로 셀 이동
+function handleKey(e, input){
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const allInputs=Array.from(document.querySelectorAll('#student-tbody input'));
+    const idx=allInputs.indexOf(input);
+    const next=allInputs[idx+1];
+    if(next) next.focus();
+    else { addRow(); setTimeout(()=>document.querySelectorAll('#student-tbody input')[idx+1]?.focus(),50); }
   }
-
-  const tbody = document.getElementById('preview-tbody');
-  if(!parsedStudents.length){
-    tbody.innerHTML=`<tr><td colspan="5" style="padding:12px;text-align:center;color:var(--muted);">파싱된 데이터가 없습니다. 형식을 확인해주세요.</td></tr>`;
-    document.getElementById('preview-table').style.display='block';
-    document.getElementById('preview-count').textContent='0';
-    return;
+  if(e.key==='Enter'){
+    e.preventDefault();
+    // 같은 열의 다음 행으로 이동
+    const allInputs=Array.from(document.querySelectorAll('#student-tbody input'));
+    const colInputs=Array.from(input.closest('td').parentElement.parentElement.querySelectorAll(`input.${input.className}`));
+    const rowIdx=colInputs.indexOf(input);
+    if(rowIdx<colInputs.length-1) colInputs[rowIdx+1].focus();
+    else { addRow(); setTimeout(()=>document.querySelectorAll(`#student-tbody input.${input.className}`)[rowIdx+1]?.focus(),50); }
   }
+}
 
-  document.getElementById('preview-count').textContent=parsedStudents.length;
-  tbody.innerHTML=parsedStudents.map(s=>`
-    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-      <td style="padding:8px 12px;">${s.name}</td>
-      <td style="padding:8px 12px;">${s.stunum}</td>
-      <td style="padding:8px 12px;">${s.school}</td>
-      <td style="padding:8px 12px;color:#63b3ed;font-family:monospace;">${s.id}</td>
-      <td style="padding:8px 12px;color:#f6ad55;font-family:monospace;">${s.pw}</td>
-    </tr>`).join('');
-  document.getElementById('preview-table').style.display='block';
+// 엑셀 붙여넣기 처리 (학교 셀에서 붙여넣으면 전체 파싱)
+function handlePaste(e, input){
+  const text=e.clipboardData.getData('text');
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(lines.length<=1) return; // 단일 셀 붙여넣기면 기본 처리
+
+  e.preventDefault();
+  const tbody=document.getElementById('student-tbody');
+
+  // 헤더 감지
+  const firstCols=lines[0].split(/\t/).map(c=>c.trim());
+  const startIdx=(firstCols[0]==='학교'||firstCols[0]==='school')?1:0;
+
+  // 기존 행 비우고 새로 채우기
+  tbody.innerHTML='';
+
+  for(let i=startIdx;i<lines.length;i++){
+    const cols=lines[i].split(/\t/).map(c=>c.trim());
+    if(cols.length<2) continue;
+    addRow();
+    const rows=tbody.rows;
+    const tr=rows[rows.length-1];
+    tr.querySelector('.cell-school').value=cols[0]||'';
+    tr.querySelector('.cell-stunum').value=cols[1]||'';
+    tr.querySelector('.cell-name').value=cols[2]||'';
+    updateRowId(tr.querySelector('.cell-school'));
+  }
+  // 번호 재정렬
+  Array.from(tbody.rows).forEach((r,i)=>r.cells[0].textContent=i+1);
 }
 
 // ── 학생 계정 일괄 생성 ──
 async function createStudents(){
-  if(!parsedStudents.length) return;
+  const tbody=document.getElementById('student-tbody');
+  const rows=Array.from(tbody.rows);
+  const students=[];
+
+  for(const tr of rows){
+    const school=tr.querySelector('.cell-school').value.trim();
+    const stunum=tr.querySelector('.cell-stunum').value.trim();
+    const name=tr.querySelector('.cell-name').value.trim();
+    if(!school||!stunum||!name) continue;
+    const id=(school+stunum).replace(/\s/g,'');
+    students.push({name,stunum,school,id,pw:stunum});
+  }
+
+  if(!students.length){alert('입력된 학생 정보가 없습니다.');return;}
+
   const btn=document.getElementById('create-btn');
   btn.disabled=true; btn.textContent='생성 중...';
   const resultEl=document.getElementById('create-result');
+  let success=0,fail=0,dup=0;
 
-  let success=0, fail=0, dup=0;
-
-  for(const s of parsedStudents){
+  for(const s of students){
     try{
-      // 중복 확인
       const existing=await db.collection('users').where('id','==',s.id).get();
-      if(!existing.empty){ dup++; continue; }
-
-      // 비밀번호 해시
+      if(!existing.empty){dup++;continue;}
       const hashedPw=await hashPW(s.pw);
-
-      // Firestore 저장
       await db.collection('users').add({
-        id:       s.id,
-        name:     s.name,
-        stunum:   s.stunum,
-        school:   s.school,
-        password: hashedPw,
-        score:    0,
-        quests:   {},
-        charName: null,
-        charTrack: 'robot',
-        isStudent: true,
-        created_at: new Date().toISOString(),
+        id:s.id, name:s.name, stunum:s.stunum, school:s.school,
+        password:hashedPw, score:0, quests:{},
+        charName:null, charTrack:'robot',
+        isStudent:true,
+        created_at:new Date().toISOString(),
       });
       success++;
-    }catch(e){
-      console.error(s.id, e);
-      fail++;
-    }
+    }catch(e){console.error(s.id,e);fail++;}
   }
 
   btn.disabled=false; btn.textContent='✅ 계정 생성';
   resultEl.innerHTML=`
     <div style="background:rgba(104,211,145,0.1);border:1px solid #68d391;border-radius:10px;padding:12px 16px;font-size:14px;">
-      ✅ 생성 완료!<br>
-      성공: <strong>${success}명</strong> &nbsp;
-      중복 스킵: <strong>${dup}명</strong> &nbsp;
-      실패: <strong>${fail}명</strong>
+      ✅ 완료! &nbsp; 성공: <strong>${success}명</strong> &nbsp; 중복스킵: <strong>${dup}명</strong> &nbsp; 실패: <strong>${fail}명</strong>
     </div>`;
   loadStudentAccounts();
 }
