@@ -208,6 +208,24 @@
       </div>
     </div>
 
+    <!-- 비밀번호 변경 (학생 계정만) -->
+    <div id="pw-change-section" style="display:none;margin-bottom:20px;">
+      <h4 style="font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🔑 비밀번호 변경</h4>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input id="pw-current" type="password" placeholder="현재 비밀번호"
+          style="padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+        <input id="pw-new" type="password" placeholder="새 비밀번호 (4자 이상)"
+          style="padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+        <input id="pw-new2" type="password" placeholder="새 비밀번호 확인"
+          style="padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
+        <div id="pw-alert" style="font-size:12px;min-height:16px;color:#fc8181;"></div>
+        <button onclick="changePassword()"
+          style="padding:10px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:10px;color:#0a0e1a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+          비밀번호 변경
+        </button>
+      </div>
+    </div>
+
     <button onclick="closeSettings()" style="width:100%;padding:12px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">확인</button>
   </div>
 </div>
@@ -542,10 +560,54 @@ function handleNameConfirm(){
 function openSettings(){
   document.getElementById('settings-modal').style.display='flex';
   updateSettingsBtns();
+  // 학생 계정(isStudent)이면 비밀번호 변경 섹션 표시
+  const user=JSON.parse(sessionStorage.getItem('gameUser')||'null');
+  const pwSection=document.getElementById('pw-change-section');
+  if(pwSection){
+    pwSection.style.display=(user&&user.uid!=='student'&&user.uid!=='admin')?'block':'none';
+  }
   toggleSidebar();
 }
 function closeSettings(){
   document.getElementById('settings-modal').style.display='none';
+}
+
+// ── 비밀번호 변경 ──
+async function changePassword(){
+  const cur=document.getElementById('pw-current').value;
+  const nw=document.getElementById('pw-new').value;
+  const nw2=document.getElementById('pw-new2').value;
+  const alertEl=document.getElementById('pw-alert');
+
+  if(!cur||!nw||!nw2){alertEl.textContent='모든 항목을 입력하세요.';return;}
+  if(nw.length<4){alertEl.textContent='새 비밀번호는 4자 이상이어야 합니다.';return;}
+  if(nw!==nw2){alertEl.textContent='새 비밀번호가 일치하지 않습니다.';return;}
+
+  try{
+    // 현재 비밀번호 확인
+    const snap=await db.collection('users').doc(currentUser.uid).get();
+    const data=snap.data();
+    const hashedCur=await hashPW(cur);
+    if(data.password!==hashedCur){alertEl.textContent='현재 비밀번호가 틀렸습니다.';return;}
+
+    // 새 비밀번호 저장
+    const hashedNew=await hashPW(nw);
+    await db.collection('users').doc(currentUser.uid).update({password:hashedNew});
+
+    alertEl.style.color='#68d391';
+    alertEl.textContent='✅ 비밀번호가 변경되었습니다!';
+    document.getElementById('pw-current').value='';
+    document.getElementById('pw-new').value='';
+    document.getElementById('pw-new2').value='';
+    setTimeout(()=>{alertEl.textContent='';alertEl.style.color='#fc8181';},3000);
+  }catch(e){
+    alertEl.textContent='오류: '+e.message;
+  }
+}
+
+async function hashPW(pw){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
 function updateSettingsBtns(){
