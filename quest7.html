@@ -7,84 +7,258 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     *{box-sizing:border-box;}
-    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:var(--bg);height:100vh;overflow:hidden;}
+    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;}
 
-    /* 레이아웃 */
+    /* ── 선택 화면 ── */
+    .select-wrap{max-width:600px;margin:0 auto;padding:clamp(20px,4vw,40px) clamp(16px,3vw,24px);}
+    .select-title{font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);color:#a78bfa;margin-bottom:6px;}
+    .select-desc{font-size:clamp(13px,2.3vw,14px);color:var(--muted);margin-bottom:28px;line-height:1.6;}
+    .menu-card{display:flex;align-items:center;gap:clamp(14px,3vw,20px);
+      background:var(--card);border:1px solid var(--border);border-radius:16px;
+      padding:clamp(16px,3vw,22px);margin-bottom:14px;cursor:pointer;
+      transition:all .3s;text-decoration:none;}
+    .menu-card:hover{border-color:#a78bfa;background:rgba(167,139,250,0.08);transform:translateY(-2px);}
+    .menu-icon{font-size:clamp(32px,7vw,44px);flex-shrink:0;}
+    .menu-num{font-family:'Jua',sans-serif;font-size:clamp(11px,2vw,13px);color:#a78bfa;margin-bottom:4px;}
+    .menu-name{font-family:'Jua',sans-serif;font-size:clamp(16px,3.5vw,20px);color:var(--text);margin-bottom:4px;}
+    .menu-desc{font-size:clamp(12px,2.2vw,13px);color:var(--muted);line-height:1.5;}
+    .menu-arrow{margin-left:auto;font-size:20px;color:rgba(167,139,250,0.5);flex-shrink:0;}
+
+    /* ── 라벨링 도구 ── */
     .labeler-layout{display:flex;height:100vh;flex-direction:column;}
     .top-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
     .top-bar .title{font-family:'Jua',sans-serif;font-size:clamp(13px,2.5vw,16px);color:#a78bfa;}
     .content-area{display:flex;flex:1;overflow:hidden;}
-
-    /* 사이드바 (이미지 목록) */
-    .img-sidebar{width:clamp(100px,18vw,160px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+    .img-sidebar{width:clamp(70px,15vw,140px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
     .img-thumb{cursor:pointer;border-bottom:1px solid var(--border);position:relative;}
     .img-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
     .img-thumb.active{outline:3px solid #a78bfa;}
     .img-thumb .labeled-dot{position:absolute;top:4px;right:4px;width:10px;height:10px;border-radius:50%;background:#68d391;}
     .img-thumb .num{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:2px 4px;text-align:center;}
-
-    /* 캔버스 영역 */
     .canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
     .canvas-wrap{flex:1;position:relative;overflow:hidden;background:#000;cursor:crosshair;}
     #img-canvas{position:absolute;top:0;left:0;}
     #draw-canvas{position:absolute;top:0;left:0;cursor:crosshair;}
-
-    /* 오른쪽 패널 */
-    .right-panel{width:clamp(160px,22vw,220px);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+    .right-panel{width:clamp(140px,20vw,200px);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
     .panel-section{padding:10px;border-bottom:1px solid var(--border);}
     .panel-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
     .class-btn{width:100%;padding:7px 10px;margin-bottom:5px;border:2px solid transparent;border-radius:8px;color:white;font-size:clamp(11px,1.8vw,12px);cursor:pointer;font-family:inherit;text-align:left;transition:all .2s;display:flex;align-items:center;gap:6px;}
     .class-btn.active{border-color:white;font-weight:700;}
     .class-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
-
-    /* 박스 목록 */
     .boxes-list{flex:1;overflow-y:auto;padding:8px;}
     .box-item{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;margin-bottom:4px;cursor:pointer;font-size:11px;border:1px solid transparent;}
     .box-item:hover{background:rgba(255,255,255,0.05);}
     .box-item.selected{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);}
     .box-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
     .box-del{margin-left:auto;background:rgba(252,129,129,0.15);border:none;border-radius:4px;padding:2px 6px;color:var(--red);font-size:10px;cursor:pointer;}
-
-    /* 하단 툴바 */
     .bottom-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
     .tool-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.07);color:var(--text);font-size:clamp(11px,2vw,13px);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}
     .tool-btn:hover{background:rgba(255,255,255,0.12);}
     .tool-btn.active{background:rgba(167,139,250,0.2);border-color:#a78bfa;color:#a78bfa;}
-
-    /* 저장 상태 */
     .save-status{font-size:11px;color:var(--muted);margin-left:auto;}
-
-    /* 빈화면 */
     .empty-canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted);}
 
-    @media(max-width:600px){
-      .img-sidebar{width:clamp(70px,15vw,100px);}
-      .right-panel{width:clamp(120px,25vw,160px);}
-    }
+    /* ── 튜토리얼 ── */
+    .tutorial-wrap{max-width:680px;margin:0 auto;padding:clamp(16px,3vw,28px);}
+    .tutorial-step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(16px,3vw,22px);margin-bottom:14px;}
+    .tutorial-step h3{font-size:clamp(15px,2.8vw,17px);margin:0 0 10px;color:#a78bfa;display:flex;align-items:center;gap:8px;}
+    .tutorial-step p{font-size:clamp(13px,2.3vw,14px);color:var(--muted);line-height:1.7;margin:0 0 10px;}
+    .tutorial-img{width:100%;border-radius:10px;border:1px solid var(--border);margin-top:10px;}
+    .tip-box{background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:rgba(99,179,237,0.9);margin-top:8px;}
+
+    /* ── 연습하기 ── */
+    .practice-wrap{max-width:700px;margin:0 auto;padding:clamp(16px,3vw,28px);}
+    .practice-canvas-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#1a2235;margin-bottom:14px;border:1px solid var(--border);}
+    .practice-canvas-wrap canvas{width:100%;display:block;}
+    .practice-guide{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:12px 16px;font-size:13px;color:#a78bfa;margin-bottom:12px;line-height:1.6;}
+
+    @media(max-width:480px){.select-wrap,.tutorial-wrap,.practice-wrap{padding:12px;}}
   </style>
 </head>
 <body>
-<div class="labeler-layout">
-  <!-- 상단 바 -->
+
+<!-- ════════════════════════════════════════ -->
+<!--  화면 1: 메뉴 선택                         -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-select">
+  <div class="select-wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <a href="quest6.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;text-decoration:none;">← 업로드</a>
+      <a href="main.html" onclick="sessionStorage.setItem('from_quest','1')" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;text-decoration:none;">🏠 메인</a>
+    </div>
+    <div class="select-title">🏷️ 퀘스트 7: 라벨링</div>
+    <div class="select-desc">무엇을 할까요? 아래에서 선택하세요!</div>
+
+    <div class="menu-card" onclick="showScreen('tutorial')">
+      <div class="menu-icon">📖</div>
+      <div>
+        <div class="menu-num">1단계</div>
+        <div class="menu-name">라벨링 튜토리얼</div>
+        <div class="menu-desc">바운딩박스 라벨링이 뭔지 배워봐요</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-card" onclick="showScreen('practice')">
+      <div class="menu-icon">✏️</div>
+      <div>
+        <div class="menu-num">2단계</div>
+        <div class="menu-name">라벨링 연습하기</div>
+        <div class="menu-desc">예시 사진으로 먼저 연습해봐요</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-card" onclick="showScreen('labeler')">
+      <div class="menu-icon">🎯</div>
+      <div>
+        <div class="menu-num">3단계</div>
+        <div class="menu-name">라벨링하기</div>
+        <div class="menu-desc">내가 올린 사진에 직접 라벨링해요</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  화면 2: 튜토리얼                          -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-tutorial" style="display:none;">
+  <div class="tutorial-wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <button onclick="showScreen('select')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;">← 뒤로</button>
+      <span style="font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;">📖 라벨링 튜토리얼</span>
+    </div>
+
+    <div class="tutorial-step">
+      <h3>🎯 1. 라벨링이란?</h3>
+      <p>라벨링(Labeling)이란 AI가 학습할 수 있도록 <strong>사진 속 물체에 표시</strong>를 해주는 작업이에요.<br>
+      예를 들어 고양이 사진에서 고양이가 있는 위치를 네모 박스로 표시하면, AI가 "아! 이게 고양이구나!"라고 배울 수 있어요.</p>
+      <div class="tip-box">💡 AI는 스스로 물체를 찾을 수 없어요. 사람이 먼저 "이게 뭐야"라고 알려줘야 해요!</div>
+    </div>
+
+    <div class="tutorial-step">
+      <h3>📦 2. 바운딩박스(Bounding Box)</h3>
+      <p>물체를 감싸는 <strong>직사각형 박스</strong>를 바운딩박스라고 해요.<br>
+      마우스로 드래그해서 물체를 감싸도록 박스를 그리면 돼요.</p>
+      <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
+        <svg width="100%" viewBox="0 0 300 200" style="max-width:300px;">
+          <rect width="300" height="200" fill="#1a2235" rx="8"/>
+          <text x="150" y="100" text-anchor="middle" font-size="60" dy=".3em">🛴</text>
+          <rect x="60" y="50" width="180" height="110" fill="none" stroke="#fc8181" stroke-width="3" stroke-dasharray="6,3"/>
+          <rect x="60" y="38" width="80" height="18" fill="#fc8181" rx="3"/>
+          <text x="68" y="51" fill="white" font-size="11" font-family="sans-serif">🛴 킥보드 92%</text>
+        </svg>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">킥보드를 감싸는 바운딩박스 예시</div>
+      </div>
+    </div>
+
+    <div class="tutorial-step">
+      <h3>🖱️ 3. 라벨링 방법</h3>
+      <p>아래 순서로 라벨링해요:</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
+          <div style="font-size:14px;color:var(--text);line-height:1.6;">오른쪽 패널에서 <strong style="color:#a78bfa;">클래스(종류)</strong>를 선택해요<br><span style="font-size:12px;color:var(--muted);">예: 킥보드, 헬멧, 사람</span></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
+          <div style="font-size:14px;color:var(--text);line-height:1.6;">사진 위에서 <strong style="color:#a78bfa;">마우스를 드래그</strong>해서 박스를 그려요</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
+          <div style="font-size:14px;color:var(--text);line-height:1.6;">박스를 그리면 <strong style="color:#68d391;">자동으로 저장</strong>돼요!</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">4</div>
+          <div style="font-size:14px;color:var(--text);line-height:1.6;">한 사진에 여러 개의 박스를 그릴 수 있어요</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tutorial-step">
+      <h3>⚠️ 4. 좋은 라벨링 vs 나쁜 라벨링</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">
+        <div style="background:rgba(104,211,145,0.08);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:13px;font-weight:700;color:#68d391;margin-bottom:8px;">✅ 좋은 라벨링</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">물체를 딱 맞게 감싸요<br>너무 크거나 작지 않게<br>물체 전체가 포함되게</div>
+        </div>
+        <div style="background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:13px;font-weight:700;color:#fc8181;margin-bottom:8px;">❌ 나쁜 라벨링</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">너무 크게 그리기<br>물체가 잘리게 그리기<br>엉뚱한 곳에 그리기</div>
+        </div>
+      </div>
+      <div class="tip-box" style="margin-top:12px;">💡 라벨링 품질이 좋을수록 AI 인식률이 높아져요!</div>
+    </div>
+
+    <button onclick="showScreen('practice')"
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;cursor:pointer;font-family:'Jua',sans-serif;margin-top:4px;">
+      연습하러 가기 →
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  화면 3: 연습하기                          -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-practice" style="display:none;">
+  <div class="practice-wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button onclick="showScreen('select')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;">← 뒤로</button>
+      <span style="font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;">✏️ 라벨링 연습하기</span>
+    </div>
+
+    <div class="practice-guide" id="practice-guide">
+      📌 <strong>클래스를 선택</strong>하고 사진 위에서 <strong>드래그</strong>해서 박스를 그려보세요!
+    </div>
+
+    <!-- 클래스 선택 -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="practice-class-btns"></div>
+
+    <!-- 캔버스 -->
+    <div class="practice-canvas-wrap">
+      <canvas id="practice-img-canvas"></canvas>
+      <canvas id="practice-draw-canvas" style="position:absolute;top:0;left:0;"
+        onmousedown="practiceStartDraw(event)" onmousemove="practiceMoveDraw(event)" onmouseup="practiceEndDraw(event)"
+        ontouchstart="practiceTouchStart(event)" ontouchmove="practiceTouchMove(event)" ontouchend="practiceTouchEnd(event)">
+      </canvas>
+    </div>
+
+    <!-- 박스 목록 -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <button onclick="practiceUndo()" class="tool-btn">↩️ 되돌리기</button>
+      <button onclick="practiceClear()" class="tool-btn" style="color:var(--red);">🗑️ 전체삭제</button>
+      <div id="practice-box-count" style="font-size:13px;color:var(--muted);padding:6px 0;margin-left:auto;">박스: 0개</div>
+    </div>
+    <div id="practice-box-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+
+    <button onclick="showScreen('labeler')"
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;cursor:pointer;font-family:'Jua',sans-serif;">
+      실전 라벨링하러 가기 🎯
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  화면 4: 실전 라벨링                       -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-labeler" style="display:none;" class="labeler-layout">
   <div class="top-bar">
-    <a href="quest6.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;text-decoration:none;">← 업로드</a>
-    <div class="title">🏷️ 퀘스트 7: 라벨링하기</div>
+    <button onclick="showScreen('select')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">← 뒤로</button>
+    <button onclick="sessionStorage.setItem('from_quest','1');window.location.href='main.html'" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">🏠 메인</button>
+    <div class="title">🎯 라벨링하기</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span id="progress-label" style="font-size:12px;color:var(--muted);"></span>
       <button onclick="downloadAllLabels()" style="background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ txt만</button>
-      <button onclick="downloadZip()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📦 이미지+txt ZIP</button>
-      <button onclick="sessionStorage.setItem('from_quest','1');window.location.href='main.html'" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">🏠 메인</button>
+      <button onclick="downloadZip()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📦 ZIP</button>
     </div>
   </div>
-
   <div class="content-area">
-    <!-- 이미지 목록 사이드바 -->
     <div class="img-sidebar" id="img-sidebar">
       <div style="padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">내 사진</div>
       <div id="thumb-list"></div>
     </div>
-
-    <!-- 캔버스 -->
     <div class="canvas-area">
       <div class="canvas-wrap" id="canvas-wrap">
         <canvas id="img-canvas"></canvas>
@@ -97,7 +271,6 @@
           <div>왼쪽에서 사진을 선택하세요</div>
         </div>
       </div>
-      <!-- 하단 툴바 -->
       <div class="bottom-bar">
         <button class="tool-btn active" id="tool-draw" onclick="setTool('draw')">✏️ 그리기</button>
         <button class="tool-btn" id="tool-select" onclick="setTool('select')">↖️ 선택</button>
@@ -106,8 +279,6 @@
         <div class="save-status" id="save-status"></div>
       </div>
     </div>
-
-    <!-- 오른쪽 패널 -->
     <div class="right-panel">
       <div class="panel-section">
         <div class="panel-title">클래스 선택</div>
@@ -119,18 +290,192 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="firebase-config.js"></script>
 <script>
+// ── 화면 전환 ──
+function showScreen(name){
+  ['select','tutorial','practice','labeler'].forEach(s=>{
+    const el=document.getElementById('screen-'+s);
+    if(el) el.style.display='none';
+  });
+  const target=document.getElementById('screen-'+name);
+  if(target){
+    target.style.display= name==='labeler'?'flex':'block';
+  }
+  if(name==='practice') initPractice();
+  if(name==='labeler') initLabeler();
+}
+
+// ════════════════════════════════════════
+//  연습하기 캔버스
+// ════════════════════════════════════════
+let practiceClasses=[], practiceSelectedClass=0;
+let practiceBoxes=[], practiceIsDrawing=false;
+let practiceStartX=0, practiceStartY=0, practiceCurrentBox=null;
+let practiceScale=1, practiceOffsetX=0, practiceOffsetY=0;
+let practiceImage=null;
+
+const PRACTICE_IMG='images/pm1.jpg'; // 예시 사진
+
+async function initPractice(){
+  // 클래스 로드
+  const snap=await db.collection('label_classes').orderBy('order').get();
+  practiceClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(!practiceClasses.length) practiceClasses=[{name:'object',color:'#63b3ed',order:0}];
+  renderPracticeClassBtns();
+  loadPracticeImage();
+}
+
+function renderPracticeClassBtns(){
+  document.getElementById('practice-class-btns').innerHTML=practiceClasses.map((c,i)=>`
+    <button onclick="practiceSelectClass(${i})"
+      style="padding:7px 14px;border:2px solid ${i===practiceSelectedClass?c.color:'rgba(255,255,255,0.15)'};
+             border-radius:20px;background:${i===practiceSelectedClass?c.color+'33':'transparent'};
+             color:${i===practiceSelectedClass?c.color:'var(--muted)'};
+             font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+      <span style="width:10px;height:10px;border-radius:3px;background:${c.color};display:inline-block;"></span>
+      [${i}] ${c.name}
+    </button>`).join('');
+}
+
+function practiceSelectClass(i){
+  practiceSelectedClass=i;
+  renderPracticeClassBtns();
+}
+
+function loadPracticeImage(){
+  const img=new Image();
+  img.onload=()=>{
+    practiceImage=img;
+    const wrap=document.querySelector('.practice-canvas-wrap');
+    const cw=wrap.clientWidth;
+    practiceScale=Math.min(cw/img.width,400/img.height,1);
+    const dw=img.width*practiceScale, dh=img.height*practiceScale;
+    practiceOffsetX=0; practiceOffsetY=0;
+    ['practice-img-canvas','practice-draw-canvas'].forEach(id=>{
+      const c=document.getElementById(id);
+      c.width=dw; c.height=dh;
+    });
+    redrawPractice();
+  };
+  img.onerror=()=>{
+    // 예시 사진 없으면 빈 캔버스
+    const c=document.getElementById('practice-img-canvas');
+    c.width=400; c.height=300;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#1a2235'; ctx.fillRect(0,0,400,300);
+    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='16px sans-serif';
+    ctx.textAlign='center'; ctx.fillText('예시 사진이 없어요. 직접 그려보세요!',200,150);
+    document.getElementById('practice-draw-canvas').width=400;
+    document.getElementById('practice-draw-canvas').height=300;
+  };
+  img.src=PRACTICE_IMG;
+}
+
+function redrawPractice(){
+  const ic=document.getElementById('practice-img-canvas');
+  const dc=document.getElementById('practice-draw-canvas');
+  const ictx=ic.getContext('2d');
+  const dctx=dc.getContext('2d');
+  ictx.clearRect(0,0,ic.width,ic.height);
+  dctx.clearRect(0,0,dc.width,dc.height);
+  if(practiceImage) ictx.drawImage(practiceImage,0,0,ic.width,ic.height);
+  practiceBoxes.forEach((box,i)=>{
+    const cls=practiceClasses[box.classIdx]||{color:'#fff',name:'?'};
+    dctx.strokeStyle=cls.color; dctx.lineWidth=2;
+    dctx.strokeRect(box.x,box.y,box.w,box.h);
+    dctx.fillStyle=cls.color+'33'; dctx.fillRect(box.x,box.y,box.w,box.h);
+    dctx.fillStyle=cls.color; dctx.font='bold 12px sans-serif';
+    dctx.fillRect(box.x,box.y-16,Math.max(60,cls.name.length*8),16);
+    dctx.fillStyle='#000'; dctx.fillText('['+box.classIdx+'] '+cls.name,box.x+2,box.y-3);
+  });
+  if(practiceCurrentBox){
+    const cls=practiceClasses[practiceSelectedClass]||{color:'#fff'};
+    dctx.strokeStyle=cls.color; dctx.lineWidth=2; dctx.setLineDash([5,3]);
+    dctx.strokeRect(practiceCurrentBox.x,practiceCurrentBox.y,practiceCurrentBox.w,practiceCurrentBox.h);
+    dctx.setLineDash([]);
+  }
+  renderPracticeBoxList();
+}
+
+function getPracticePos(e){
+  const c=document.getElementById('practice-draw-canvas');
+  const rect=c.getBoundingClientRect();
+  const scaleX=c.width/rect.width, scaleY=c.height/rect.height;
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
+}
+
+function practiceStartDraw(e){
+  const pos=getPracticePos(e);
+  practiceIsDrawing=true; practiceStartX=pos.x; practiceStartY=pos.y;
+  practiceCurrentBox={x:pos.x,y:pos.y,w:0,h:0};
+}
+function practiceMoveDraw(e){
+  if(!practiceIsDrawing) return;
+  const pos=getPracticePos(e);
+  practiceCurrentBox={x:Math.min(practiceStartX,pos.x),y:Math.min(practiceStartY,pos.y),
+    w:Math.abs(pos.x-practiceStartX),h:Math.abs(pos.y-practiceStartY)};
+  redrawPractice();
+}
+function practiceEndDraw(e){
+  if(!practiceIsDrawing) return;
+  practiceIsDrawing=false;
+  if(practiceCurrentBox&&practiceCurrentBox.w>10&&practiceCurrentBox.h>10){
+    practiceBoxes.push({...practiceCurrentBox,classIdx:practiceSelectedClass});
+    document.getElementById('practice-guide').innerHTML=
+      `✅ 박스 ${practiceBoxes.length}개 완성! 계속 그려보거나 다른 클래스를 선택해보세요.`;
+  }
+  practiceCurrentBox=null;
+  redrawPractice();
+}
+function practiceTouchStart(e){e.preventDefault();practiceStartDraw(e);}
+function practiceTouchMove(e){e.preventDefault();practiceMoveDraw(e);}
+function practiceTouchEnd(e){e.preventDefault();practiceEndDraw(e);}
+
+function practiceUndo(){
+  practiceBoxes.pop();
+  redrawPractice();
+}
+function practiceClear(){
+  practiceBoxes=[];
+  document.getElementById('practice-guide').innerHTML=
+    '📌 <strong>클래스를 선택</strong>하고 사진 위에서 <strong>드래그</strong>해서 박스를 그려보세요!';
+  redrawPractice();
+}
+
+function renderPracticeBoxList(){
+  document.getElementById('practice-box-count').textContent=`박스: ${practiceBoxes.length}개`;
+  document.getElementById('practice-box-list').innerHTML=practiceBoxes.map((b,i)=>{
+    const cls=practiceClasses[b.classIdx]||{color:'#fff',name:'?'};
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid ${cls.color}33;">
+      <span style="width:10px;height:10px;border-radius:3px;background:${cls.color};flex-shrink:0;"></span>
+      <span style="font-size:13px;flex:1;">[${b.classIdx}] ${cls.name}</span>
+      <button onclick="practiceDeleteBox(${i})" style="background:rgba(252,129,129,0.15);border:none;border-radius:4px;padding:2px 8px;color:#fc8181;font-size:11px;cursor:pointer;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function practiceDeleteBox(i){
+  practiceBoxes.splice(i,1);
+  redrawPractice();
+}
+
+// ════════════════════════════════════════
+//  실전 라벨링 (기존 코드)
+// ════════════════════════════════════════
 let currentUser=null, userData=null;
 let classes=[], myImages=[], currentImgIdx=-1;
 let allBoxes={}, currentImg=null;
 let isDrawing=false, startX=0, startY=0, currentBox=null;
 let selectedClassIdx=0, selectedBoxIdx=-1, currentTool='draw';
 let scale=1, offsetX=0, offsetY=0;
+let labelerInited=false;
 
 requireAuth(async (user)=>{
   currentUser=user;
@@ -142,15 +487,20 @@ requireAuth(async (user)=>{
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
   await loadClasses();
-  await loadMyImages();
-  setupResize();
 });
 
 async function loadClasses(){
   const snap=await db.collection('label_classes').orderBy('order').get();
   classes=snap.docs.map(d=>({id:d.id,...d.data()}));
   if(!classes.length) classes=[{name:'object',color:'#63b3ed',order:0}];
+}
+
+async function initLabeler(){
+  if(labelerInited) return;
+  labelerInited=true;
   renderClassButtons();
+  await loadMyImages();
+  setupResize();
 }
 
 function renderClassButtons(){
@@ -167,40 +517,18 @@ function selectClass(i){selectedClassIdx=i;renderClassButtons();}
 
 async function loadMyImages(){
   const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-
   try{
-    // 인덱스 필요한 쿼리 시도
-    const snap=await db.collection('uploads')
-      .where('userId','==',userId)
-      .orderBy('created_at','desc').get();
+    const snap=await db.collection('uploads').where('userId','==',userId).orderBy('created_at','desc').get();
     myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
   }catch(e){
-    console.warn('정렬 쿼리 실패, 단순 쿼리로 재시도:', e.message);
-    // 인덱스 없으면 정렬 없이 불러오기
-    try{
-      const snap=await db.collection('uploads')
-        .where('userId','==',userId).get();
-      myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
-      // 클라이언트에서 정렬
-      myImages.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
-    }catch(e2){
-      console.error('이미지 로드 실패:', e2);
-      document.getElementById('empty-msg').innerHTML=
-        `<div style="color:#fc8181;font-size:13px;">오류: ${e2.message}</div>`;
-      document.getElementById('empty-msg').style.display='flex';
-      return;
-    }
+    const snap=await db.collection('uploads').where('userId','==',userId).get();
+    myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
+    myImages.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
   }
-
-  // 기존 라벨 로드
   try{
     const labelSnap=await db.collection('labels').where('userId','==',userId).get();
-    labelSnap.docs.forEach(d=>{
-      const data=d.data();
-      allBoxes[data.imageId]=data.boxes||[];
-    });
-  }catch(e){ console.warn('라벨 로드 실패:', e); }
-
+    labelSnap.docs.forEach(d=>{const data=d.data();allBoxes[data.imageId]=data.boxes||[];});
+  }catch(e){}
   updateProgress();
   document.getElementById('thumb-list').innerHTML=myImages.map((img,i)=>`
     <div class="img-thumb ${i===currentImgIdx?'active':''}" id="thumb-${i}" onclick="selectImage(${i})">
@@ -208,14 +536,13 @@ async function loadMyImages(){
       ${allBoxes[img.id]?.length?'<div class="labeled-dot"></div>':''}
       <div class="num">${i+1}</div>
     </div>`).join('');
-
   if(myImages.length>0) selectImage(0);
   else document.getElementById('empty-msg').style.display='flex';
 }
 
 function updateProgress(){
   const labeled=myImages.filter(img=>allBoxes[img.id]?.length>0).length;
-  document.getElementById('progress-label').textContent=`${labeled}/${myImages.length} 라벨링 완료`;
+  document.getElementById('progress-label').textContent=`${labeled}/${myImages.length} 완료`;
 }
 
 function selectImage(idx){
@@ -225,41 +552,29 @@ function selectImage(idx){
   document.getElementById('empty-msg').style.display='none';
   document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
   renderBoxList();
-
-  // Cloudinary URL에 CORS 파라미터 추가
   let imgUrl=img.url||'';
-  // Cloudinary URL이면 crossorigin 허용 파라미터 추가
-  if(imgUrl.includes('cloudinary.com') && !imgUrl.includes('fl_attachment')){
-    imgUrl=imgUrl.replace('/upload/','/upload/fl_attachment:false/');
-  }
-
   const image=new Image();
   image.crossOrigin='anonymous';
-  image.onload=()=>{
-    fitImageToCanvas(image);
-    redrawCanvas(image);
-  };
+  image.onload=()=>{fitImageToCanvas(image);redrawCanvas(image);};
   image.onerror=()=>{
-    // crossOrigin 없이 재시도
     const img2=new Image();
     img2.onload=()=>{fitImageToCanvas(img2);redrawCanvas(img2);};
     img2.src=imgUrl+'?t='+Date.now();
     currentImg._imageEl=img2;
   };
   image.src=imgUrl;
-  currentImg._image=null;
   currentImg._imageEl=image;
 }
 
 function fitImageToCanvas(image){
   const wrap=document.getElementById('canvas-wrap');
   const cw=wrap.clientWidth, ch=wrap.clientHeight;
-  scale=Math.min(cw/image.width, ch/image.height, 1);
-  const dw=image.width*scale, dh=image.height*scale;
-  offsetX=(cw-dw)/2; offsetY=(ch-dh)/2;
+  scale=Math.min(cw/image.width,ch/image.height,1);
+  const dw=image.width*scale,dh=image.height*scale;
+  offsetX=(cw-dw)/2;offsetY=(ch-dh)/2;
   ['img-canvas','draw-canvas'].forEach(id=>{
     const c=document.getElementById(id);
-    c.width=cw; c.height=ch;
+    c.width=cw;c.height=ch;
   });
 }
 
@@ -271,24 +586,20 @@ function redrawCanvas(imageEl){
   const dc=drawC.getContext('2d');
   ic.clearRect(0,0,imgC.width,imgC.height);
   dc.clearRect(0,0,drawC.width,drawC.height);
-  // 배경
   ic.fillStyle='#111';ic.fillRect(0,0,imgC.width,imgC.height);
-  // 이미지
-  ic.drawImage(imageEl, offsetX, offsetY, imageEl.width*scale, imageEl.height*scale);
-  // 박스들
+  ic.drawImage(imageEl,offsetX,offsetY,imageEl.width*scale,imageEl.height*scale);
   const boxes=allBoxes[currentImg.id]||[];
   boxes.forEach((box,i)=>{
     const cls=classes[box.classIdx]||{color:'#fff',name:'?'};
-    const x=offsetX+box.x*scale, y=offsetY+box.y*scale;
-    const w=box.w*scale, h=box.h*scale;
+    const x=offsetX+box.x*scale,y=offsetY+box.y*scale;
+    const w=box.w*scale,h=box.h*scale;
     dc.strokeStyle=cls.color;dc.lineWidth=i===selectedBoxIdx?3:2;
     dc.strokeRect(x,y,w,h);
     dc.fillStyle=cls.color+'44';dc.fillRect(x,y,w,h);
-    dc.fillStyle=cls.color;dc.font='bold '+(clamp(10,scale*14,14))+'px sans-serif';
+    dc.fillStyle=cls.color;dc.font='bold 12px sans-serif';
     dc.fillRect(x,y-16,Math.max(60,cls.name.length*8),16);
     dc.fillStyle='#000';dc.fillText('['+box.classIdx+'] '+cls.name,x+2,y-3);
   });
-  // 현재 그리는 박스
   if(currentBox){
     const cls=classes[selectedClassIdx]||{color:'#fff'};
     dc.strokeStyle=cls.color;dc.lineWidth=2;dc.setLineDash([5,3]);
@@ -297,274 +608,126 @@ function redrawCanvas(imageEl){
   }
 }
 
-// 그리기
 function getCanvasPos(e){
   const c=document.getElementById('draw-canvas');
   const rect=c.getBoundingClientRect();
   const clientX=e.touches?e.touches[0].clientX:e.clientX;
   const clientY=e.touches?e.touches[0].clientY:e.clientY;
-  return {x:clientX-rect.left, y:clientY-rect.top};
+  return{x:clientX-rect.left,y:clientY-rect.top};
 }
 
-function startDraw(e){
-  if(currentTool!=='draw'||!currentImg) return;
-  const pos=getCanvasPos(e);
-  isDrawing=true;
-  startX=pos.x;startY=pos.y;
-  currentBox={x:pos.x,y:pos.y,w:0,h:0};
-}
-function moveDraw(e){
-  if(!isDrawing||!currentImg) return;
-  const pos=getCanvasPos(e);
-  currentBox={x:Math.min(startX,pos.x),y:Math.min(startY,pos.y),
-    w:Math.abs(pos.x-startX),h:Math.abs(pos.y-startY)};
-  redrawCanvas(currentImg._imageEl);
-}
+function startDraw(e){if(currentTool!=='draw'||!currentImg)return;const pos=getCanvasPos(e);isDrawing=true;startX=pos.x;startY=pos.y;currentBox={x:pos.x,y:pos.y,w:0,h:0};}
+function moveDraw(e){if(!isDrawing||!currentImg)return;const pos=getCanvasPos(e);currentBox={x:Math.min(startX,pos.x),y:Math.min(startY,pos.y),w:Math.abs(pos.x-startX),h:Math.abs(pos.y-startY)};redrawCanvas(currentImg._imageEl);}
 function endDraw(e){
-  if(!isDrawing) return;
-  isDrawing=false;
+  if(!isDrawing)return;isDrawing=false;
   if(currentBox&&currentBox.w>10&&currentBox.h>10){
-    // 캔버스 좌표 → 이미지 좌표 변환
-    const imgBox={
-      classIdx:selectedClassIdx,
-      x:(currentBox.x-offsetX)/scale,
-      y:(currentBox.y-offsetY)/scale,
-      w:currentBox.w/scale,
-      h:currentBox.h/scale,
-    };
-    // 이미지 범위 클리핑
     const img=currentImg._imageEl;
+    const imgBox={classIdx:selectedClassIdx,x:(currentBox.x-offsetX)/scale,y:(currentBox.y-offsetY)/scale,w:currentBox.w/scale,h:currentBox.h/scale};
     imgBox.x=Math.max(0,imgBox.x);imgBox.y=Math.max(0,imgBox.y);
-    imgBox.w=Math.min(img.width-imgBox.x,imgBox.w);
-    imgBox.h=Math.min(img.height-imgBox.y,imgBox.h);
-    if(!allBoxes[currentImg.id]) allBoxes[currentImg.id]=[];
+    if(img){imgBox.w=Math.min(img.width-imgBox.x,imgBox.w);imgBox.h=Math.min(img.height-imgBox.y,imgBox.h);}
+    if(!allBoxes[currentImg.id])allBoxes[currentImg.id]=[];
     allBoxes[currentImg.id].push(imgBox);
-    renderBoxList();
-    saveLabels();
-    updateThumb();
-    updateProgress();
+    renderBoxList();saveLabels();updateThumb();updateProgress();
   }
-  currentBox=null;
-  redrawCanvas(currentImg._imageEl);
+  currentBox=null;redrawCanvas(currentImg._imageEl);
 }
-// 터치
 function touchStartDraw(e){e.preventDefault();startDraw(e);}
 function touchMoveDraw(e){e.preventDefault();moveDraw(e);}
 function touchEndDraw(e){e.preventDefault();endDraw(e);}
 
-function setTool(t){
-  currentTool=t;
-  document.getElementById('tool-draw').classList.toggle('active',t==='draw');
-  document.getElementById('tool-select').classList.toggle('active',t==='select');
-  document.getElementById('draw-canvas').style.cursor=t==='draw'?'crosshair':'default';
-}
-
-function undoLast(){
-  if(!currentImg||!allBoxes[currentImg.id]?.length) return;
-  allBoxes[currentImg.id].pop();
-  renderBoxList();saveLabels();updateThumb();updateProgress();
-  redrawCanvas(currentImg._imageEl);
-}
-
-function clearBoxes(){
-  if(!currentImg) return;
-  if(!confirm('이 사진의 모든 박스를 삭제할까요?')) return;
-  allBoxes[currentImg.id]=[];
-  renderBoxList();saveLabels();updateThumb();updateProgress();
-  redrawCanvas(currentImg._imageEl);
-}
-
-function deleteBox(i){
-  allBoxes[currentImg.id].splice(i,1);
-  renderBoxList();saveLabels();updateThumb();updateProgress();
-  redrawCanvas(currentImg._imageEl);
-}
+function setTool(t){currentTool=t;document.getElementById('tool-draw').classList.toggle('active',t==='draw');document.getElementById('tool-select').classList.toggle('active',t==='select');document.getElementById('draw-canvas').style.cursor=t==='draw'?'crosshair':'default';}
+function undoLast(){if(!currentImg||!allBoxes[currentImg.id]?.length)return;allBoxes[currentImg.id].pop();renderBoxList();saveLabels();updateThumb();updateProgress();redrawCanvas(currentImg._imageEl);}
+function clearBoxes(){if(!currentImg)return;if(!confirm('이 사진의 모든 박스를 삭제할까요?'))return;allBoxes[currentImg.id]=[];renderBoxList();saveLabels();updateThumb();updateProgress();redrawCanvas(currentImg._imageEl);}
+function deleteBox(i){allBoxes[currentImg.id].splice(i,1);renderBoxList();saveLabels();updateThumb();updateProgress();redrawCanvas(currentImg._imageEl);}
 
 function renderBoxList(){
   const boxes=allBoxes[currentImg?.id]||[];
   document.getElementById('boxes-list').innerHTML=boxes.length
-    ?boxes.map((b,i)=>{
-      const cls=classes[b.classIdx]||{color:'#fff',name:'?'};
-      return `<div class="box-item ${i===selectedBoxIdx?'selected':''}" onclick="selectBox(${i})">
-        <span class="box-dot" style="background:${cls.color};"></span>
-        <span>[${b.classIdx}] ${cls.name}</span>
-        <button class="box-del" onclick="event.stopPropagation();deleteBox(${i})">✕</button>
-      </div>`;}).join('')
+    ?boxes.map((b,i)=>{const cls=classes[b.classIdx]||{color:'#fff',name:'?'};return`<div class="box-item ${i===selectedBoxIdx?'selected':''}" onclick="selectBox(${i})"><span class="box-dot" style="background:${cls.color};"></span><span>[${b.classIdx}] ${cls.name}</span><button class="box-del" onclick="event.stopPropagation();deleteBox(${i})">✕</button></div>`;}).join('')
     :`<div style="font-size:12px;color:var(--muted);padding:8px;">박스를 그려주세요</div>`;
 }
-
-function selectBox(i){
-  selectedBoxIdx=i===selectedBoxIdx?-1:i;
-  renderBoxList();
-  redrawCanvas(currentImg._imageEl);
-}
+function selectBox(i){selectedBoxIdx=i===selectedBoxIdx?-1:i;renderBoxList();redrawCanvas(currentImg._imageEl);}
 
 async function saveLabels(){
-  if(!currentImg) return;
+  if(!currentImg)return;
   const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
   document.getElementById('save-status').textContent='저장 중...';
   try{
     const boxes=allBoxes[currentImg.id]||[];
-
-    // 1. Firestore에 저장
     const snap=await db.collection('labels').where('userId','==',userId).where('imageId','==',currentImg.id).get();
-    if(snap.empty){
-      await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});
-    } else {
-      await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});
-    }
-    // uploads labeled 업데이트
+    if(snap.empty){await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});}
+    else{await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});}
     await db.collection('uploads').doc(currentImg.id).update({labeled:boxes.length>0});
-
-    // 2. Google Drive에 txt 저장
-    if(GDRIVE_CONFIG.APPS_SCRIPT_URL && !GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
-      const iw=currentImg.width||600, ih=currentImg.height||600;
-      const txtContent=boxes.map(b=>{
-        const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
-        const bw=b.w/iw, bh=b.h/ih;
-        return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
-      }).join('\n');
+    if(GDRIVE_CONFIG.APPS_SCRIPT_URL&&!GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
+      const iw=currentImg.width||600,ih=currentImg.height||600;
+      const txtContent=boxes.map(b=>{const cx=(b.x+b.w/2)/iw,cy=(b.y+b.h/2)/ih,bw=b.w/iw,bh=b.h/ih;return`${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;}).join('\n');
       const baseName=(currentImg.originalName||currentImg.fileName||currentImg.id).replace(/\.[^.]+$/,'');
-      const subfolder=currentImg.subfolder||'train';
-      await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
-        method:'POST',
-        body:JSON.stringify({
-          action:'saveLabel',
-          fileName: baseName+'.txt',
-          content: txtContent,
-          subfolder: subfolder,
-        })
-      }).catch(()=>{});
+      await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveLabel',fileName:baseName+'.txt',content:txtContent,subfolder:currentImg.subfolder||'train'})}).catch(()=>{});
     }
-
-    document.getElementById('save-status').textContent='✅ 저장됨 (Drive+Firestore)';
+    document.getElementById('save-status').textContent='✅ 저장됨';
     setTimeout(()=>document.getElementById('save-status').textContent='',2500);
   }catch(e){document.getElementById('save-status').textContent='❌ 저장 실패';}
 }
 
 function updateThumb(){
   const thumb=document.getElementById('thumb-'+currentImgIdx);
-  if(!thumb) return;
+  if(!thumb)return;
   const dot=thumb.querySelector('.labeled-dot');
-  if(allBoxes[currentImg.id]?.length){
-    if(!dot){const d=document.createElement('div');d.className='labeled-dot';thumb.appendChild(d);}
-  } else {
-    dot?.remove();
-  }
+  if(allBoxes[currentImg.id]?.length){if(!dot){const d=document.createElement('div');d.className='labeled-dot';thumb.appendChild(d);}}
+  else{dot?.remove();}
 }
 
-// YOLO txt 다운로드
 function downloadAllLabels(){
   const labeled=Object.entries(allBoxes).filter(([id,boxes])=>boxes.length>0);
   if(!labeled.length){alert('라벨링된 사진이 없습니다!');return;}
-
-  // classes.txt
   const classesContent=classes.map(c=>c.name).join('\n');
   downloadText('classes.txt',classesContent);
-
-  // 각 이미지별 txt (600x600 고정)
   labeled.forEach(([imgId,boxes])=>{
     const img=myImages.find(i=>i.id===imgId);
-    if(!img) return;
-    // 이미지 크기 - 업로드 시 600x600으로 고정
-    const iw=img.width||img._imageEl?.width||600;
-    const ih=img.height||img._imageEl?.height||600;
-    const content=boxes.map(b=>{
-      const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
-      const bw=b.w/iw, bh=b.h/ih;
-      return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
-    }).join('\n');
-    // 파일명 처리 (cloudinary public_id에서 파일명 추출)
+    if(!img)return;
+    const iw=img.width||img._imageEl?.width||600,ih=img.height||img._imageEl?.height||600;
+    const content=boxes.map(b=>{const cx=(b.x+b.w/2)/iw,cy=(b.y+b.h/2)/ih,bw=b.w/iw,bh=b.h/ih;return`${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;}).join('\n');
     const rawName=img.originalName||img.fileName||imgId;
     const fname=rawName.replace(/\.[^.]+$/,'')+'.txt';
     downloadText(fname,content);
   });
-  alert(`✅ ${labeled.length}개 라벨 파일 + classes.txt 다운로드 완료!\nYOLO 형식으로 저장되었습니다.`);
+  alert(`✅ ${labeled.length}개 파일 + classes.txt 다운로드 완료!`);
 }
 
-function downloadText(filename, content){
-  const blob=new Blob([content],{type:'text/plain'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=filename;a.click();
-}
-
-// ZIP 다운로드 (이미지 + txt 라벨 + classes.txt)
 async function downloadZip(){
   const labeled=Object.entries(allBoxes).filter(([id,boxes])=>boxes.length>0);
   if(!labeled.length){alert('라벨링된 사진이 없습니다!');return;}
-
   const btn=document.querySelector('[onclick="downloadZip()"]');
   if(btn){btn.textContent='⏳ 준비 중...';btn.disabled=true;}
-
   try{
     const zip=new JSZip();
     const imgFolder=zip.folder('images');
     const lblFolder=zip.folder('labels');
-
-    // classes.txt 추가
-    zip.file('classes.txt', classes.map(c=>c.name).join('\n'));
-
-    let done=0;
-    const total=labeled.length;
-
+    zip.file('classes.txt',classes.map(c=>c.name).join('\n'));
+    let done=0;const total=labeled.length;
     for(const [imgId,boxes] of labeled){
       const img=myImages.find(i=>i.id===imgId);
-      if(!img) continue;
-
-      const iw=img.width||600;
-      const ih=img.height||600;
-
-      // 파일명 처리
+      if(!img)continue;
+      const iw=img.width||600,ih=img.height||600;
       const rawName=img.originalName||img.fileName||imgId;
       const baseName=rawName.replace(/\.[^.]+$/,'');
       const imgExt=rawName.split('.').pop()||'jpg';
-
-      // txt 라벨 생성
-      const txtContent=boxes.map(b=>{
-        const cx=(b.x+b.w/2)/iw, cy=(b.y+b.h/2)/ih;
-        const bw=b.w/iw, bh=b.h/ih;
-        return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
-      }).join('\n');
-      lblFolder.file(`${baseName}.txt`, txtContent);
-
-      // 이미지 다운로드 (Cloudinary URL)
-      try{
-        const imgUrl=img.url;
-        const res=await fetch(imgUrl);
-        const blob=await res.blob();
-        imgFolder.file(`${baseName}.${imgExt}`, blob);
-      }catch(e){
-        console.warn('이미지 다운로드 실패:', imgId, e);
-      }
-
-      done++;
-      if(btn) btn.textContent=`⏳ ${done}/${total}장 처리 중...`;
+      const txtContent=boxes.map(b=>{const cx=(b.x+b.w/2)/iw,cy=(b.y+b.h/2)/ih,bw=b.w/iw,bh=b.h/ih;return`${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;}).join('\n');
+      lblFolder.file(`${baseName}.txt`,txtContent);
+      try{const r=await fetch(img.url);const blob=await r.blob();imgFolder.file(`${baseName}.${imgExt}`,blob);}catch(e){}
+      done++;if(btn)btn.textContent=`⏳ ${done}/${total}장...`;
     }
-
-    // ZIP 생성 및 다운로드
-    if(btn) btn.textContent='📦 ZIP 생성 중...';
-    const zipBlob=await zip.generateAsync({type:'blob', compression:'DEFLATE'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(zipBlob);
-    a.download=`ai-class-labels-${Date.now()}.zip`;
-    a.click();
-
-    alert(`✅ ZIP 다운로드 완료!\n\n📁 구조:\n  images/ - 사진 ${done}장\n  labels/ - 라벨 txt ${done}개\n  classes.txt - 클래스 목록\n\nYOLOv8 학습에 바로 사용 가능합니다!`);
-  }catch(e){
-    alert('ZIP 생성 실패: '+e.message);
-  }finally{
-    if(btn){btn.textContent='📦 이미지+txt ZIP';btn.disabled=false;}
-  }
+    if(btn)btn.textContent='📦 ZIP 생성 중...';
+    const zipBlob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(zipBlob);a.download=`ai-class-labels-${Date.now()}.zip`;a.click();
+    alert(`✅ ZIP 완료!\nimages/ ${done}장\nlabels/ ${done}개\nclasses.txt`);
+  }catch(e){alert('ZIP 생성 실패: '+e.message);}
+  finally{if(btn){btn.textContent='📦 ZIP';btn.disabled=false;}}
 }
 
+function downloadText(filename,content){const blob=new Blob([content],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
 function clamp(min,val,max){return Math.min(max,Math.max(min,val));}
-
-function setupResize(){
-  window.addEventListener('resize',()=>{
-    if(currentImg?._imageEl) fitImageToCanvas(currentImg._imageEl);
-    redrawCanvas(currentImg?._imageEl);
-  });
-}
+function setupResize(){window.addEventListener('resize',()=>{if(currentImg?._imageEl)fitImageToCanvas(currentImg._imageEl);redrawCanvas(currentImg?._imageEl);});}
 </script>
 </body>
 </html>
