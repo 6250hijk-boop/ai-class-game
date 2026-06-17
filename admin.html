@@ -432,21 +432,19 @@ function moveCell(e){
 // 엑셀 붙여넣기 처리
 function handleCreatePaste(e, startRow){
   const text = e.clipboardData.getData('text');
-  const lines = text.split('
-').map(l => l.trim()).filter(l => l);
-  if(lines.length <= 1) return; // 단일 셀은 기본 처리
+  const lines = text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l;});
+  if(lines.length <= 1) return;
   e.preventDefault();
 
   const rows = document.querySelectorAll('#create-tbody tr');
   let dataStart = 0;
-  // 헤더 감지
-  const firstCols = lines[0].split(/	/).map(c => c.trim());
+  const firstCols = lines[0].split('\t').map(function(c){return c.trim();});
   if(firstCols[0]==='학교' || firstCols[0]==='school') dataStart = 1;
 
   for(let i=dataStart; i<lines.length; i++){
     const rowIdx = startRow + (i - dataStart);
     if(rowIdx >= rows.length) break;
-    const cols = lines[i].split(/	/).map(c => c.trim());
+    const cols = lines[i].split('\t').map(function(c){return c.trim();});
     const tr = rows[rowIdx];
     if(cols[0]) tr.querySelector('.c-school').value = cols[0];
     if(cols[1]) tr.querySelector('.c-stunum').value = cols[1];
