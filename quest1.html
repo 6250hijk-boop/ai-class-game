@@ -685,14 +685,12 @@ async function deleteMyPost(docId){
 function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
-  // 점수 저장 후 메인으로
   if(currentUser.uid==='student'){
     userData.quests=userData.quests||{};
     userData.quests.q1_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   }
-  sessionStorage.setItem('from_quest','1');
-  window.location.href='main.html';
+  showComplete();
 }
 
 let completeShown=false;
