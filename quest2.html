@@ -777,14 +777,12 @@ async function deleteMyPost(docId){
 function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
-  // 점수 저장 후 메인으로
   if(currentUser.uid==='student'){
     userData.quests=userData.quests||{};
     userData.quests.q2_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   }
-  sessionStorage.setItem('from_quest','1');
-  window.location.href='main.html';
+  showComplete();
 }
 
 let completeShown=false;
@@ -794,10 +792,10 @@ function showComplete(){
   document.getElementById('dialog-next').style.display='none';
   typeText(document.getElementById('dialog-text'),
     '🎉 퀘스트 2 완료!\n인공지능의 아버지들을 잘 배웠어!',()=>{
-    const old=document.getElementById('complete-overlay');
+    const old=document.getElementById('complete-btns');
     if(old) old.remove();
     const overlay=document.createElement('div');
-    overlay.id='complete-overlay';
+    overlay.id='complete-btns';
     overlay.style.cssText=`position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;`;
     overlay.innerHTML=`
       <div style="background:#111827;border:2px solid rgba(99,179,237,0.4);border-radius:24px;
