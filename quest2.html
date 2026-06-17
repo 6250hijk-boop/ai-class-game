@@ -36,7 +36,7 @@
     .char-name-tag.both{background:linear-gradient(135deg,#b794f4,#805ad5);}
     .char-name-tag.goodfellow{background:linear-gradient(135deg,#fc8181,#e53e3e);}
     .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;transition:all .2s;}
-    .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(99,179,237,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(80px,12vh,110px);max-height:clamp(135px,22vh,180px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
+    .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(99,179,237,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(90px,13vh,125px);max-height:clamp(150px,26vh,220px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
     .dialog-text{font-size:clamp(14px,2.4vw,17px);line-height:1.85;color:#e2e8f0;text-shadow:0 1px 3px rgba(0,0,0,0.5);white-space:pre-line;}
     .dialog-next{position:absolute;bottom:12px;right:12px;width:26px;height:26px;background:rgba(99,179,237,0.2);border:2px solid rgba(99,179,237,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:arrowBounce 1s ease-in-out infinite;}
     .dialog-next::after{content:'▼';font-size:10px;color:#63b3ed;}
@@ -92,12 +92,12 @@
 
     /* 퀴즈 확인 팝업 */
     .quiz-confirm-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-confirm-box{background:linear-gradient(135deg,#0a0e1a,#1a1f3a);border:2px solid rgba(251,191,36,0.5);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(251,191,36,0.25),0 20px 40px rgba(0,0,0,0.6);animation:slideUp .4s ease;}
+    .quiz-confirm-box{background:#111827;border:2px solid rgba(68d391,0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(68d391,0.2);animation:slideUp .4s ease;}
     .quiz-confirm-emoji{font-size:clamp(44px,8vw,64px);margin-bottom:14px;}
-    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:#fbbf24;font-size:clamp(20px,4.5vw,28px);text-shadow:0 2px 8px rgba(251,191,36,0.5),0 0 20px rgba(251,191,36,0.3);font-weight:700;margin-bottom:8px;}
+    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:68d391_VAR;margin-bottom:8px;}
     .quiz-confirm-desc{font-size:clamp(13px,2.5vw,15px);color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;}
     .quiz-confirm-btns{display:flex;gap:10px;}
-    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;border-radius:12px;color:#1a1f3a;font-size:clamp(15px,3.2vw,17px);font-weight:900;box-shadow:0 4px 16px rgba(251,191,36,0.4);cursor:pointer;font-family:inherit;transition:all .3s;}
+    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,68d391_BTN);border:none;border-radius:12px;color:white;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
     .quiz-confirm-ok:hover{transform:translateY(-2px);}
     .quiz-confirm-cancel{padding:clamp(12px,2.5vw,14px) clamp(16px,3vw,20px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:clamp(13px,2.5vw,15px);cursor:pointer;font-family:inherit;}
   </style>
@@ -158,96 +158,74 @@ const MESSAGES = [
   { speaker:0, name:"내레이터", cls:"",
     text:"나의 아버지를 소개할께.\n음악의 아버지가 바흐라면\n인공지능의 아버지는 앨런 튜링(Alan Turing)과\n제프리 힌턴(Geoffrey Hinton)이야." },
   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"나를 소개하지.\n나는 영국의 수학자야.\n나는 1912년에 태어났지." },
+    text:"나를 소개하지.\n나는 영국의 수학자야.\n나는 1912년에 태어났지.\n그래서 나 때에는 우리가 아는 컴퓨터가 없었지.\n그냥 내 생각으로만 무엇이든 계산할 수 있는\n상상속의 기계를 설계했지.\n이게 바로 튜링 기계야." },
   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"그래서 나 때에는\n우리가 아는 컴퓨터가 없었지." },
+    text:"기계가 생각하는지 어떻게 알까?\n그래서 난 기계가 생각할 수 있는지 알 수 있는\n시험방법을 생각해냈지.\n먼저 벽 뒤에 있는 사람과 기계에게 채팅으로 질문을 하는거야.\n만약 {{name}}이 그 둘하고 대화해서\n누가 사람이고 기계인지 구분할 수 없다면\n그 기계는 지능을 가졌다고 볼 수 있는거야." },
   { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"그냥 내 생각으로만\n무엇이든 계산할 수 있는\n상상속의 기계를 설계했지.\n이게 바로 튜링 기계야." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"기계가 생각하는지 어떻게 알까?\n그래서 난 시험방법을\n생각해냈지." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"벽 뒤에 있는 사람과 기계에게\n채팅으로 질문을 하는거야." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"만약 {{name}}이 그 둘하고 대화해서\n누가 사람이고 기계인지 모른다면\n그 기계는 지능을 가졌다고\n볼 수 있는거야." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"이걸 튜링 테스트라고 해. 🧪\n오늘날 ChatGPT 같은 AI들이\n바로 이 테스트를\n통과할 수 있는 수준이야!" },
+    text:"이걸 튜링 테스트라고 해. 🧪\n오늘날 ChatGPT 같은 AI들이 바로 이 테스트를\n통과할 수 있는 수준이야!" },
   { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"나를 소개하지.\n나는 영국에서 태어나\n캐나다 국적도 가지고 있지." },
+    text:"나를 소개하지.\n나는 영국에서 태어나 캐나다 국적도 가지고 있지.\n나는 1947년에 태어난 컴퓨터 과학자 겸 심리학자야.\n앞에 나온 앨런 튜링 이후 인공지능은 긴 침체기였어.\n그 동안에는 기계에게 인간이 모든 규칙을 가르쳐야 했지." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"나는 1947년에 태어난\n컴퓨터 과학자 겸 심리학자야." },
+    text:"그래서 나는 인공신경망 방식을 주장했지.\n인간의 뇌가 수많은 뉴런으로 연결되서 학습하는 것처럼\n뉴런처럼 생긴 수학적 노드를 엄청 많이 쌓아 올리는 방법이지. 🧠" },
   { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"앨런 튜링 이후 인공지능은\n긴 침체기였어." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"그 동안에는 기계에게\n인간이 모든 규칙을\n가르쳐야 했지." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"그래서 나는\n인공신경망 방식을 주장했지." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"인간의 뇌처럼 뉴런을\n수학적 노드로 만들어서\n엄청 많이 쌓아 올리는 방법이지. 🧠" },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"나는 결국 이 방법으로\n효율적인 학습법을 찾았고\n이걸 딥러닝이라고 불렀어." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"덕분에 2024년\n노벨 물리학상을 수상했지! 🏆" },
+    text:"나는 결국 이 방법으로 효율적으로 학습시키는 방법을 찾았고\n이걸 딥러닝이라고 불렀어.\n덕분에 2024년 노벨 물리학상을 수상했지! 🏆" },
   { speaker:3, name:"앨런 튜링 & 제프리 힌턴", cls:"both",
-    text:"앨런 튜링이 AI라는 꿈을 꾸었다면,\n제프리 힌턴은 그 꿈을 현실로\n만드는 딥러닝을 만들었지." },
+    text:"앨런 튜링이 AI라는 꿈을 꾸었다면,\n제프리 힌턴은 그 꿈을 현실로 만드는 딥러닝을 만들었지.\n둘 다 인공지능의 역사에서 빠질 수 없는 아버지들이야! 👨‍👨‍👦" },
   { speaker:3, name:"앨런 튜링 & 제프리 힌턴", cls:"both",
-    text:"둘 다 인공지능의 역사에서\n빠질 수 없는 아버지들이야! 👨‍👨‍👦" },
-  { speaker:3, name:"앨런 튜링 & 제프리 힌턴", cls:"both",
-    text:"자, 우리 두 사람에 대해 잘 배웠지?\n두 사람의 특징을 구분하는\n퀴즈를 풀어볼까? 🎮",
+    text:"자, 우리 두 사람에 대해 잘 배웠지?\n두 사람의 특징을 구분하는 퀴즈를 풀어볼까? 🎮",
     type:"quiz_1" },
 
   // ── 2부: 지도학습/비지도학습 (배경 bgq2-2) ──
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
-    text:"인공지능의 시작을 알아봤으니\n이번엔 인공지능 학습의\n가장 큰 두 줄기를 알아보자." },
+    text:"인공지능의 시작을 알아봤으니\n인공지능 학습의 가장 큰 두 줄기를 알아보도록 하자." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
     text:"인공지능 학습방법에는 크게\n[지도학습]과 [비지도학습]이 있지." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
-    text:"지도학습이란 인공지능에게\n문제와 정답을 세트로\n다 알려주면서 가르치는 방법이야." },
+    text:"지도학습이란 인공지능에게 문제와 정답을\n세트로 다 알려주면서 가르치는 방법이야." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
     text:"마치 인간이 기출문제와 답을 보면서\n\"아! 이 문제는 이렇게 푸는구나!\"라고\n깨닫게 하는 방법이야." },
 
   // 배경 bgq2-3
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"인공지능에게 수천장의\n강아지와 고양이 사진을 보여주면서\n\"이건 강아지\", \"이건 고양이\"라고\n이름을 붙여주는거야." },
+    text:"인공지능에게 수천장의 강아지와 고양이 사진을\n보여주면서 \"이건 강아지야\", \"이건 고양이야\"라고\n이름을 붙여주는거야." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
     text:"이걸 라벨링(레이블링)이라고 하지. 🏷️" },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"그럼 인공지능은 새로운 사진을 보면\n\"이건 예전에 배운 특징을 보니\n고양이구나\"라고 정답을 맞추는 거야." },
+    text:"그럼 인공지능은 학습하지 않은 강아지나 고양이 사진을 보면\n\"아 이건 예전에 배운 특징을 보니 고양이구나\"라고\n정답을 맞추는 거야." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"정답을 맞춘다고 했지만\n정확히 말하면 예측하는 거지. 🎯" },
+    text:"정답을 맞춘다고 했지만 정확히 말하면\n예측하는 거지. 🎯" },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
     text:"여기서 똑똑한 친구들은 눈치챘겠지만\n인공지능이 배우지 않은 내용은\n정확한 예측을 할 수 없어." },
   { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"대표적인 학자는\n'제프리힌턴', '얀 르쿤',\n'앤드류 응'이 있지." },
+    text:"대표적인 학자는 '제프리힌턴', '얀 르쿤', '앤드류 응'이 있지." },
 
   // 이언 굿펠로 (char2-3) 등장
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
-    text:"안녕 나는 이언 굿펠로야. 👋\n이번에는 비지도학습에 대해\n설명해줄께." },
+    text:"안녕 나는 이언 굿펠로야. 👋\n이번에는 비지도학습에 대해 설명해줄께." },
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
-    text:"지도학습과 다르게\n비지도학습은 정답이 없어." },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
-    text:"그냥 데이터들만 던져주고\n\"인공지능아 니가 뭐가 비슷한지\n찾아봐\"라고 하는거야." },
+    text:"지도학습과 다르게 비지도학습은 정답이 없어.\n그냥 데이터들만 던져주고\n\"인공지능아 니가 여기서 뭐가 비슷한지 찾아봐\"라고 하는거야." },
 
   // 배경 bgq2-5
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
     text:"우리가 여러 옷 더미를 던져줬을 때\n양말은 양말끼리, 반팔은 반팔끼리,\n바지는 바지끼리 분류하는 것과 같아. 👕👖🧦" },
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
-    text:"라벨링 되어있지 않은\n수만개의 데이터를 보여주고\n스스로 공통점을 찾는거지." },
+    text:"라벨링 되어있지 않은 수만개의 데이터를 보여주고\n스스로 데이터 사이의 공통점을 찾는거지." },
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
     text:"그럼 언제 활용할 수 있을까? 🤔" },
 
   // 배경 bgq2-6
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-6",
-    text:"음악 취향 찾기나\n카드 부정사용 방지에\n활용하기 좋지! 🎵💳" },
+    text:"음악 취향 찾기나 카드 부정사용을 방지하는데\n활용하기 좋지! 🎵💳" },
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-6",
-    text:"\"이 사람은 이런 음악들을 듣네?\n비슷한 음악들을 그룹으로 묶어서\n추천해주자!\"" },
+    text:"\"이 사람은 이런 음악들을 듣네?\n비슷한 음악들을 그룹으로 묶어서 추천해주자!\"" },
 
   // 배경 bgq2-7
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
-    text:"\"평소 이 사람은 한국에서\n만원 정도 쓰는데\n갑자기 외국에서 100만원이?\n일단 정지시키자!\" 🚨" },
+    text:"\"평소 이 사람은 한국에서 만원 정도 쓰는데\n갑자기 외국에서 100만원이 결제되었네?\n일단 정지시키자!\" 🚨" },
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
-    text:"대표적인 학자로는\n'요수아 벤지오', '테우보 코호넨',\n'이언 굿펠로'가 있지." },
+    text:"대표적인 학자로는\n'요수아 벤지오', '테우보 코호넨', '이언 굿펠로'가 있지." },
   { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
-    text:"자, 지도학습과 비지도학습에 대해\n잘 배웠지?\n퀴즈로 확인해볼까? 🎮",
+    text:"자, 지도학습과 비지도학습에 대해 잘 배웠지?\n퀴즈로 확인해볼까? 🎮",
     type:"quiz_2" },
 ];
 
@@ -277,7 +255,6 @@ let quizShowing=false;
 let slotMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
 requireAuth(async (user) => {
-  await showQuestStory(2);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
@@ -409,15 +386,17 @@ async function autoSave(){
 }
 
 document.addEventListener('click',(e)=>{
-  if(window.questStoryShowing) return; // 스토리 팝업 중에는 무시
   if(quizShowing) return;
+  if(document.getElementById('board-overlay')) return;
+  if(document.getElementById('complete-btns')) return;
   if(e.target.closest('.quiz-overlay')||e.target.closest('.dialog-next')||
      e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
   nextMessage();
 });
 document.addEventListener('keydown',(e)=>{
-  if(window.questStoryShowing) return;
   if(quizShowing) return;
+  if(document.getElementById('board-overlay')) return;
+  if(document.getElementById('complete-btns')) return;
   if(e.code==='Space'||e.code==='Enter') nextMessage();
   if(e.code==='ArrowLeft') prevMessage();
 });
@@ -823,7 +802,7 @@ function showComplete(){
     overlay.innerHTML=`
       <div style="background:#111827;border:2px solid rgba(99,179,237,0.4);border-radius:24px;
            padding:36px 32px;text-align:center;max-width:360px;width:90%;
-           box-shadow:0 0 60px rgba(251,191,36,0.25),0 20px 40px rgba(0,0,0,0.6);animation:slideUp .4s ease;">
+           box-shadow:0 0 60px rgba(99,179,237,0.2);animation:slideUp .4s ease;">
         <div style="font-size:56px;margin-bottom:12px;">🏅</div>
         <h2 style="font-family:'Jua',sans-serif;font-size:22px;color:#63b3ed;margin-bottom:6px;">
           퀘스트 2 완료!
