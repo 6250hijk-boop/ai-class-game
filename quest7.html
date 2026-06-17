@@ -210,13 +210,17 @@
     </div>
 
     <div class="practice-guide" id="practice-guide">
-      📌 <strong>클래스를 선택</strong>하고 사진 위에서 <strong>드래그</strong>해서 박스를 그려보세요!
+      📌 아래 사진에서 <strong>킥보드, 헬멧, 사람</strong>을 찾아 클래스를 선택하고 드래그해서 박스를 그려보세요!
     </div>
 
     <!-- 클래스 선택 -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="practice-class-btns"></div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">① 클래스 선택</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="practice-class-btns"></div>
+    </div>
 
     <!-- 캔버스 -->
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">② 드래그해서 박스 그리기</div>
     <div class="practice-canvas-wrap">
       <canvas id="practice-img-canvas"></canvas>
       <canvas id="practice-draw-canvas" style="position:absolute;top:0;left:0;"
@@ -225,13 +229,20 @@
       </canvas>
     </div>
 
-    <!-- 박스 목록 -->
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+    <!-- 도구 버튼 -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
       <button onclick="practiceUndo()" class="tool-btn">↩️ 되돌리기</button>
       <button onclick="practiceClear()" class="tool-btn" style="color:var(--red);">🗑️ 전체삭제</button>
       <div id="practice-box-count" style="font-size:13px;color:var(--muted);padding:6px 0;margin-left:auto;">박스: 0개</div>
     </div>
+
+    <!-- 박스 목록 -->
     <div id="practice-box-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+
+    <!-- 완료 체크 -->
+    <div id="practice-complete-msg" style="display:none;background:rgba(104,211,145,0.1);border:1px solid #68d391;border-radius:10px;padding:12px 16px;font-size:14px;color:#68d391;margin-bottom:14px;text-align:center;">
+      🎉 연습 완료! 이제 실전 라벨링을 해봐요!
+    </div>
 
     <button onclick="showScreen('labeler')"
       style="width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;cursor:pointer;font-family:'Jua',sans-serif;">
@@ -319,7 +330,7 @@ let practiceStartX=0, practiceStartY=0, practiceCurrentBox=null;
 let practiceScale=1, practiceOffsetX=0, practiceOffsetY=0;
 let practiceImage=null;
 
-const PRACTICE_IMG='images/pm1.jpg'; // 예시 사진
+const PRACTICE_IMG='images/pm2.jpg'; // 연습용 사진
 
 async function initPractice(){
   // 클래스 로드
@@ -428,8 +439,13 @@ function practiceEndDraw(e){
   practiceIsDrawing=false;
   if(practiceCurrentBox&&practiceCurrentBox.w>10&&practiceCurrentBox.h>10){
     practiceBoxes.push({...practiceCurrentBox,classIdx:practiceSelectedClass});
+    const cls=practiceClasses[practiceSelectedClass];
     document.getElementById('practice-guide').innerHTML=
-      `✅ 박스 ${practiceBoxes.length}개 완성! 계속 그려보거나 다른 클래스를 선택해보세요.`;
+      `✅ <strong style="color:${cls?.color||'#a78bfa'}">[${practiceSelectedClass}] ${cls?.name||'객체'}</strong> 박스 완성! 총 ${practiceBoxes.length}개 · 다른 물체도 찾아보세요!`;
+    // 3개 이상 그리면 완료 메시지
+    if(practiceBoxes.length>=3){
+      document.getElementById('practice-complete-msg').style.display='block';
+    }
   }
   practiceCurrentBox=null;
   redrawPractice();
@@ -445,7 +461,8 @@ function practiceUndo(){
 function practiceClear(){
   practiceBoxes=[];
   document.getElementById('practice-guide').innerHTML=
-    '📌 <strong>클래스를 선택</strong>하고 사진 위에서 <strong>드래그</strong>해서 박스를 그려보세요!';
+    '📌 아래 사진에서 <strong>킥보드, 헬멧, 사람</strong>을 찾아 클래스를 선택하고 드래그해서 박스를 그려보세요!';
+  document.getElementById('practice-complete-msg').style.display='none';
   redrawPractice();
 }
 
