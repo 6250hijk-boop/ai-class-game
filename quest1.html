@@ -263,14 +263,17 @@ function showMessage(idx){
 }
 
 function typeText(el,text,cb){
-  el.textContent=''; isTyping=true;
+  el.innerHTML=''; isTyping=true;
   document.getElementById('dialog-next').style.opacity='0.3';
   let i=0;
   typingTimer=setInterval(()=>{
-    if(i<text.length){el.textContent=text.slice(0,i+1);i++;}
-    else{
+    if(i<text.length){
+      el.innerHTML=text.slice(0,i+1).replace(/\n/g,'<br>');
+      i++;
+    } else {
       clearInterval(typingTimer);
-      el.textContent=text; isTyping=false;
+      el.innerHTML=text.replace(/\n/g,'<br>');
+      isTyping=false;
       document.getElementById('dialog-next').style.opacity='1';
       if(cb) cb();
     }
@@ -280,11 +283,11 @@ function typeText(el,text,cb){
 let quizShowing = false;
 
 function nextMessage(){
-  if(quizShowing) return; // 퀴즈 중엔 무시
+  if(quizShowing) return;
   if(isTyping){
     clearInterval(typingTimer);
     const msg=MESSAGES[msgIdx];
-    document.getElementById('dialog-text').textContent=msg.text;
+    document.getElementById('dialog-text').innerHTML=(msg.text||'').replace(/\n/g,'<br>');
     isTyping=false;
     document.getElementById('dialog-next').style.opacity='1';
     if(msg.type==='quiz_1'){
@@ -702,8 +705,7 @@ function showComplete(){
   if(old) old.remove();
   typeText(document.getElementById('dialog-text'),
     '🎉 퀘스트 1 완료!\n법률에 대해 잘 배웠어!\n다음 퀘스트로 넘어가볼까?',()=>{
-    document.getElementById('dialog-next').style.display='none';
-    // 기존 버튼 있으면 제거
+    // 완료 후 오버레이 표시
     const old2=document.getElementById('complete-btns');
     if(old2) old2.remove();
     // 게임 스타일 완료 UI 오버레이
