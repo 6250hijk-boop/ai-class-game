@@ -48,14 +48,16 @@ const CHAR_TRACKS = {
   robot: [
     { level:1, name:"아기 로봇",     minScore:0,   img:"images/robot_1.png", emoji:"🤖" },
     { level:2, name:"초보 AI",       minScore:50,  img:"images/robot_2.png", emoji:"🦾" },
-    { level:3, name:"미래형 가디언", minScore:200, img:"images/robot_3.png", emoji:"🌟" },
+    { level:3, name:"학습 AI",       minScore:150, img:"images/robot_3.png", emoji:"🧠" },
+    { level:4, name:"지능형 AI",     minScore:300, img:"images/robot_4.png", emoji:"⚡" },
+    { level:5, name:"미래형 가디언", minScore:500, img:"images/robot_5.png", emoji:"🌟" },
   ],
   wizard: [
     { level:1, name:"견습 마법사",   minScore:0,   img:"images/wizard_1.png", emoji:"🧙" },
     { level:2, name:"마법사",        minScore:50,  img:"images/wizard_2.png", emoji:"✨" },
-    { level:3, name:"상급 마법사",   minScore:100, img:"images/wizard_3.png", emoji:"🔮" },
-    { level:4, name:"대마법사",      minScore:200, img:"images/wizard_4.png", emoji:"⚡" },
-    { level:5, name:"아크메이지",    minScore:350, img:"images/wizard_5.png", emoji:"🌟" },
+    { level:3, name:"상급 마법사",   minScore:150, img:"images/wizard_3.png", emoji:"🔮" },
+    { level:4, name:"대마법사",      minScore:300, img:"images/wizard_4.png", emoji:"⚡" },
+    { level:5, name:"아크메이지",    minScore:500, img:"images/wizard_5.png", emoji:"🌟" },
   ],
 };
 
