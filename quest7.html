@@ -16,25 +16,7 @@
     .content-area{display:flex;flex:1;overflow:hidden;}
 
     /* 사이드바 (이미지 목록) */
-    .img-sidebar{width:clamp(100px,18vw,160px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;}
-
-    /* 필터 탭 */
-    .filter-tabs{display:flex;gap:2px;padding:6px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);flex-shrink:0;position:sticky;top:0;z-index:5;}
-    .filter-tab{flex:1;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--muted);font-size:10px;padding:5px 4px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
-    .filter-tab:hover{background:rgba(255,255,255,0.05);color:var(--text);}
-    .filter-tab.active{background:rgba(167,139,250,0.2);border-color:rgba(167,139,250,0.4);color:#a78bfa;font-weight:700;}
-    #thumb-list{flex:1;overflow-y:auto;}
-    .empty-list{padding:20px 10px;text-align:center;font-size:11px;color:var(--muted);}
-
-    /* 네비게이션 버튼 (이전/다음) */
-    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);color:white;font-size:20px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s;}
-    .nav-btn:hover:not(:disabled){background:rgba(167,139,250,0.7);border-color:#a78bfa;}
-    .nav-btn:disabled{opacity:0.3;cursor:not-allowed;}
-    .nav-btn.prev{left:10px;}
-    .nav-btn.next{right:10px;}
-    .nav-info{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:4px 14px;color:white;font-size:11px;z-index:10;}
-    @media(max-width:600px){.nav-btn{width:36px;height:36px;font-size:16px;}}
-
+    .img-sidebar{width:clamp(100px,18vw,160px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
     .img-thumb{cursor:pointer;border-bottom:1px solid var(--border);position:relative;}
     .img-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
     .img-thumb.active{outline:3px solid #a78bfa;}
@@ -85,7 +67,7 @@
 <div class="labeler-layout">
   <!-- 상단 바 -->
   <div class="top-bar">
-    <a href="#" onclick="event.preventDefault();sessionStorage.setItem('from_quest','1');window.location.href='main.html';" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;text-decoration:none;">← 메인</a>
+    <a href="quest6.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;text-decoration:none;">← 업로드</a>
     <div class="title">🏷️ 퀘스트 7: 라벨링하기</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span id="progress-label" style="font-size:12px;color:var(--muted);"></span>
@@ -98,11 +80,7 @@
   <div class="content-area">
     <!-- 이미지 목록 사이드바 -->
     <div class="img-sidebar" id="img-sidebar">
-      <div class="filter-tabs">
-        <button class="filter-tab active" id="filter-all" onclick="setFilter('all')">전체</button>
-        <button class="filter-tab" id="filter-todo" onclick="setFilter('todo')">미완료</button>
-        <button class="filter-tab" id="filter-done" onclick="setFilter('done')">완료</button>
-      </div>
+      <div style="padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">내 사진</div>
       <div id="thumb-list"></div>
     </div>
 
@@ -114,9 +92,6 @@
           onmousedown="startDraw(event)" onmousemove="moveDraw(event)" onmouseup="endDraw(event)"
           ontouchstart="touchStartDraw(event)" ontouchmove="touchMoveDraw(event)" ontouchend="touchEndDraw(event)">
         </canvas>
-        <button class="nav-btn prev" id="btn-prev" onclick="prevImage()" title="이전 사진 (←)">◀</button>
-        <button class="nav-btn next" id="btn-next" onclick="nextImage()" title="다음 사진 (→)">▶</button>
-        <div class="nav-info" id="nav-info"></div>
         <div class="empty-canvas" id="empty-msg">
           <div style="font-size:40px;">👈</div>
           <div>왼쪽에서 사진을 선택하세요</div>
@@ -156,10 +131,8 @@ let allBoxes={}, currentImg=null;
 let isDrawing=false, startX=0, startY=0, currentBox=null;
 let selectedClassIdx=0, selectedBoxIdx=-1, currentTool='draw';
 let scale=1, offsetX=0, offsetY=0;
-let currentFilter='all'; // 'all' | 'todo' | 'done'
 
 requireAuth(async (user)=>{
-  await showQuestStory(7);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
@@ -194,119 +167,50 @@ function selectClass(i){selectedClassIdx=i;renderClassButtons();}
 
 async function loadMyImages(){
   const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-  const snap=await db.collection('uploads').where('userId','==',userId).orderBy('created_at','desc').get();
-  myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  try{
+    // 인덱스 필요한 쿼리 시도
+    const snap=await db.collection('uploads')
+      .where('userId','==',userId)
+      .orderBy('created_at','desc').get();
+    myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    console.warn('정렬 쿼리 실패, 단순 쿼리로 재시도:', e.message);
+    // 인덱스 없으면 정렬 없이 불러오기
+    try{
+      const snap=await db.collection('uploads')
+        .where('userId','==',userId).get();
+      myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
+      // 클라이언트에서 정렬
+      myImages.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+    }catch(e2){
+      console.error('이미지 로드 실패:', e2);
+      document.getElementById('empty-msg').innerHTML=
+        `<div style="color:#fc8181;font-size:13px;">오류: ${e2.message}</div>`;
+      document.getElementById('empty-msg').style.display='flex';
+      return;
+    }
+  }
 
   // 기존 라벨 로드
-  const labelSnap=await db.collection('labels').where('userId','==',userId).get();
-  labelSnap.docs.forEach(d=>{
-    const data=d.data();
-    allBoxes[data.imageId]=data.boxes||[];
-  });
+  try{
+    const labelSnap=await db.collection('labels').where('userId','==',userId).get();
+    labelSnap.docs.forEach(d=>{
+      const data=d.data();
+      allBoxes[data.imageId]=data.boxes||[];
+    });
+  }catch(e){ console.warn('라벨 로드 실패:', e); }
 
   updateProgress();
-  renderThumbList();
+  document.getElementById('thumb-list').innerHTML=myImages.map((img,i)=>`
+    <div class="img-thumb ${i===currentImgIdx?'active':''}" id="thumb-${i}" onclick="selectImage(${i})">
+      <img src="${img.url}" onerror="this.style.display='none'">
+      ${allBoxes[img.id]?.length?'<div class="labeled-dot"></div>':''}
+      <div class="num">${i+1}</div>
+    </div>`).join('');
 
   if(myImages.length>0) selectImage(0);
   else document.getElementById('empty-msg').style.display='flex';
-}
-
-// 필터 적용해서 보여줄 사진 리스트 반환
-function getFilteredImages(){
-  if(currentFilter==='all') return myImages.map((img,i)=>({img, originalIdx:i}));
-  if(currentFilter==='done') return myImages.map((img,i)=>({img, originalIdx:i})).filter(x=>allBoxes[x.img.id]?.length>0);
-  if(currentFilter==='todo') return myImages.map((img,i)=>({img, originalIdx:i})).filter(x=>!allBoxes[x.img.id]?.length);
-  return [];
-}
-
-// 썸네일 목록 그리기
-function renderThumbList(){
-  const filtered=getFilteredImages();
-
-  // 카운트 업데이트
-  const totalCnt=myImages.length;
-  const doneCnt=myImages.filter(img=>allBoxes[img.id]?.length>0).length;
-  const todoCnt=totalCnt-doneCnt;
-  document.getElementById('filter-all').textContent=`전체 ${totalCnt}`;
-  document.getElementById('filter-todo').textContent=`미완료 ${todoCnt}`;
-  document.getElementById('filter-done').textContent=`완료 ${doneCnt}`;
-
-  if(filtered.length===0){
-    document.getElementById('thumb-list').innerHTML=`<div class="empty-list">${
-      currentFilter==='done'?'아직 라벨링한 사진이 없어요':
-      currentFilter==='todo'?'🎉 모두 라벨링 완료!':
-      '사진이 없어요'
-    }</div>`;
-    return;
-  }
-
-  document.getElementById('thumb-list').innerHTML=filtered.map(({img,originalIdx})=>{
-    const isLabeled=allBoxes[img.id]?.length>0;
-    return `
-    <div class="img-thumb ${originalIdx===currentImgIdx?'active':''}" id="thumb-${originalIdx}" onclick="selectImage(${originalIdx})">
-      <img src="${toDisplayUrl(img.url, img.driveFileId)}" onerror="this.style.display='none'">
-      ${isLabeled?'<div class="labeled-dot"></div>':''}
-      <div class="num">${originalIdx+1}</div>
-    </div>`;
-  }).join('');
-}
-
-// 필터 변경
-function setFilter(f){
-  currentFilter=f;
-  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('filter-'+f).classList.add('active');
-  renderThumbList();
-}
-
-// 이전/다음 사진 이동
-function prevImage(){
-  const filtered=getFilteredImages();
-  if(filtered.length===0) return;
-
-  const curPos=filtered.findIndex(x=>x.originalIdx===currentImgIdx);
-  if(curPos===-1){
-    // 현재 사진이 필터에 없으면 첫 번째 선택
-    selectImage(filtered[0].originalIdx);
-    return;
-  }
-  const newPos=curPos===0 ? filtered.length-1 : curPos-1; // 끝에서 처음으로 순환
-  selectImage(filtered[newPos].originalIdx);
-}
-
-function nextImage(){
-  const filtered=getFilteredImages();
-  if(filtered.length===0) return;
-
-  const curPos=filtered.findIndex(x=>x.originalIdx===currentImgIdx);
-  if(curPos===-1){
-    selectImage(filtered[0].originalIdx);
-    return;
-  }
-  const newPos=curPos===filtered.length-1 ? 0 : curPos+1; // 끝에서 처음으로 순환
-  selectImage(filtered[newPos].originalIdx);
-}
-
-// 네비게이션 정보 업데이트 (현재 위치 표시)
-function updateNavInfo(){
-  const filtered=getFilteredImages();
-  const info=document.getElementById('nav-info');
-  if(filtered.length===0){
-    info.style.display='none';
-    return;
-  }
-  const curPos=filtered.findIndex(x=>x.originalIdx===currentImgIdx);
-  if(curPos===-1){
-    info.style.display='none';
-    return;
-  }
-  info.style.display='block';
-  info.textContent=`${curPos+1} / ${filtered.length}`;
-
-  // 1장만 있으면 버튼 비활성화
-  const onlyOne=filtered.length<=1;
-  document.getElementById('btn-prev').disabled=onlyOne;
-  document.getElementById('btn-next').disabled=onlyOne;
 }
 
 function updateProgress(){
@@ -314,35 +218,20 @@ function updateProgress(){
   document.getElementById('progress-label').textContent=`${labeled}/${myImages.length} 라벨링 완료`;
 }
 
-// Drive URL을 외부 임베드 가능한 lh3 URL로 변환
-function toDisplayUrl(url, fileId){
-  if(!url && !fileId) return '';
-  // 이미 lh3 URL이면 그대로
-  if(url && url.includes('lh3.googleusercontent.com')) return url;
-  // drive.google.com/uc?...&id=FILE_ID 형식 → lh3로 변환
-  if(url && url.includes('drive.google.com')){
-    const m=url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if(m) return 'https://lh3.googleusercontent.com/d/'+m[1]+'=w800';
-  }
-  // fileId가 따로 있으면 그걸로
-  if(fileId) return 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
-  // Cloudinary 등 다른 URL은 그대로
-  return url||'';
-}
-
 function selectImage(idx){
   currentImgIdx=idx;
   const img=myImages[idx];
   currentImg=img;
   document.getElementById('empty-msg').style.display='none';
-  document.querySelectorAll('.img-thumb').forEach(el=>el.classList.remove('active'));
-  const activeThumb=document.getElementById('thumb-'+idx);
-  if(activeThumb) activeThumb.classList.add('active');
+  document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
   renderBoxList();
-  updateNavInfo();
 
-  // Drive URL을 lh3 형식으로 변환 (CORS + 캔버스 호환)
-  const imgUrl=toDisplayUrl(img.url, img.driveFileId);
+  // Cloudinary URL에 CORS 파라미터 추가
+  let imgUrl=img.url||'';
+  // Cloudinary URL이면 crossorigin 허용 파라미터 추가
+  if(imgUrl.includes('cloudinary.com') && !imgUrl.includes('fl_attachment')){
+    imgUrl=imgUrl.replace('/upload/','/upload/fl_attachment:false/');
+  }
 
   const image=new Image();
   image.crossOrigin='anonymous';
@@ -351,17 +240,10 @@ function selectImage(idx){
     redrawCanvas(image);
   };
   image.onerror=()=>{
-    // crossOrigin 없이 재시도 (캔버스에 그릴 때 tainted 될 수 있지만 표시는 됨)
-    console.warn('crossOrigin 로드 실패, 재시도:', imgUrl);
+    // crossOrigin 없이 재시도
     const img2=new Image();
     img2.onload=()=>{fitImageToCanvas(img2);redrawCanvas(img2);};
-    img2.onerror=()=>{
-      console.error('이미지 로드 완전 실패:', imgUrl);
-      document.getElementById('empty-msg').style.display='flex';
-      document.getElementById('empty-msg').innerHTML=
-        '<div style="font-size:40px;">⚠️</div><div>이미지를 불러올 수 없어요<br><span style="font-size:11px;color:var(--muted);">'+imgUrl.slice(0,50)+'...</span></div>';
-    };
-    img2.src=imgUrl;
+    img2.src=imgUrl+'?t='+Date.now();
     currentImg._imageEl=img2;
   };
   image.src=imgUrl;
@@ -519,9 +401,7 @@ function selectBox(i){
 
 async function saveLabels(){
   if(!currentImg) return;
-  const charName=userData.charName||userData.name||'익명';
-  const userId=currentUser.uid==='student'?('temp_'+charName):currentUser.uid;
-  const studentId=charName+'_'+userId;
+  const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
   document.getElementById('save-status').textContent='저장 중...';
   try{
     const boxes=allBoxes[currentImg.id]||[];
@@ -529,14 +409,14 @@ async function saveLabels(){
     // 1. Firestore에 저장
     const snap=await db.collection('labels').where('userId','==',userId).where('imageId','==',currentImg.id).get();
     if(snap.empty){
-      await db.collection('labels').add({userId,studentId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});
+      await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});
     } else {
       await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});
     }
     // uploads labeled 업데이트
     await db.collection('uploads').doc(currentImg.id).update({labeled:boxes.length>0});
 
-    // 2. Google Drive에 txt 저장 (학생 폴더에)
+    // 2. Google Drive에 txt 저장
     if(GDRIVE_CONFIG.APPS_SCRIPT_URL && !GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
       const iw=currentImg.width||600, ih=currentImg.height||600;
       const txtContent=boxes.map(b=>{
@@ -544,8 +424,7 @@ async function saveLabels(){
         const bw=b.w/iw, bh=b.h/ih;
         return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
       }).join('\n');
-      // ⚠️ 중요: Drive에 저장된 실제 이미지 파일 이름과 일치시켜야 YOLO가 매칭함
-      const baseName=(currentImg.fileName||currentImg.originalName||currentImg.id).replace(/\.[^.]+$/,'');
+      const baseName=(currentImg.originalName||currentImg.fileName||currentImg.id).replace(/\.[^.]+$/,'');
       const subfolder=currentImg.subfolder||'train';
       await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
         method:'POST',
@@ -554,21 +433,8 @@ async function saveLabels(){
           fileName: baseName+'.txt',
           content: txtContent,
           subfolder: subfolder,
-          studentId,   // ⬅ 학생 폴더 식별자
         })
       }).catch(()=>{});
-
-      // classes.txt도 학생 폴더에 자동 저장 (dataset.yaml도 함께 생성됨)
-      try{
-        const cs=await db.collection('label_classes').orderBy('order').get();
-        if(!cs.empty){
-          const content=cs.docs.map(d=>d.data().name).join('\n');
-          fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{
-            method:'POST',
-            body:JSON.stringify({action:'saveClasses', content, studentId})
-          }).catch(()=>{});
-        }
-      }catch(e){}
     }
 
     document.getElementById('save-status').textContent='✅ 저장됨 (Drive+Firestore)';
@@ -577,9 +443,14 @@ async function saveLabels(){
 }
 
 function updateThumb(){
-  // 라벨링 상태가 바뀌었으니 전체 썸네일 + 필터 카운트 재계산
-  renderThumbList();
-  updateNavInfo();
+  const thumb=document.getElementById('thumb-'+currentImgIdx);
+  if(!thumb) return;
+  const dot=thumb.querySelector('.labeled-dot');
+  if(allBoxes[currentImg.id]?.length){
+    if(!dot){const d=document.createElement('div');d.className='labeled-dot';thumb.appendChild(d);}
+  } else {
+    dot?.remove();
+  }
 }
 
 // YOLO txt 다운로드
@@ -603,8 +474,8 @@ function downloadAllLabels(){
       const bw=b.w/iw, bh=b.h/ih;
       return `${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;
     }).join('\n');
-    // 파일명 처리 - Drive 이미지 파일명과 일치하도록 fileName 우선
-    const rawName=img.fileName||img.originalName||imgId;
+    // 파일명 처리 (cloudinary public_id에서 파일명 추출)
+    const rawName=img.originalName||img.fileName||imgId;
     const fname=rawName.replace(/\.[^.]+$/,'')+'.txt';
     downloadText(fname,content);
   });
@@ -643,8 +514,8 @@ async function downloadZip(){
       const iw=img.width||600;
       const ih=img.height||600;
 
-      // 파일명 처리 - Drive 이미지 파일명과 일치하도록 fileName 우선
-      const rawName=img.fileName||img.originalName||imgId;
+      // 파일명 처리
+      const rawName=img.originalName||img.fileName||imgId;
       const baseName=rawName.replace(/\.[^.]+$/,'');
       const imgExt=rawName.split('.').pop()||'jpg';
 
@@ -656,9 +527,9 @@ async function downloadZip(){
       }).join('\n');
       lblFolder.file(`${baseName}.txt`, txtContent);
 
-      // 이미지 다운로드 (lh3 URL로 변환)
+      // 이미지 다운로드 (Cloudinary URL)
       try{
-        const imgUrl=toDisplayUrl(img.url, img.driveFileId);
+        const imgUrl=img.url;
         const res=await fetch(imgUrl);
         const blob=await res.blob();
         imgFolder.file(`${baseName}.${imgExt}`, blob);
@@ -692,23 +563,6 @@ function setupResize(){
   window.addEventListener('resize',()=>{
     if(currentImg?._imageEl) fitImageToCanvas(currentImg._imageEl);
     redrawCanvas(currentImg?._imageEl);
-  });
-
-  // 키보드 단축키: 좌우 화살표로 사진 이동
-  window.addEventListener('keydown',(e)=>{
-    // input/textarea에 포커스 있으면 무시
-    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
-
-    if(e.key==='ArrowLeft'){
-      e.preventDefault();
-      prevImage();
-    } else if(e.key==='ArrowRight'){
-      e.preventDefault();
-      nextImage();
-    } else if(e.key==='s'||e.key==='S'){
-      // S 키로 저장
-      if(currentImg) saveLabels();
-    }
   });
 }
 </script>
