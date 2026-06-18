@@ -142,6 +142,29 @@
       <h3>📦 2. 바운딩박스(Bounding Box)</h3>
       <p>물체를 감싸는 <strong>직사각형 박스</strong>를 바운딩박스라고 해요.<br>
       마우스로 드래그해서 물체를 감싸도록 박스를 그리면 돼요.</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+        <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:700;color:#63b3ed;margin-bottom:6px;">⛑️ helmet (안전모)</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;">
+            안전모 <strong>착용한 경우에만</strong> 안전모 부분만 박스로 그려요.<br>
+            <span style="color:#fc8181;">❌ 안전모를 착용하지 않은 사람은 helmet 박스를 그리지 않아요.</span>
+          </div>
+        </div>
+        <div style="background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:700;color:#fc8181;margin-bottom:6px;">🛴 PM-hpp (전동킥보드)</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;">
+            전동킥보드 전체를 박스로 그려요.<br>
+            <strong>뒷바퀴부터 핸들 부분까지 전부</strong> 포함되도록 해야 해요.
+          </div>
+        </div>
+        <div style="background:rgba(104,211,145,0.08);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:12px 14px;">
+          <div style="font-weight:700;color:#68d391;margin-bottom:6px;">🧍 person (사람)</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7;">
+            킥보드를 타고 있는 <strong>사람 전체</strong>를 박스로 그려요.
+          </div>
+        </div>
+      </div>
       <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
         <img src="images/pm0.png" style="max-width:100%;border-radius:8px;border:1px solid var(--border);"
           onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block'">
