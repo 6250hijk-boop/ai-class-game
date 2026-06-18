@@ -302,6 +302,7 @@
         <canvas id="img-canvas"></canvas>
         <canvas id="draw-canvas"
           onmousedown="startDraw(event)" onmousemove="moveDraw(event)" onmouseup="endDraw(event)"
+          onmouseleave="crosshairX=-1;crosshairY=-1;redrawCanvas(currentImg?._imageEl);"
           ontouchstart="touchStartDraw(event)" ontouchmove="touchMoveDraw(event)" ontouchend="touchEndDraw(event)">
         </canvas>
         <div class="empty-canvas" id="empty-msg">
@@ -520,6 +521,7 @@ let isDrawing=false, startX=0, startY=0, currentBox=null;
 let selectedClassIdx=0, selectedBoxIdx=-1, currentTool='draw';
 let scale=1, offsetX=0, offsetY=0;
 let labelerInited=false;
+let crosshairX=-1, crosshairY=-1; // 십자선 위치
 
 requireAuth(async (user)=>{
   currentUser=user;
@@ -650,6 +652,39 @@ function redrawCanvas(imageEl){
     dc.strokeRect(currentBox.x,currentBox.y,currentBox.w,currentBox.h);
     dc.setLineDash([]);
   }
+  // 십자선 가이드
+  if(crosshairX>=0 && crosshairY>=0 && !isDrawing){
+    const cls=classes[selectedClassIdx]||{color:'#a78bfa'};
+    dc.save();
+    dc.globalAlpha=0.5;
+    dc.strokeStyle=cls.color;
+    dc.lineWidth=1;
+    dc.setLineDash([4,4]);
+    // 세로선
+    dc.beginPath();
+    dc.moveTo(crosshairX,0);
+    dc.lineTo(crosshairX,drawC.height);
+    dc.stroke();
+    // 가로선
+    dc.beginPath();
+    dc.moveTo(0,crosshairY);
+    dc.lineTo(drawC.width,crosshairY);
+    dc.stroke();
+    dc.setLineDash([]);
+    dc.restore();
+    // 좌표 표시
+    const imgX=Math.round((crosshairX-offsetX)/scale);
+    const imgY=Math.round((crosshairY-offsetY)/scale);
+    if(imgX>=0&&imgY>=0){
+      dc.save();
+      dc.fillStyle='rgba(0,0,0,0.6)';
+      dc.fillRect(crosshairX+6,crosshairY-18,70,16);
+      dc.fillStyle='rgba(255,255,255,0.9)';
+      dc.font='11px monospace';
+      dc.fillText(`${imgX}, ${imgY}`,crosshairX+10,crosshairY-5);
+      dc.restore();
+    }
+  }
 }
 
 function getCanvasPos(e){
@@ -661,7 +696,13 @@ function getCanvasPos(e){
 }
 
 function startDraw(e){if(currentTool!=='draw'||!currentImg)return;const pos=getCanvasPos(e);isDrawing=true;startX=pos.x;startY=pos.y;currentBox={x:pos.x,y:pos.y,w:0,h:0};}
-function moveDraw(e){if(!isDrawing||!currentImg)return;const pos=getCanvasPos(e);currentBox={x:Math.min(startX,pos.x),y:Math.min(startY,pos.y),w:Math.abs(pos.x-startX),h:Math.abs(pos.y-startY)};redrawCanvas(currentImg._imageEl);}
+function moveDraw(e){
+  const pos=getCanvasPos(e);
+  crosshairX=pos.x; crosshairY=pos.y;
+  if(!isDrawing||!currentImg){redrawCanvas(currentImg?._imageEl);return;}
+  currentBox={x:Math.min(startX,pos.x),y:Math.min(startY,pos.y),w:Math.abs(pos.x-startX),h:Math.abs(pos.y-startY)};
+  redrawCanvas(currentImg._imageEl);
+}
 function endDraw(e){
   if(!isDrawing)return;isDrawing=false;
   if(currentBox&&currentBox.w>10&&currentBox.h>10){
