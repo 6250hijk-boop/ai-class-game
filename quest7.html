@@ -654,34 +654,52 @@ function redrawCanvas(imageEl){
   }
   // 십자선 가이드
   if(crosshairX>=0 && crosshairY>=0 && !isDrawing){
-    const cls=classes[selectedClassIdx]||{color:'#a78bfa'};
     dc.save();
-    dc.globalAlpha=0.5;
-    dc.strokeStyle=cls.color;
+
+    // 검은색 그림자 선 (먼저 그려서 뒤에 깔림)
+    dc.globalAlpha=0.8;
+    dc.strokeStyle='#000000';
+    dc.lineWidth=3;
+    dc.setLineDash([4,4]);
+    dc.beginPath();dc.moveTo(crosshairX,0);dc.lineTo(crosshairX,drawC.height);dc.stroke();
+    dc.beginPath();dc.moveTo(0,crosshairY);dc.lineTo(drawC.width,crosshairY);dc.stroke();
+
+    // 노란색 선 (위에 그려짐)
+    dc.globalAlpha=1.0;
+    dc.strokeStyle='#FFE500';
     dc.lineWidth=1;
     dc.setLineDash([4,4]);
-    // 세로선
-    dc.beginPath();
-    dc.moveTo(crosshairX,0);
-    dc.lineTo(crosshairX,drawC.height);
-    dc.stroke();
-    // 가로선
-    dc.beginPath();
-    dc.moveTo(0,crosshairY);
-    dc.lineTo(drawC.width,crosshairY);
-    dc.stroke();
+    dc.beginPath();dc.moveTo(crosshairX,0);dc.lineTo(crosshairX,drawC.height);dc.stroke();
+    dc.beginPath();dc.moveTo(0,crosshairY);dc.lineTo(drawC.width,crosshairY);dc.stroke();
     dc.setLineDash([]);
+
+    // 교차점 원
+    dc.beginPath();
+    dc.arc(crosshairX,crosshairY,4,0,Math.PI*2);
+    dc.strokeStyle='#000';dc.lineWidth=3;dc.stroke();
+    dc.beginPath();
+    dc.arc(crosshairX,crosshairY,4,0,Math.PI*2);
+    dc.strokeStyle='#FFE500';dc.lineWidth=1.5;dc.stroke();
+
     dc.restore();
+
     // 좌표 표시
     const imgX=Math.round((crosshairX-offsetX)/scale);
     const imgY=Math.round((crosshairY-offsetY)/scale);
     if(imgX>=0&&imgY>=0){
       dc.save();
-      dc.fillStyle='rgba(0,0,0,0.6)';
-      dc.fillRect(crosshairX+6,crosshairY-18,70,16);
-      dc.fillStyle='rgba(255,255,255,0.9)';
-      dc.font='11px monospace';
-      dc.fillText(`${imgX}, ${imgY}`,crosshairX+10,crosshairY-5);
+      dc.font='bold 11px monospace';
+      const label=`${imgX}, ${imgY}`;
+      const tw=dc.measureText(label).width+10;
+      // 말풍선 배경
+      dc.fillStyle='rgba(0,0,0,0.75)';
+      dc.fillRect(crosshairX+8,crosshairY-20,tw,16);
+      // 노란 테두리
+      dc.strokeStyle='#FFE500';dc.lineWidth=1;
+      dc.strokeRect(crosshairX+8,crosshairY-20,tw,16);
+      // 텍스트
+      dc.fillStyle='#FFE500';
+      dc.fillText(label,crosshairX+13,crosshairY-7);
       dc.restore();
     }
   }
