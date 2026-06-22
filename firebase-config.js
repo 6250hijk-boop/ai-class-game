@@ -312,6 +312,229 @@ async function unlockBadge(badgeId, userSession, userLocalData) {
       console.error("Firestore achievements update failed:", e);
     }
   }
+
+  // 새로 획득한 경우 팝업 모달 표시
+  showBadgeUnlockModal(badgeId);
   return true; // 새로 획득함
 }
+
+// ── 뱃지 획득 시 연출 모달 ──
+function showBadgeUnlockModal(badgeId) {
+  const badge = BADGES.find(b => b.id === badgeId);
+  if (!badge) return;
+
+  // 효과음 재생
+  playSFX('levelup');
+
+  // 스타일 주입
+  if (!document.getElementById('badge-unlock-modal-style')) {
+    const style = document.createElement('style');
+    style.id = 'badge-unlock-modal-style';
+    style.innerHTML = `
+      .badge-unlock-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn .3s ease;
+      }
+      .badge-unlock-card {
+        background: #0f1420;
+        border: 2px solid rgba(246, 173, 85, 0.4);
+        box-shadow: 0 0 45px rgba(246, 173, 85, 0.25);
+        border-radius: 24px;
+        padding: 36px 28px;
+        text-align: center;
+        max-width: 360px;
+        width: 100%;
+        animation: badgePop .5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      @keyframes badgePop {
+        from { transform: scale(0.6); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .badge-unlock-icon-wrap {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle, rgba(246, 173, 85, 0.2) 0%, transparent 70%);
+      }
+      .badge-unlock-icon {
+        font-size: 64px;
+        animation: badgeFloat 2s ease-in-out infinite;
+      }
+      @keyframes badgeFloat {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-8px) scale(1.05); }
+      }
+      .badge-unlock-title {
+        font-family: 'Jua', sans-serif;
+        font-size: 22px;
+        color: #f6ad55;
+        margin-bottom: 8px;
+      }
+      .badge-unlock-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin-bottom: 12px;
+      }
+      .badge-unlock-desc {
+        font-size: 13px;
+        color: #8a9bb0;
+        line-height: 1.6;
+        margin-bottom: 24px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .badge-unlock-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #f6ad55, #ed8936);
+        border: none;
+        border-radius: 12px;
+        color: #0a0e1a;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all .2s;
+        touch-action: manipulation;
+      }
+      .badge-unlock-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(246, 173, 85, 0.4);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // DOM 생성
+  const overlay = document.createElement('div');
+  overlay.className = 'badge-unlock-overlay';
+  overlay.id = 'badge-unlock-overlay-container';
+  overlay.innerHTML = `
+    <div class="badge-unlock-card">
+      <div style="font-size: 12px; color: #f6ad55; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; font-weight: 700;">🎖️ 업적 달성!</div>
+      <div class="badge-unlock-icon-wrap">
+        <div class="badge-unlock-icon">${badge.icon}</div>
+      </div>
+      <div class="badge-unlock-title">새로운 뱃지 획득!</div>
+      <div class="badge-unlock-name">${badge.title}</div>
+      <div class="badge-unlock-desc">${badge.desc}</div>
+      <button class="badge-unlock-btn" onclick="document.getElementById('badge-unlock-overlay-container').remove();">확인</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // 메인 페이지일 경우 꽃가루 날리기
+  if (typeof startConfetti === 'function') {
+    startConfetti();
+  }
+}
+
+// ── 글로벌 오디오 플로팅 제어 버튼 주입 ──
+document.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname;
+  if (path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
+    return;
+  }
+
+  // 스타일 주입
+  if (!document.getElementById('global-sound-btn-style')) {
+    const style = document.createElement('style');
+    style.id = 'global-sound-btn-style';
+    style.innerHTML = `
+      .global-sound-btn {
+        position: fixed;
+        top: 10px;
+        right: 14px;
+        z-index: 1000;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(26, 34, 53, 0.85);
+        border: 1px solid rgba(99, 179, 237, 0.3);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        backdrop-filter: blur(4px);
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      .global-sound-btn:hover {
+        background: rgba(99, 179, 237, 0.15);
+        border-color: #63b3ed;
+        transform: scale(1.05);
+      }
+      .global-sound-btn:active {
+        transform: scale(0.95);
+      }
+      @media (max-width: 768px) {
+        .global-sound-btn {
+          top: 10px;
+          right: 56px; /* 모바일에서 햄버거 메뉴 옆에 겹치지 않게 여유 공간 조정 */
+          width: 34px;
+          height: 34px;
+          font-size: 14px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // 버튼 엘리먼트 생성
+  const btn = document.createElement('button');
+  btn.className = 'global-sound-btn';
+  btn.id = 'global-sound-float-btn';
+
+  const updateIcon = () => {
+    const s = getSoundSettings();
+    btn.textContent = s.bgm ? '🔊' : '🔇';
+    btn.title = s.bgm ? '배경음 켜짐' : '배경음 꺼짐';
+  };
+
+  updateIcon();
+
+  btn.addEventListener('click', () => {
+    const on = toggleBGM();
+    updateIcon();
+
+    if (on) {
+      const pageName = window.location.pathname.split('/').pop();
+      if (pageName && pageName.startsWith('quest')) {
+        playBGM('quest');
+      } else {
+        playBGM('main');
+      }
+    } else {
+      stopBGM();
+    }
+
+    if (typeof updateSettingsBtns === 'function') {
+      updateSettingsBtns();
+    }
+    if (typeof updateStoryBGMBtn === 'function') {
+      updateStoryBGMBtn();
+    }
+  });
+
+  document.body.appendChild(btn);
+});
 

@@ -355,6 +355,186 @@
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── 학습 분석 대시보드 ── */
+    .analytics-container {
+      margin-top: 24px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: clamp(16px, 3vw, 24px);
+      padding: clamp(20px, 4vw, 32px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .analytics-title {
+      margin-bottom: 20px;
+    }
+    .analytics-title h3 {
+      font-family: 'Jua', sans-serif;
+      color: var(--primary);
+      font-size: clamp(16px, 3.5vw, 20px);
+      margin: 0 0 6px 0;
+    }
+    .analytics-title p {
+      font-size: clamp(11px, 2.2vw, 13px);
+      color: var(--muted);
+      margin: 0;
+    }
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+    @media (max-width: 480px) {
+      .analytics-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .analytics-card {
+        padding: 12px !important;
+      }
+    }
+    .analytics-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.3s ease;
+    }
+    .analytics-card:hover {
+      transform: translateY(-3px);
+      background: rgba(99, 179, 237, 0.05);
+      border-color: rgba(99, 179, 237, 0.3);
+      box-shadow: 0 6px 15px rgba(99,179,237,0.1);
+    }
+    .analytics-card-icon {
+      font-size: clamp(24px, 5vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(44px, 8vw, 54px);
+      height: clamp(44px, 8vw, 54px);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    .analytics-card-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .analytics-card-label {
+      font-size: clamp(10px, 2vw, 12px);
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .analytics-card-value {
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(16px, 3.5vw, 22px);
+      color: var(--text);
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    /* ── 뱃지 상세 정보 모달 스타일 ── */
+    .badge-detail-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .25s ease;
+    }
+    .badge-detail-card {
+      background: #0f1420;
+      border: 2px solid rgba(99, 179, 237, 0.4);
+      box-shadow: 0 0 40px rgba(99, 179, 237, 0.2);
+      border-radius: 24px;
+      padding: 30px 24px;
+      text-align: center;
+      max-width: 340px;
+      width: 100%;
+      position: relative;
+      animation: badgePop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .badge-detail-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .badge-detail-close:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    .badge-detail-icon-wrap {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(99, 179, 237, 0.15) 0%, transparent 70%);
+    }
+    .badge-detail-icon {
+      font-size: 52px;
+    }
+    .badge-detail-icon.locked-gray {
+      filter: grayscale(100%);
+      opacity: 0.3;
+    }
+    .badge-detail-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .badge-detail-desc {
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .badge-detail-status {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: 700;
+    }
+    .badge-detail-status.unlocked {
+      background: rgba(104, 211, 145, 0.15);
+      color: #68d391;
+      border: 1px solid rgba(104, 211, 145, 0.3);
+    }
+    .badge-detail-status.locked {
+      background: rgba(252, 129, 129, 0.15);
+      color: #fc8181;
+      border: 1px solid rgba(252, 129, 129, 0.3);
+    }
   </style>
 </head>
 <body class="page">
@@ -374,7 +554,7 @@
       <div>🛴 <strong>인공지능 가디언 되기</strong><br>안전한 킥보드 이용을 위한 AI를 훈련시키며 나만의 캐릭터를 진화시켜 보세요!</div>
     </div>
 
-    <button class="btn bp" onclick="closeGuideAndPlay()" style="margin: 0; padding: 12px; width: 100%; font-size: 15px;">모험 시작하기 & 소리 켜기 🔊</button>
+    <button class="btn btn-primary" onclick="closeGuideAndPlay()" style="margin: 0; padding: 12px; width: 100%; font-size: 15px;">모험 시작하기 & 소리 켜기 🔊</button>
   </div>
 </div>
 
@@ -576,6 +756,51 @@
         <!-- 노드들이 JS를 통해 동적으로 생성됩니다 -->
       </div>
     </div>
+
+    <!-- 실시간 학습 분석 대시보드 -->
+    <div class="analytics-container" id="analytics-wrap">
+      <div class="analytics-title">
+        <h3>📈 실시간 학습 분석 (Learning Analytics)</h3>
+        <p>나의 인공지능 학습 기여도와 훈련 상태를 분석합니다.</p>
+      </div>
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <div class="analytics-card-icon">🎯</div>
+          <div class="analytics-card-info">
+            <div class="analytics-card-label">완료 퀘스트</div>
+            <div class="analytics-card-value" id="analytic-quests">0 / 8</div>
+          </div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-card-icon">📸</div>
+          <div class="analytics-card-info">
+            <div class="analytics-card-label">수집한 데이터</div>
+            <div class="analytics-card-value" id="analytic-uploads">0 장</div>
+          </div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-card-icon">🏷️</div>
+          <div class="analytics-card-info">
+            <div class="analytics-card-label">라벨링한 데이터</div>
+            <div class="analytics-card-value" id="analytic-labels">0 장</div>
+          </div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-card-icon">🏆</div>
+          <div class="analytics-card-info">
+            <div class="analytics-card-label">획득 뱃지</div>
+            <div class="analytics-card-value" id="analytic-badges">0 / 8</div>
+          </div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-card-icon">💯</div>
+          <div class="analytics-card-info">
+            <div class="analytics-card-label">퀴즈 최고 점수</div>
+            <div class="analytics-card-value" id="analytic-quiz-score">0 점</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -755,6 +980,9 @@ function initUI(){
   // 뱃지 렌더링
   renderBadges();
 
+  // 실시간 학습 분석 로드
+  loadAnalytics();
+
   // 활성 퀘스트 찾기 (가장 낮은 번호의 미완료 퀘스트, 모두 완료 시 9)
   let activeQuestId = 9;
   for (let i = 1; i <= 8; i++) {
@@ -824,18 +1052,96 @@ function renderBadges() {
   grid.innerHTML = BADGES.map(b => {
     const unlocked = achievements.includes(b.id);
     return `
-      <div class="badge-item ${unlocked ? 'unlocked' : 'locked'}">
+      <div class="badge-item ${unlocked ? 'unlocked' : 'locked'}" onclick="showBadgeDetail('${b.id}')" style="cursor: pointer;">
         <span>${b.icon}</span>
         <div class="badge-tooltip">
           <strong>${b.title}</strong>
           ${b.desc}<br>
           <span style="color:${unlocked ? 'var(--green)' : 'var(--red)'}; font-weight:bold;">
-            ${unlocked ? '🔓 획득 완료' : '🔒 미획득'}
+            ${unlocked ? '🔓 획득 완료 (클릭하여 상세 정보)' : '🔒 미획득 (클릭하여 상세 정보)'}
           </span>
         </div>
       </div>
     `;
   }).join('');
+}
+
+// ── 뱃지 클릭 상세정보 모달 표시 ──
+function showBadgeDetail(badgeId) {
+  playSFX('click');
+  const badge = BADGES.find(b => b.id === badgeId);
+  if (!badge) return;
+
+  const achievements = userData.achievements || [];
+  const unlocked = achievements.includes(badgeId);
+
+  // 모달 생성
+  const overlay = document.createElement('div');
+  overlay.className = 'badge-detail-overlay';
+  overlay.id = 'badge-detail-modal-overlay';
+  
+  // 바깥쪽 클릭 시 닫기
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+
+  overlay.innerHTML = `
+    <div class="badge-detail-card">
+      <button class="badge-detail-close" onclick="document.getElementById('badge-detail-modal-overlay').remove();">✕</button>
+      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">뱃지 정보</div>
+      <div class="badge-detail-icon-wrap">
+        <div class="badge-detail-icon ${unlocked ? '' : 'locked-gray'}">${badge.icon}</div>
+      </div>
+      <div class="badge-detail-title">${badge.title}</div>
+      <div class="badge-detail-desc">${badge.desc}</div>
+      <div class="badge-detail-status ${unlocked ? 'unlocked' : 'locked'}" style="margin-top: 10px;">
+        ${unlocked ? '🔓 획득 완료' : '🔒 미획득'}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// ── 실시간 학습 분석 로드 ──
+async function loadAnalytics() {
+  const quests = userData.quests || {};
+  
+  // 1. 완료 퀘스트 개수 계산
+  const questDoneCount = Object.keys(quests).filter(k => k.endsWith('_done')).length;
+  const questDoneEl = document.getElementById('analytic-quests');
+  if (questDoneEl) questDoneEl.textContent = `${questDoneCount} / 8`;
+
+  // 2. 획득 뱃지 개수 계산
+  const achievements = userData.achievements || [];
+  const achievementsEl = document.getElementById('analytic-badges');
+  if (achievementsEl) achievementsEl.textContent = `${achievements.length} / ${BADGES.length}`;
+
+  // 3. 퀴즈 최고 점수 계산
+  const bestScore = quests.q5_best_score || 0;
+  const quizScoreEl = document.getElementById('analytic-quiz-score');
+  if (quizScoreEl) quizScoreEl.textContent = `${bestScore} 점`;
+
+  // 4. 수집한 사진 데이터 & 라벨링 개수 실시간 데이터베이스 조회
+  const userId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+  try {
+    // 수집한 사진 데이터 조회
+    const uploadSnap = await db.collection('uploads').where('userId', '==', userId).get();
+    const uploadsEl = document.getElementById('analytic-uploads');
+    if (uploadsEl) uploadsEl.textContent = `${uploadSnap.size} 장`;
+
+    // 라벨링한 데이터 개수 조회 (labels 컬렉션)
+    const labelSnap = await db.collection('labels').where('userId', '==', userId).get();
+    const labelsEl = document.getElementById('analytic-labels');
+    if (labelsEl) labelsEl.textContent = `${labelSnap.size} 장`;
+  } catch (error) {
+    console.error("실시간 분석 데이터 로드 오류:", error);
+    const uploadsEl = document.getElementById('analytic-uploads');
+    if (uploadsEl) uploadsEl.textContent = `- 장`;
+    const labelsEl = document.getElementById('analytic-labels');
+    if (labelsEl) labelsEl.textContent = `- 장`;
+  }
 }
 
 // ── 로드맵 연결선 그리기 ──
