@@ -209,7 +209,7 @@ const QUIZZES_2 = [
 
 let currentUser=null, userData=null;
 let msgIdx=0, isTyping=false, typingTimer=null;
-let currentQuizSet=null, quizIdx=0, quizScore=0, quizAttempts=0;
+let currentQuizSet=null, quizIdx=0, quizScore=0, quizAttempts=0, currentCombo=0, comboBonus=0;
 let orderSlots={}, matchMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
 requireAuth(async (user) => {
@@ -340,6 +340,7 @@ document.addEventListener('keydown',(e)=>{
 function startQuiz(setNum){
   currentQuizSet=setNum===1?QUIZZES_1:QUIZZES_2;
   quizIdx=0; quizScore=0; quizAttempts=0;
+  currentCombo=0; comboBonus=0;
   document.getElementById('quiz-title').textContent=setNum===1?'📝 AI 가디언 퀴즈!':'📝 씨큐 퀴즈!';
   document.getElementById('quiz-overlay').style.display='flex';
   renderQuiz();
@@ -367,11 +368,27 @@ function selectMC(idx,btn){
   const ok=idx===q.ans;
   btn.classList.add(ok?'correct':'wrong');
   if(!ok) document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
-  if(ok) quizScore++;
+  
+  if(ok) {
+    quizScore++;
+    currentCombo++;
+    playSFX('correct');
+  } else {
+    currentCombo = 0;
+    playSFX('wrong');
+  }
   quizAttempts++;
+
+  const bonusScore = currentCombo >= 2 ? (currentCombo - 1) * 2 : 0;
+  if(bonusScore > 0) {
+    comboBonus += bonusScore;
+  }
+
+  const comboText = currentCombo >= 2 ? `<span style="color:#f6ad55; font-weight:bold; margin-left:8px; display:inline-block; animation: floatIndicator 1s ease-in-out infinite;">🔥 ${currentCombo} 콤보! (보너스 +${bonusScore}점)</span>` : '';
+
   document.getElementById('quiz-feedback').innerHTML=`
     <div class="quiz-feedback ${ok?'correct':'wrong'}" style="margin-top:10px;">
-      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
+      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp} ${comboText}
     </div>
     <button class="quiz-check-btn" onclick="nextQuiz()">
       ${quizIdx+1<currentQuizSet.length?'다음 문제 →':'결과 보기 →'}
@@ -474,7 +491,7 @@ async function nextQuiz(){
 
 async function finishQuiz(){
   const total=currentQuizSet.length;
-  const xp=quizScore*12+(quizScore===total?20:0);
+  const xp=quizScore*12+(quizScore===total?20:0) + comboBonus;
   const quizName=currentQuizSet===QUIZZES_1?'q1_AI가디언퀴즈':'q1_씨큐퀴즈';
 
   if(currentUser.uid==='student'){
@@ -511,7 +528,7 @@ async function finishQuiz(){
       <div class="big-emoji">${quizScore===total?'🏆':quizScore>=Math.ceil(total/2)?'👍':'💪'}</div>
       <h3>${quizScore} / ${total} 정답</h3>
       <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(quizScore/total*100)}%</div>
-      <div class="xp-gain">+${xp} 점 획득!</div>
+      <div class="xp-gain">+${xp} 점 획득! ${comboBonus > 0 ? `<br><span style="font-size:12px; color:#f6ad55; font-weight:bold;">(콤보 보너스 +${comboBonus}점 포함)</span>` : ''}</div>
       <button class="quiz-check-btn" onclick="closeQuiz()">계속 학습하기 →</button>
     </div>`;
   showXPPopup('+'+xp+' 점');
@@ -682,7 +699,7 @@ async function deleteMyPost(docId){
   }catch(e){alert('삭제 실패: '+e.message);}
 }
 
-function skipBoard(){
+async function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
   if(currentUser.uid==='student'){
@@ -690,6 +707,7 @@ function skipBoard(){
     userData.quests.q1_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   }
+  await unlockBadge('ethics_guardian', currentUser, userData);
   showComplete();
 }
 

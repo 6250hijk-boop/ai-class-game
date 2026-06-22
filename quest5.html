@@ -258,7 +258,7 @@ const ALL_QUESTIONS = [
 
 const TIME_LIMIT = 10;
 let currentUser=null, userData=null;
-let questions=[], qIdx=0, score=0, lives=3;
+let questions=[], qIdx=0, score=0, lives=3, currentCombo=0, comboBonus=0;
 let timerInterval=null, timeLeft=TIME_LIMIT;
 let answered=false, correctCount=0;
 let bestScore=0;
@@ -286,6 +286,7 @@ function startGame(){
   // 문제 섞기
   questions=[...ALL_QUESTIONS].sort(()=>Math.random()-.5);
   qIdx=0; score=0; lives=3; correctCount=0;
+  currentCombo=0; comboBonus=0;
   document.getElementById('intro-screen').style.display='none';
   document.getElementById('game-screen').classList.add('active');
   showQuestion();
@@ -350,18 +351,29 @@ function selectAnswer(val, btn){
   if(correct){
     btn.classList.add('ans-correct');
     score+=10; correctCount++;
+    currentCombo++;
+    playSFX('correct');
   } else {
     btn.classList.add('ans-wrong');
     lives--;
+    currentCombo = 0;
+    playSFX('wrong');
     // 정답 표시
     if(q.type==='mc'){
       document.querySelectorAll('.mc-btn')[q.ans].classList.add('ans-show');
     }
   }
 
+  const bonusScore = currentCombo >= 2 ? (currentCombo - 1) * 2 : 0;
+  if(bonusScore > 0) {
+    comboBonus += bonusScore;
+    score += bonusScore;
+  }
+
   // 피드백
   const fb=document.getElementById('feedback-box');
-  fb.textContent=(correct?'✅ 정답! ':'❌ 오답! ')+q.exp;
+  const comboText = currentCombo >= 2 ? ` 🔥 ${currentCombo} 콤보! (+${bonusScore}점)` : '';
+  fb.textContent=(correct?'✅ 정답!':'❌ 오답!') + comboText + ' ' + q.exp;
   fb.classList.add('show', correct?'feedback-correct':'feedback-wrong');
 
   // 라이프 업데이트
@@ -382,6 +394,8 @@ function timeoutQuestion(){
   if(answered) return;
   answered=true;
   lives--;
+  currentCombo = 0;
+  playSFX('wrong');
   document.querySelectorAll('.ox-btn,.mc-btn').forEach(b=>b.disabled=true);
   const q=questions[qIdx];
   if(q.type==='mc') document.querySelectorAll('.mc-btn')[q.ans].classList.add('ans-show');
@@ -409,6 +423,12 @@ async function endGame(isGameOver){
   const finalScore=score+bonus;
   const pct=Math.round(correctCount/total*100);
 
+  if (isGameOver) {
+    playSFX('wrong');
+  } else {
+    playSFX('complete');
+  }
+
   // 별점
   const stars=pct>=90?'⭐⭐⭐':pct>=70?'⭐⭐':pct>=50?'⭐':'';
   const grade=isGameOver?'💀':pct===100?'🏆':pct>=80?'🥇':pct>=60?'🥈':'🥉';
@@ -420,7 +440,8 @@ async function endGame(isGameOver){
   document.getElementById('result-score').textContent=finalScore+'점';
   document.getElementById('result-detail').innerHTML=
     `정답 <strong style="color:#68d391;">${correctCount}</strong> / ${total}문제 (${pct}%)`+
-    (bonus?`<br><span style="color:#f6ad55;">전체 정답 보너스 +${bonus}점!</span>`:'');
+    (bonus?`<br><span style="color:#f6ad55;">전체 정답 보너스 +${bonus}점!</span>`:'')+
+    (comboBonus>0?`<br><span style="color:#f6ad55;">콤보 보너스 +${comboBonus}점!</span>`:'');
   document.getElementById('result-screen').classList.add('active');
 
   // 저장
@@ -447,6 +468,11 @@ async function endGame(isGameOver){
     checkLevelUp((userData.score||0),(userData.score||0)+xp);
     userData.score=(userData.score||0)+xp;
   }
+  
+  if (!isGameOver) {
+    await unlockBadge('flawless_master', currentUser, userData);
+  }
+  
   if(xp>0) showXPPopup('+'+xp+' 점');
 }
 

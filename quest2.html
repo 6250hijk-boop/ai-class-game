@@ -774,14 +774,17 @@ async function deleteMyPost(docId){
   }catch(e){alert('삭제 실패: '+e.message);}
 }
 
-function skipBoard(){
+async function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
   if(currentUser.uid==='student'){
     userData.quests=userData.quests||{};
     userData.quests.q2_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
+  } else {
+    await db.collection('users').doc(currentUser.uid).update({'quests.q2_done':true, 'quests.q2_msgIdx':MESSAGES.length});
   }
+  await unlockBadge('truth_seeker', currentUser, userData);
   showComplete();
 }
 

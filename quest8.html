@@ -408,6 +408,24 @@ async function drawResults(imgUrl, data){
   } else {
     safeEl.innerHTML=`<div class="tip-box">💡 킥보드나 사람이 감지되지 않았어요.</div>`;
   }
+
+  // 퀘스트 8 완료 처리
+  const q=(userData.quests||{});
+  if(!q.q8_done){
+    const xp = 20;
+    if(currentUser.uid==='student'){
+      userData.score=(userData.score||0)+xp;
+      userData.quests=userData.quests||{};
+      userData.quests.q8_done=true;
+      localStorage.setItem('tempUserData',JSON.stringify(userData));
+    } else {
+      await addScore(currentUser.uid,xp,'퀘스트8 테스트 완료');
+      await db.collection('users').doc(currentUser.uid).update({'quests.q8_done':true});
+    }
+    await unlockBadge('safety_officer', currentUser, userData);
+    document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
+    alert('🎉 퀘스트 8 완료! +20점! (안전의 파수꾼 🛡️ 뱃지 획득)');
+  }
 }
 
 function showLoading(msg){

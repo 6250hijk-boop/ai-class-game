@@ -448,6 +448,7 @@ async function finishQuiz(){
     updateHUD();updateCharImages();
     checkLevelUp(userData.score-xp,userData.score);
   }
+  await unlockBadge('young_scientist', currentUser, userData);
   document.getElementById('quiz-content').innerHTML=`
     <div class="quiz-result">
       <div class="big-emoji">${qScore===total?'🏆':qScore>=2?'👍':'💪'}</div>

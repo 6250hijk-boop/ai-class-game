@@ -337,13 +337,17 @@ const sv = sessionStorage.getItem('gameUser');
 if (sv) { const u=JSON.parse(sv); window.location.href=u.isAdmin?'admin.html':'main.html'; }
 
 function showTab(t) {
+  if (t === 'temp') {
+    tempGo('continue');
+    return;
+  }
   ['login','signup','find','temp'].forEach(id=>{
-    document.getElementById('tab-'+id).style.display=id===t?'block':'none';
+    const el = document.getElementById('tab-'+id);
+    if(el) el.style.display=id===t?'block':'none';
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
     b.classList.toggle('on',['login','signup','find','temp'][i]===t);
   });
-  if(t==='temp') loadTempInfo();
 }
 
 function loadTempInfo() {

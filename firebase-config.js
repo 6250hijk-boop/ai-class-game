@@ -34,7 +34,7 @@ const ADMIN_PW = "20260404";
 
 // ── 임시 학생 계정 ──
 const STUDENT_ID = "student";
-const STUDENT_PW = "20260404";
+const STUDENT_PW = "123456";
 
 // ── 욕설/비하 필터 ──
 const BAD_WORDS = ["욕1","욕2","바보","멍청","시발","씨발","병신","개새","ㅅㅂ","ㅂㅅ","fuck","shit","damn","bitch"];
@@ -279,3 +279,39 @@ function playSFX(key) {
 function updateBGMVolume(vol) {
   if (_bgmAudio) _bgmAudio.volume = vol;
 }
+
+// ── 뱃지(업적) 정의 ──
+const BADGES = [
+  { id: 'ethics_guardian', title: '윤리의 수호자', icon: '⚖️', desc: '퀘스트 1 완료' },
+  { id: 'truth_seeker', title: '진실의 추적자', icon: '🔍', desc: '퀘스트 2 완료' },
+  { id: 'ai_educator', title: '지식의 전파자', icon: '📚', desc: '퀘스트 3 완료' },
+  { id: 'young_scientist', title: '새내기 과학자', icon: '🎓', desc: '퀘스트 4 완료' },
+  { id: 'flawless_master', title: '완벽한 마스터', icon: '💯', desc: '퀘스트 5에서 100점 달성' },
+  { id: 'data_hunter', title: '데이터 사냥꾼', icon: '📷', desc: '퀘스트 6 완료' },
+  { id: 'labeling_expert', title: '라벨링 전문가', icon: '🏷️', desc: '퀘스트 7 완료' },
+  { id: 'safety_officer', title: '안전의 파수꾼', icon: '🛡️', desc: '퀘스트 8 완료' }
+];
+
+async function unlockBadge(badgeId, userSession, userLocalData) {
+  if (!badgeId) return false;
+  if (!userLocalData.achievements) userLocalData.achievements = [];
+  let achievements = userLocalData.achievements;
+  if (achievements.includes(badgeId)) return false; // 이미 획득함
+
+  achievements.push(badgeId);
+  userLocalData.achievements = achievements;
+
+  if (userSession.uid === 'student') {
+    localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
+  } else if (userSession.uid !== 'admin') {
+    try {
+      await db.collection('users').doc(userSession.uid).update({
+        achievements: achievements
+      });
+    } catch (e) {
+      console.error("Firestore achievements update failed:", e);
+    }
+  }
+  return true; // 새로 획득함
+}
+

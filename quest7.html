@@ -769,6 +769,25 @@ async function saveLabels(){
     }
     document.getElementById('save-status').textContent='✅ 저장됨';
     setTimeout(()=>document.getElementById('save-status').textContent='',2500);
+
+    // 퀘스트 7 완료 처리
+    if(boxes.length > 0) {
+      const q=(userData.quests||{});
+      if(!q.q7_done){
+        const xp = 20;
+        if(currentUser.uid==='student'){
+          userData.score=(userData.score||0)+xp;
+          userData.quests=userData.quests||{};
+          userData.quests.q7_done=true;
+          localStorage.setItem('tempUserData',JSON.stringify(userData));
+        } else {
+          await addScore(currentUser.uid,xp,'퀘스트7 라벨링 완료');
+          await db.collection('users').doc(currentUser.uid).update({'quests.q7_done':true});
+        }
+        await unlockBadge('labeling_expert', currentUser, userData);
+        alert('🎉 퀘스트 7 완료! +20점! (라벨링 전문가 🏷️ 뱃지 획득)');
+      }
+    }
   }catch(e){document.getElementById('save-status').textContent='❌ 저장 실패';}
 }
 
