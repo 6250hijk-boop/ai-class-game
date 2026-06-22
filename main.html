@@ -140,27 +140,17 @@
     .roadmap-nodes {
       position: relative;
       z-index: 2;
-      display: flex;
-      flex-direction: column;
-      gap: clamp(40px, 8vw, 60px);
       width: 100%;
-      max-width: 540px;
-    }
-    .roadmap-row {
-      display: flex;
-      width: 100%;
-      justify-content: space-around;
-      position: relative;
-    }
-    .roadmap-row.reverse {
-      flex-direction: row-reverse;
+      height: 520px;
+      max-width: 600px;
     }
     .roadmap-node-wrapper {
-      position: relative;
+      position: absolute;
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: clamp(90px, 22vw, 120px);
+      width: clamp(80px, 18vw, 110px);
+      transform: translate(-50%, -50%);
     }
     .roadmap-node {
       width: clamp(52px, 12vw, 64px);
@@ -312,6 +302,58 @@
       color: var(--primary);
       display: block;
       margin-bottom: 2px;
+    }
+
+    /* ── SVG 로드맵 연결선 스타일 ── */
+    .roadmap-path {
+      stroke: rgba(99, 179, 237, 0.2);
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
+    }
+    .roadmap-path.completed {
+      stroke: var(--green);
+      stroke-width: 5;
+      filter: drop-shadow(0 0 4px rgba(104, 211, 145, 0.6));
+    }
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -20;
+      }
+    }
+    .roadmap-path.active-path {
+      stroke: var(--accent);
+      stroke-width: 5;
+      stroke-dasharray: 6 4;
+      animation: dash 1s linear infinite;
+      filter: drop-shadow(0 0 4px rgba(246, 173, 85, 0.6));
+    }
+
+    /* ── 안내 가이드 팝업 스타일 ── */
+    .policy-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .policy-box {
+      background: #0f1420;
+      border: 2px solid rgba(99, 179, 237, 0.4);
+      border-radius: 20px;
+      max-width: 440px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp .4s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -713,8 +755,8 @@ function initUI(){
   // 뱃지 렌더링
   renderBadges();
 
-  // 활성 퀘스트 찾기 (가장 낮은 번호의 미완료 퀘스트)
-  let activeQuestId = 1;
+  // 활성 퀘스트 찾기 (가장 낮은 번호의 미완료 퀘스트, 모두 완료 시 9)
+  let activeQuestId = 9;
   for (let i = 1; i <= 8; i++) {
     if (!(userData.quests || {})[`q${i}_done`]) {
       activeQuestId = i;
@@ -722,49 +764,48 @@ function initUI(){
     }
   }
 
-  // 8개 퀘스트를 4개 행으로 나누어 렌더링 (zig-zag 경로)
-  const rows = [
-    [1, 2],
-    [4, 3], // reverse row
-    [5, 6],
-    [8, 7]  // reverse row
-  ];
+  // 8개 퀘스트의 2D 평면상 좌표 설정 (S자형 지도 형태)
+  const coords = {
+    1: { x: 22, y: 15 },
+    2: { x: 55, y: 15 },
+    3: { x: 80, y: 30 },
+    4: { x: 60, y: 50 },
+    5: { x: 30, y: 48 },
+    6: { x: 18, y: 70 },
+    7: { x: 48, y: 82 },
+    8: { x: 78, y: 78 }
+  };
 
   let roadmapHtml = '';
-  rows.forEach((rowQuests, rowIndex) => {
-    const isReverse = rowIndex % 2 !== 0;
-    roadmapHtml += `<div class="roadmap-row ${isReverse ? 'reverse' : ''}">`;
-    
-    rowQuests.forEach(qid => {
-      const q = QUESTS.find(item => item.id === qid);
-      const done = (userData.quests || {})[`q${qid}_done`];
-      const isActive = qid === activeQuestId;
-      const isLocked = qid > activeQuestId;
+  for (let qid = 1; qid <= 8; qid++) {
+    const q = QUESTS.find(item => item.id === qid);
+    const done = (userData.quests || {})[`q${qid}_done`];
+    const isActive = qid === activeQuestId;
+    const isLocked = qid > activeQuestId;
 
-      let stateClass = 'locked';
-      if (done) stateClass = 'done';
-      else if (isActive) stateClass = 'active';
+    let stateClass = 'locked';
+    if (done) stateClass = 'done';
+    else if (isActive) stateClass = 'active';
 
-      roadmapHtml += `
-        <div class="roadmap-node-wrapper">
-          ${isActive ? `<div class="character-indicator">${lv.emoji}</div>` : ''}
-          <a href="${isLocked ? '#' : `quest${qid}.html`}" 
-             id="node-${qid}" 
-             class="roadmap-node ${stateClass}" 
-             style="${isLocked ? 'pointer-events: none;' : ''}"
-             title="${q.title}">
-            <span>${isLocked ? '🔒' : q.icon}</span>
-          </a>
-          <div class="roadmap-node-title">
-            <div class="roadmap-node-step">퀘스트 ${qid}</div>
-            ${q.title}
-          </div>
+    const pos = coords[qid] || { x: 50, y: 50 };
+
+    roadmapHtml += `
+      <div class="roadmap-node-wrapper" style="left: ${pos.x}%; top: ${pos.y}%;">
+        ${isActive ? `<div class="character-indicator">${lv.emoji}</div>` : ''}
+        <a href="${isLocked ? '#' : `quest${qid}.html`}" 
+           id="node-${qid}" 
+           class="roadmap-node ${stateClass}" 
+           style="${isLocked ? 'pointer-events: none;' : ''}"
+           title="${q.title}">
+          <span>${isLocked ? '🔒' : q.icon}</span>
+        </a>
+        <div class="roadmap-node-title">
+          <div class="roadmap-node-step">퀘스트 ${qid}</div>
+          ${q.title}
         </div>
-      `;
-    });
-    
-    roadmapHtml += `</div>`;
-  });
+      </div>
+    `;
+  }
   
   document.getElementById('roadmap-nodes-container').innerHTML = roadmapHtml;
 
@@ -815,6 +856,14 @@ function drawRoadmapLines() {
     }
   }
   
+  let activeQuestId = 9;
+  for (let i = 1; i <= 8; i++) {
+    if (!(userData.quests || {})[`q${i}_done`]) {
+      activeQuestId = i;
+      break;
+    }
+  }
+  
   for (let i = 0; i < points.length - 1; i++) {
     const p1 = points[i];
     const p2 = points[i+1];
@@ -827,7 +876,14 @@ function drawRoadmapLines() {
     const q1Done = (userData.quests || {})[`q${p1.id}_done`];
     const q2Done = (userData.quests || {})[`q${p2.id}_done`];
     
-    line.setAttribute('class', `roadmap-path ${q1Done && q2Done ? 'completed' : ''}`);
+    let pathClass = 'roadmap-path';
+    if (q1Done && q2Done) {
+      pathClass += ' completed';
+    } else if (p2.id === activeQuestId && q1Done) {
+      pathClass += ' active-path';
+    }
+    
+    line.setAttribute('class', pathClass);
     svg.appendChild(line);
   }
 }
