@@ -89,13 +89,13 @@
 
     /* 퀴즈 확인 팝업 */
     .quiz-confirm-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-confirm-box{background:#111827;border:2px solid rgba(63b3ed,0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(63b3ed,0.2);animation:slideUp .4s ease;}
+    .quiz-confirm-box{background:#111827;border:2px solid rgba(99,179,237,0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(99,179,237,0.2);animation:slideUp .4s ease;}
     .quiz-confirm-emoji{font-size:clamp(44px,8vw,64px);margin-bottom:14px;}
-    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:63b3ed_VAR;margin-bottom:8px;}
+    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:#63b3ed;margin-bottom:8px;}
     .quiz-confirm-desc{font-size:clamp(13px,2.5vw,15px);color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;}
     .quiz-confirm-btns{display:flex;gap:10px;}
-    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,63b3ed_BTN);border:none;border-radius:12px;color:white;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
-    .quiz-confirm-ok:hover{transform:translateY(-2px);}
+    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
+    .quiz-confirm-ok:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(99,179,237,0.4);}
     .quiz-confirm-cancel{padding:clamp(12px,2.5vw,14px) clamp(16px,3vw,20px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:clamp(13px,2.5vw,15px);cursor:pointer;font-family:inherit;}
   </style>
 </head>
@@ -322,6 +322,7 @@ async function autoSave(){
 }
 
 document.addEventListener('click',(e)=>{
+  if(completeShown) return;
   if(quizShowing) return;
   if(document.getElementById('board-overlay')) return; // 게시판 열려있으면 차단
   if(document.getElementById('complete-btns')) return; // 완료화면 열려있으면 차단
@@ -330,6 +331,7 @@ document.addEventListener('click',(e)=>{
   nextMessage();
 });
 document.addEventListener('keydown',(e)=>{
+  if(completeShown) return;
   if(quizShowing) return;
   if(document.getElementById('board-overlay')) return;
   if(e.code==='Space'||e.code==='Enter') nextMessage();
@@ -574,12 +576,6 @@ function showBoard(){
           </h2>
           <p style="font-size:12px;color:rgba(255,255,255,0.4);">찾은 내용이나 링크를 공유해보세요!</p>
         </div>
-        <button onclick="skipBoard()"
-          style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
-                 border-radius:8px;padding:6px 12px;color:rgba(255,255,255,0.5);
-                 font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">
-          건너뛰기 →
-        </button>
       </div>
 
       <!-- 글 작성 -->
@@ -597,10 +593,7 @@ function showBoard(){
                  border-radius:10px;padding:10px 12px;color:#e2e8f0;font-size:13px;
                  font-family:inherit;outline:none;margin-top:8px;transition:border .2s;"
           onfocus="this.style.borderColor='#63b3ed'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-          <span style="font-size:12px;color:rgba(255,255,255,0.35);">
-            작성자: ${userData.charName||userData.name||'익명'}
-          </span>
+        <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:10px;">
           <button onclick="submitPost()"
             style="background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;
                    border-radius:9px;padding:8px 18px;color:#0a0e1a;font-size:13px;
@@ -661,6 +654,8 @@ async function loadPosts(){
     if(!posts.length){container.innerHTML=`<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:13px;">아직 게시글이 없어요!</div>`;return;}
     container.innerHTML=posts.map(d=>{
       const isMe=d.authorId===myId;
+      const isAdmin=currentUser.uid==='admin';
+      const canDelete=isMe||isAdmin;
       const date=d.created_at?.slice(0,16).replace('T',' ')||'';
       const xp=d.xp||BOARD_DEFAULT_XP;
       return `<div id="post-${d.id}" style="background:rgba(255,255,255,0.04);border:1px solid ${isMe?'rgba(99,179,237,0.3)':'rgba(255,255,255,0.08)'};border-radius:12px;padding:14px;margin-bottom:10px;">
@@ -669,7 +664,7 @@ async function loadPosts(){
           <div style="display:flex;align-items:center;gap:6px;">
             <span style="background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.3);border-radius:6px;padding:2px 8px;font-size:11px;color:#f6ad55;">+${xp}점</span>
             <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
-            ${isMe?`<button onclick="deleteMyPost('${d.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>`:''}
+            ${canDelete?`<button onclick="deleteMyPost('${d.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>`:''}
           </div>
         </div>
         <p style="font-size:14px;color:#e2e8f0;line-height:1.6;margin-bottom:${d.link?'8px':'0'};white-space:pre-wrap;">${d.content}</p>
@@ -686,13 +681,23 @@ async function deleteMyPost(docId){
     if(snap.exists){
       const post=snap.data();
       const xp=post.xp||BOARD_DEFAULT_XP;
+      
+      const myId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
+      const isAdmin=currentUser.uid==='admin';
+      if(post.authorId!==myId && !isAdmin){
+        alert('삭제 권한이 없습니다.');
+        return;
+      }
+      
       await db.collection('board_q1').doc(docId).delete();
-      if(currentUser.uid==='student'){
-        userData.score=Math.max(0,(userData.score||0)-xp);
-        localStorage.setItem('tempUserData',JSON.stringify(userData));
-        updateHUD();
+      if(post.isTemp){
+        if(post.authorId===myId){
+          userData.score=Math.max(0,(userData.score||0)-xp);
+          localStorage.setItem('tempUserData',JSON.stringify(userData));
+          updateHUD();
+        }
       } else {
-        await addScore(currentUser.uid,-xp,'게시글 삭제 (board_q1)');
+        await addScore(post.authorId,-xp,'게시글 삭제 (board_q1)');
       }
     }
     document.getElementById('post-'+docId)?.remove();
