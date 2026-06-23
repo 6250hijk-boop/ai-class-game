@@ -99,9 +99,14 @@
     /* ── RPG 스타일 로드맵 (Path Map) ── */
     .roadmap-container {
       position: relative;
-      background: var(--card);
-      background-image: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(99,179,237,0.06) 0%, transparent 80%);
-      border: 1px solid var(--border);
+      background: #0b101d;
+      /* 고화질 그리드 및 스캔 텍스처 */
+      background-image: 
+        linear-gradient(rgba(99, 179, 237, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 179, 237, 0.04) 1px, transparent 1px),
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(99, 179, 237, 0.08) 0%, transparent 85%);
+      background-size: 24px 24px, 24px 24px, 100% 100%;
+      border: 1px solid rgba(99, 179, 237, 0.25);
       border-radius: clamp(16px, 3vw, 24px);
       padding: clamp(24px, 5vw, 48px) clamp(16px, 3vw, 24px);
       margin-top: 20px;
@@ -110,8 +115,40 @@
       flex-direction: column;
       align-items: center;
       overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
     }
+    /* 스캐닝 레이저 바 효과 */
+    .roadmap-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(99, 179, 237, 0.35), transparent);
+      animation: scan 8s linear infinite;
+      z-index: 3;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0% { top: 0%; opacity: 0; }
+      5% { opacity: 0.8; }
+      95% { opacity: 0.8; }
+      100% { top: 100%; opacity: 0; }
+    }
+    /* 전술 그리드 코너 장식 */
+    .roadmap-corner {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-color: rgba(99, 179, 237, 0.6);
+      border-style: solid;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .corner-tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+    .corner-tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+    .corner-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+    .corner-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
+
     .roadmap-title-bar {
       width: 100%;
       text-align: center;
@@ -125,6 +162,7 @@
       font-size: clamp(16px, 3.5vw, 20px);
       margin: 0 0 6px 0;
       letter-spacing: 0.5px;
+      text-shadow: 0 0 10px rgba(99, 179, 237, 0.4);
     }
     .roadmap-title-bar p {
       font-size: clamp(11px, 2.2vw, 13px);
@@ -153,44 +191,79 @@
       transform: translate(-50%, -50%);
     }
     .roadmap-node {
-      width: clamp(52px, 12vw, 64px);
-      height: clamp(52px, 12vw, 64px);
+      width: clamp(54px, 12vw, 66px);
+      height: clamp(54px, 12vw, 66px);
       border-radius: 50%;
-      background: #0f1420;
-      border: 3px solid rgba(255,255,255,0.1);
+      background: rgba(15, 20, 32, 0.85);
+      border: 2px solid rgba(99, 179, 237, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: clamp(20px, 5vw, 26px);
+      font-size: clamp(22px, 5vw, 28px);
       cursor: pointer;
+      position: relative;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.05);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.05);
       text-decoration: none;
       -webkit-tap-highlight-color: transparent;
+      backdrop-filter: blur(4px);
     }
     .roadmap-node:hover {
       transform: scale(1.12);
-      box-shadow: 0 0 20px rgba(99,179,237,0.4);
+      box-shadow: 0 0 22px rgba(99, 179, 237, 0.5), inset 0 0 8px rgba(99, 179, 237, 0.2);
       border-color: var(--primary);
     }
+    /* 현재 진행해야하는 활성 노드 효과 */
     .roadmap-node.active {
       border-color: var(--accent);
-      box-shadow: 0 0 25px rgba(246,173,85,0.5);
+      box-shadow: 0 0 25px rgba(246, 173, 85, 0.6), inset 0 0 10px rgba(246, 173, 85, 0.3);
       animation: nodePulse 1.8s infinite ease-in-out;
     }
+    .roadmap-node.active::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border: 1.5px dashed var(--accent);
+      border-radius: 50%;
+      animation: nodeSpin 12s linear infinite;
+    }
+    @keyframes nodeSpin {
+      100% { transform: rotate(360deg); }
+    }
+    /* 완료한 노드 체크 뱃지 및 스타일 */
     .roadmap-node.done {
       border-color: var(--green);
-      box-shadow: 0 0 15px rgba(104,211,145,0.3);
-      background: rgba(104,211,145,0.05);
+      box-shadow: 0 0 18px rgba(104, 211, 145, 0.4), inset 0 0 8px rgba(104, 211, 145, 0.2);
+      background: rgba(104, 211, 145, 0.06);
+    }
+    .roadmap-node.done::after {
+      content: '✓';
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 18px;
+      height: 18px;
+      background: var(--green);
+      color: #0b101d;
+      font-size: 11px;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      border: 1px solid #0b101d;
     }
     .roadmap-node.locked {
-      opacity: 0.45;
+      opacity: 0.35;
+      background: rgba(15, 20, 32, 0.95);
+      border-color: rgba(255,255,255,0.05);
       cursor: not-allowed;
       pointer-events: none;
     }
     @keyframes nodePulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(246,173,85,0.7); }
+      50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(246, 173, 85, 0.8), inset 0 0 12px rgba(246, 173, 85, 0.4); }
     }
     .roadmap-node-title {
       font-size: clamp(10px, 2.2vw, 12px);
@@ -220,6 +293,35 @@
     @keyframes floatIndicator {
       0%, 100% { transform: translateY(0) scale(1); }
       50% { transform: translateY(-6px) scale(1.08); }
+    }
+
+    /* 지도 장식 요소 (Start, Goal) */
+    .roadmap-decor {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .decor-emoji {
+      font-size: clamp(28px, 6vw, 36px);
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
+      animation: floatDecor 3.5s ease-in-out infinite;
+    }
+    .decor-label {
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(9px, 1.8vw, 11px);
+      color: rgba(99, 179, 237, 0.6);
+      margin-top: 4px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    @keyframes floatDecor {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     /* ── 뱃지 보관함 ── */
@@ -306,7 +408,7 @@
 
     /* ── SVG 로드맵 연결선 스타일 ── */
     .roadmap-path {
-      stroke: rgba(99, 179, 237, 0.2);
+      stroke: rgba(99, 179, 237, 0.15);
       stroke-width: 4;
       stroke-linecap: round;
       fill: none;
@@ -314,7 +416,7 @@
     .roadmap-path.completed {
       stroke: var(--green);
       stroke-width: 5;
-      filter: drop-shadow(0 0 4px rgba(104, 211, 145, 0.6));
+      filter: url(#glow-green);
     }
     @keyframes dash {
       to {
@@ -326,7 +428,7 @@
       stroke-width: 5;
       stroke-dasharray: 6 4;
       animation: dash 1s linear infinite;
-      filter: drop-shadow(0 0 4px rgba(246, 173, 85, 0.6));
+      filter: url(#glow-orange);
     }
 
     /* ── 안내 가이드 팝업 스타일 ── */
@@ -744,13 +846,36 @@
     <p style="color:var(--muted);margin-bottom:24px;font-size:14px;">오늘도 AI를 학습시켜볼까요?</p>
     <!-- RPG 스타일 로드맵 (Path Map) -->
     <div class="roadmap-container">
+      <!-- 전술 그리드 코너 장식 -->
+      <div class="roadmap-corner corner-tl"></div>
+      <div class="roadmap-corner corner-tr"></div>
+      <div class="roadmap-corner corner-bl"></div>
+      <div class="roadmap-corner corner-br"></div>
+
       <div class="roadmap-title-bar">
         <h3>🎯 AI 가디언 모험 경로</h3>
         <p>퀘스트를 완료하여 나만의 인공지능 캐릭터를 성장시키세요!</p>
       </div>
       
-      <!-- 연결선 레이어 -->
-      <svg class="roadmap-svg-layer" id="roadmap-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <!-- 연결선 레이어 (네온 발광 필터 포함) -->
+      <svg class="roadmap-svg-layer" id="roadmap-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glow-orange" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
       
       <div class="roadmap-nodes" id="roadmap-nodes-container">
         <!-- 노드들이 JS를 통해 동적으로 생성됩니다 -->
@@ -1035,6 +1160,18 @@ function initUI(){
     `;
   }
   
+  // 출발 및 골 지점 장식 추가
+  roadmapHtml += `
+    <div class="roadmap-decor" style="left: 8%; top: 15%;">
+      <span class="decor-emoji">🚩</span>
+      <div class="decor-label">START</div>
+    </div>
+    <div class="roadmap-decor" style="left: 88%; top: 80%;">
+      <span class="decor-emoji">🏰</span>
+      <div class="decor-label">GOAL</div>
+    </div>
+  `;
+
   document.getElementById('roadmap-nodes-container').innerHTML = roadmapHtml;
 
   // 연결선 그리기 (렌더링 직후 및 창 크기 변경 시)
@@ -1148,7 +1285,27 @@ async function loadAnalytics() {
 function drawRoadmapLines() {
   const svg = document.getElementById('roadmap-svg');
   if (!svg) return;
-  svg.innerHTML = '';
+  
+  // defs와 네온 필터 생성 및 초기화
+  svg.innerHTML = `
+    <defs>
+      <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+      <filter id="glow-orange" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+  `;
+  
   const containerRect = svg.getBoundingClientRect();
   
   let points = [];
