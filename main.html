@@ -926,6 +926,67 @@
         </div>
       </div>
     </div>
+
+    <!-- ═══ 1. 실시간 점수 리더보드 ═══ -->
+    <div class="collab-section" id="leaderboard-wrap">
+      <div class="collab-section-header">
+        <div>
+          <h3>🏆 학급 리더보드</h3>
+          <p>우리 반 친구들의 실시간 점수 랭킹을 확인하세요!</p>
+        </div>
+      </div>
+      <div class="leaderboard-list" id="leaderboard-list">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">
+          로딩 중...
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 2. 학급 공동 AI 훈련 게이지 ═══ -->
+    <div class="collab-section" id="gauge-wrap">
+      <div class="collab-section-header">
+        <div>
+          <h3>🤖 학급 공동 AI 훈련</h3>
+          <p>학급 전체의 퀘스트·데이터 기여도가 모여 AI가 함께 성장합니다!</p>
+        </div>
+      </div>
+      <div class="gauge-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:14px;font-weight:700;color:var(--text);">학급 AI 훈련 진행도</span>
+          <span id="gauge-pct" style="font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">0%</span>
+        </div>
+        <div class="gauge-bar-wrap">
+          <div class="gauge-bar-fill" id="gauge-fill" style="width:0%"></div>
+        </div>
+        <div class="gauge-stats">
+          <span id="gauge-stat-score">총 점수: 0</span>
+          <span id="gauge-stat-people">참여 인원: 0명</span>
+        </div>
+        <div class="gauge-milestone" id="gauge-milestones">
+          <!-- JS fills milestones -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 3. AI 오분류 토론방 ═══ -->
+    <div class="collab-section" id="discuss-wrap">
+      <div class="collab-section-header">
+        <div>
+          <h3>💬 AI 오분류 토론방</h3>
+          <p>AI가 잘못 분류한 사례를 공유하고, 왜 틀렸는지 함께 토론해봐요!</p>
+        </div>
+      </div>
+      <div class="discuss-input-row">
+        <textarea id="discuss-input" placeholder="AI가 잘못 분류한 사례를 공유해 주세요! (예: AI가 고양이 사진을 강아지로 인식했어요 🐱→🐶)"></textarea>
+        <button onclick="postDiscussion()">✍️ 작성</button>
+      </div>
+      <div class="discuss-list" id="discuss-list" style="margin-top:12px;">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">
+          로딩 중...
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1107,6 +1168,11 @@ function initUI(){
 
   // 실시간 학습 분석 로드
   loadAnalytics();
+
+  // 협동 기능 로드
+  loadLeaderboard();
+  loadClassGauge();
+  loadDiscussions();
 
   // 활성 퀘스트 찾기 (가장 낮은 번호의 미완료 퀘스트, 모두 완료 시 9)
   let activeQuestId = 9;
@@ -1662,6 +1728,221 @@ async function selectChar(img, name){
 function showLockedChar(){
   playSFX('wrong');
   alert('아직 잠겨있어요! 점수를 더 모아서 해금하세요 🔒');
+}
+
+// ══════════════ 1. 리더보드 ══════════════
+async function loadLeaderboard() {
+  const list = document.getElementById('leaderboard-list');
+  if (!list) return;
+  try {
+    const snap = await db.collection('users').orderBy('score', 'desc').limit(20).get();
+    const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+    let rows = [];
+    let rank = 1;
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!d.charName) return; // 이름 없는 유저 제외
+      const isMe = doc.id === currentUser.uid;
+      const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
+      const medal = rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+      rows.push(`<div class="lb-row ${isMe ? 'me' : ''}">
+        <div class="lb-rank ${rankClass}">${medal}</div>
+        <span class="lb-name">${isMe ? '⭐ ' : ''}${d.charName || '???'}</span>
+        <span class="lb-score">${d.score || 0}점</span>
+      </div>`);
+      rank++;
+    });
+
+    // 임시 유저(student)도 리더보드에 표시
+    if (currentUser.uid === 'student' && userData.charName) {
+      const myScore = userData.score || 0;
+      // 내 순위 계산
+      let inserted = false;
+      const finalRows = [];
+      let newRank = 1;
+      // DB에서 가져온 점수들과 비교
+      const scores = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.charName) scores.push(d.score || 0);
+      });
+      let myRankIdx = scores.filter(s => s > myScore).length;
+      // 기존 rows에 내 row 삽입
+      const meRow = `<div class="lb-row me">
+        <div class="lb-rank ${myRankIdx === 0 ? 'gold' : myRankIdx === 1 ? 'silver' : myRankIdx === 2 ? 'bronze' : 'normal'}">${myRankIdx === 0 ? '👑' : myRankIdx === 1 ? '🥈' : myRankIdx === 2 ? '🥉' : myRankIdx + 1}</div>
+        <span class="lb-name">⭐ ${userData.charName} <span style="font-size:10px;color:rgba(255,255,255,0.3);">(임시)</span></span>
+        <span class="lb-score">${myScore}점</span>
+      </div>`;
+      rows.splice(myRankIdx, 0, meRow);
+    }
+
+    if (!rows.length) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">아직 참여한 친구가 없어요!</div>';
+    } else {
+      list.innerHTML = rows.join('');
+    }
+  } catch (e) {
+    console.error('리더보드 로드 실패:', e);
+    list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">리더보드를 불러올 수 없습니다.</div>';
+  }
+}
+
+// ══════════════ 2. 학급 공동 AI 훈련 게이지 ══════════════
+const GAUGE_MILESTONES = [
+  { target: 500,  label: '🌱 AI 탄생', reward: '전원 +5점' },
+  { target: 1500, label: '🧠 학습 시작', reward: '전원 +10점' },
+  { target: 3000, label: '🚀 자율 사고', reward: '전원 +15점' },
+  { target: 5000, label: '⭐ 마스터 AI', reward: '협동 뱃지 해금' },
+];
+
+async function loadClassGauge() {
+  try {
+    const snap = await db.collection('users').get();
+    let totalScore = 0;
+    let participants = 0;
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (d.charName && (d.score || 0) > 0) {
+        totalScore += (d.score || 0);
+        participants++;
+      }
+    });
+
+    // 임시 유저 점수도 합산
+    if (currentUser.uid === 'student' && userData.charName && (userData.score || 0) > 0) {
+      totalScore += (userData.score || 0);
+      participants++;
+    }
+
+    const maxTarget = GAUGE_MILESTONES[GAUGE_MILESTONES.length - 1].target;
+    const pct = Math.min(100, Math.round((totalScore / maxTarget) * 100));
+
+    const fillEl = document.getElementById('gauge-fill');
+    const pctEl = document.getElementById('gauge-pct');
+    const statScore = document.getElementById('gauge-stat-score');
+    const statPeople = document.getElementById('gauge-stat-people');
+    const msEl = document.getElementById('gauge-milestones');
+
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (statScore) statScore.textContent = '총 점수: ' + totalScore.toLocaleString();
+    if (statPeople) statPeople.textContent = '참여 인원: ' + participants + '명';
+
+    if (msEl) {
+      msEl.innerHTML = GAUGE_MILESTONES.map(m => {
+        const reached = totalScore >= m.target;
+        return `<div class="gauge-milestone-item ${reached ? 'reached' : ''}">
+          ${reached ? '✅' : '🔒'} ${m.label} (${m.target.toLocaleString()}점) — ${m.reward}
+        </div>`;
+      }).join('');
+    }
+
+    // 마지막 마일스톤 달성 시 협동 뱃지 해금
+    if (totalScore >= maxTarget) {
+      await unlockBadge('team_player', currentUser, userData);
+    }
+  } catch (e) {
+    console.error('학급 게이지 로드 실패:', e);
+  }
+}
+
+// ══════════════ 3. AI 오분류 토론방 ══════════════
+async function loadDiscussions() {
+  const list = document.getElementById('discuss-list');
+  if (!list) return;
+  try {
+    const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+    const snap = await db.collection('discuss_ai').orderBy('created_at', 'desc').limit(30).get();
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">아직 토론 글이 없어요! 첫 번째 글을 작성해 보세요 💬</div>';
+      return;
+    }
+    let html = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      const isMe = d.authorId === myId;
+      const cheers = d.cheers || [];
+      const cheerCount = d.cheerCount || cheers.length;
+      const alreadyCheered = cheers.includes(myId);
+      const date = d.created_at?.slice(0, 16).replace('T', ' ') || '';
+      html += `<div class="discuss-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+          <span style="font-size:13px;font-weight:700;color:${isMe ? '#63b3ed' : '#e2e8f0'};">${isMe ? '👤 ' : ''}${d.authorName || '???'}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
+            ${isMe || currentUser.uid === 'admin' ? `<button onclick="deleteDiscuss('${doc.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>` : ''}
+          </div>
+        </div>
+        <p style="font-size:14px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${d.content}</p>
+        <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
+                onclick="${alreadyCheered ? '' : `doCheerDiscuss('${doc.id}', this)`}" 
+                ${alreadyCheered ? 'disabled' : ''}>
+          👏 응원 ${cheerCount > 0 ? cheerCount : ''}
+        </button>
+      </div>`;
+    });
+    list.innerHTML = html;
+  } catch (e) {
+    console.error('토론방 로드 실패:', e);
+    list.innerHTML = '<div style="color:#fc8181;font-size:13px;padding:16px;">로드 오류: ' + e.message + '</div>';
+  }
+}
+
+async function postDiscussion() {
+  const input = document.getElementById('discuss-input');
+  const content = (input?.value || '').trim();
+  if (!content) { alert('내용을 입력해 주세요!'); return; }
+  if (content.length > 500) { alert('500자 이내로 작성해 주세요!'); return; }
+  if (!userData.charName) { alert('먼저 캐릭터 이름을 설정해 주세요!'); return; }
+
+  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+  try {
+    await db.collection('discuss_ai').add({
+      content,
+      authorId: myId,
+      authorName: userData.charName,
+      isTemp: currentUser.uid === 'student',
+      cheers: [],
+      cheerCount: 0,
+      created_at: new Date().toISOString()
+    });
+    input.value = '';
+    // +3점 보상
+    if (currentUser.uid === 'student') {
+      userData.score = (userData.score || 0) + 3;
+      localStorage.setItem('tempUserData', JSON.stringify(userData));
+      updateHUD();
+    } else if (currentUser.uid !== 'admin') {
+      await addScore(currentUser.uid, 3, '토론방 게시글 작성');
+    }
+    playSFX('correct');
+    loadDiscussions();
+  } catch (e) {
+    alert('작성 실패: ' + e.message);
+  }
+}
+
+async function doCheerDiscuss(docId, btn) {
+  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+  const result = await cheerPost('discuss_ai', docId, myId);
+  if (result.ok) {
+    btn.classList.add('cheered');
+    btn.disabled = true;
+    btn.innerHTML = '👏 응원 ' + result.count;
+    playSFX('correct');
+  } else {
+    alert(result.msg);
+  }
+}
+
+async function deleteDiscuss(docId) {
+  if (!confirm('이 글을 삭제할까요?')) return;
+  try {
+    await db.collection('discuss_ai').doc(docId).delete();
+    loadDiscussions();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
 }
 </script>
 </body>

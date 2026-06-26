@@ -289,7 +289,8 @@ const BADGES = [
   { id: 'flawless_master', title: '완벽한 마스터', icon: '💯', desc: '퀘스트 5에서 100점 달성' },
   { id: 'data_hunter', title: '데이터 사냥꾼', icon: '📷', desc: '퀘스트 6 완료' },
   { id: 'labeling_expert', title: '라벨링 전문가', icon: '🏷️', desc: '퀘스트 7 완료' },
-  { id: 'safety_officer', title: '안전의 파수꾼', icon: '🛡️', desc: '퀘스트 8 완료' }
+  { id: 'safety_officer', title: '안전의 파수꾼', icon: '🛡️', desc: '퀘스트 8 완료' },
+  { id: 'team_player', title: '협동의 마스터', icon: '🤝', desc: '학급 공동 목표 달성' }
 ];
 
 async function unlockBadge(badgeId, userSession, userLocalData) {
@@ -537,4 +538,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.body.appendChild(btn);
 });
+
+// ── 게시글 응원(좋아요) 시스템 ──
+async function cheerPost(collectionName, docId, userId) {
+  const ref = db.collection(collectionName).doc(docId);
+  const snap = await ref.get();
+  if (!snap.exists) return { ok: false, msg: '게시글을 찾을 수 없습니다.' };
+  const data = snap.data();
+  const cheers = data.cheers || [];
+  if (cheers.includes(userId)) return { ok: false, msg: '이미 응원했어요!' };
+  cheers.push(userId);
+  await ref.update({ cheers, cheerCount: cheers.length });
+  // 응원받은 글쓴이에게 +2점
+  if (!data.isTemp && data.authorId && data.authorId !== 'student') {
+    await addScore(data.authorId, 2, '게시글 응원 받음 (' + collectionName + ')');
+  }
+  return { ok: true, count: cheers.length };
+}
 
