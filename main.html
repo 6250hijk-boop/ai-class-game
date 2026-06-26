@@ -699,6 +699,149 @@
       color: #fc8181;
       border: 1px solid rgba(252, 129, 129, 0.3);
     }
+
+    /* ── 학급 커뮤니티 광장 (Unified Tabs Container) ── */
+    .collab-container {
+      margin-top: 28px;
+      margin-bottom: 24px;
+      width: 100%;
+      background: var(--card); /* #1a2235 - 완전 불투명 솔리드 배경 */
+      border: 1px solid var(--border);
+      border-radius: clamp(16px, 3vw, 24px); /* 실시간학습분석과 동일 */
+      padding: clamp(20px, 4vw, 32px); /* 실시간학습분석과 동일 */
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3); /* 실시간학습분석과 동일 */
+      position: relative;
+      overflow: hidden;
+      z-index: 5;
+    }
+    .collab-container::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(99,179,237,0.03), rgba(127,90,240,0.03));
+      pointer-events: none;
+    }
+    .collab-header {
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+    .collab-header h3 {
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(16px, 3.5vw, 20px);
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(99,179,237,0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 6px 0;
+    }
+    .collab-header p {
+      font-size: clamp(11px, 2.2vw, 13px);
+      color: var(--muted);
+      margin: 0;
+    }
+    .collab-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(10, 14, 26, 0.5);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      position: relative;
+      z-index: 2;
+    }
+    .collab-tabs::-webkit-scrollbar {
+      height: 4px;
+    }
+    .collab-tabs::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+    .collab-tab-btn {
+      flex: 1;
+      min-width: 105px;
+      padding: 10px 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .collab-tab-btn.active {
+      background: linear-gradient(135deg, var(--primary), #5a9fd4);
+      color: #0a0e1a;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(99, 179, 237, 0.25);
+    }
+    .collab-tab-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .collab-tab-content {
+      display: none;
+      animation: fadeIn 0.35s ease;
+      position: relative;
+      z-index: 2;
+    }
+    .collab-tab-content.active {
+      display: block;
+    }
+
+    /* ── 리더보드 가시성 강화 ── */
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 450px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .leaderboard-list::-webkit-scrollbar { width:4px; }
+    .leaderboard-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:99px; }
+
+    .lb-row {
+      display: flex; align-items: center; gap: 12px;
+      background: #111827; /* 완전 불투명 솔리드 배경 */
+      border: 1px solid rgba(99, 179, 237, 0.15);
+      border-radius: 12px;
+      padding: 12px 16px;
+      transition: all .25s;
+    }
+    .lb-row:hover {
+      background: #0d1321;
+      border-color: rgba(99, 179, 237, 0.3);
+      box-shadow: 0 2px 12px rgba(99,179,237,0.12);
+      transform: translateY(-1px);
+    }
+    .lb-row.me {
+      background: rgba(99, 179, 237, 0.15);
+      border-color: rgba(99, 179, 237, 0.45);
+      box-shadow: 0 0 15px rgba(99, 179, 237, 0.15);
+    }
+    .lb-rank {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .lb-rank.gold   { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#1a0800; box-shadow:0 0 12px rgba(255,215,0,.5); }
+    .lb-rank.silver { background:linear-gradient(135deg,#c0c0c0,#8a8a8a); color:#1a1a1a; box-shadow:0 0 10px rgba(192,192,192,.3); }
+    .lb-rank.bronze { background:linear-gradient(135deg,#cd7f32,#8b4513); color:#fff; box-shadow:0 0 10px rgba(205,127,50,.3); }
+    .lb-rank.normal { background:rgba(255,255,255,0.08); color:var(--muted); }
+    .lb-name { flex: 1; font-size: 14px; font-weight: 600; color: #e2e8f0; }
+    .lb-score {
+      font-size: 15px; font-weight: 800;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 <body class="page">
@@ -706,21 +849,7 @@
 <!-- 캔버스 (꽃가루 폭죽 이펙트) -->
 <canvas id="confetti-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:999;display:none;"></canvas>
 
-<!-- 첫 진입 안내 및 사운드 활성화 팝업 -->
-<div id="guide-popup" class="policy-overlay" style="display:none; z-index:999;">
-  <div class="policy-box" style="max-width: 440px; padding: 24px; text-align: center; border-radius: 20px; background:#0f1420; border:2px solid rgba(99,179,237,0.4);">
-    <div style="font-size: 50px; margin-bottom: 12px; animation: float 3s ease-in-out infinite;">🎮</div>
-    <h2 style="font-family:'Jua',sans-serif; color:var(--primary); font-size:22px; margin: 0 0 12px;">AI 가디언에 오신 것을 환영합니다!</h2>
-    
-    <div style="text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 13.5px; line-height: 1.6; color: rgba(255, 255, 255, 0.85);">
-      <div style="margin-bottom: 10px;">🔊 <strong>최상의 몰입도를 위한 사운드 지원</strong><br>배경음악과 효과음이 함께 작동하여 더욱 흥미진진한 모험이 펼쳐집니다!</div>
-      <div style="margin-bottom: 10px;">💻 <strong>구글 크롬(Chrome) 브라우저 권장</strong><br>웹캠 사물 인식 및 업로드 실습을 위해 크롬 환경에서 완벽하게 작동합니다.</div>
-      <div>🛴 <strong>인공지능 가디언 되기</strong><br>안전한 킥보드 이용을 위한 AI를 훈련시키며 나만의 캐릭터를 진화시켜 보세요!</div>
-    </div>
 
-    <button class="btn btn-primary" onclick="closeGuideAndPlay()" style="margin: 0; padding: 12px; width: 100%; font-size: 15px;">모험 시작하기 & 소리 켜기 🔊</button>
-  </div>
-</div>
 
 <!-- 비회원 이어하기/새로 시작 선택 -->
 <div id="temp-choice-screen" class="temp-choice-overlay" style="display:none;">
@@ -1520,24 +1649,17 @@ window.addEventListener('resize', drawRoadmapLines);
 
 // ── 가이드 팝업 및 오디오 활성화 ──
 function checkGuideAndPlay() {
-  const guideSeen = sessionStorage.getItem('guide_seen');
-  if (!guideSeen && currentUser.uid !== 'admin') {
-    document.getElementById('guide-popup').style.display = 'flex';
-  } else {
-    playBGM('main');
-    if (shouldTriggerConfetti) {
-      setTimeout(() => {
-        startConfetti();
-        playSFX('complete');
-      }, 500);
-      shouldTriggerConfetti = false;
-    }
+  playBGM('main');
+  if (shouldTriggerConfetti) {
+    setTimeout(() => {
+      startConfetti();
+      playSFX('complete');
+    }, 500);
+    shouldTriggerConfetti = false;
   }
 }
 
 function closeGuideAndPlay() {
-  sessionStorage.setItem('guide_seen', '1');
-  document.getElementById('guide-popup').style.display = 'none';
   playBGM('main');
   if (shouldTriggerConfetti) {
     startConfetti();
