@@ -225,6 +225,7 @@ requireAuth(async (user) => {
   const saved=(userData.quests||{}).q1_msgIdx||0;
   msgIdx=Math.min(saved,MESSAGES.length-1);
   setTimeout(()=>showMessage(msgIdx),500);
+  playBGM('quest');
 });
 
 function updateCharImages(){

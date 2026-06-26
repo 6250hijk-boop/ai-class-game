@@ -206,6 +206,7 @@ requireAuth(async (user)=>{
   msgIdx=quests.q4_done?0:Math.min(quests.q4_msgIdx||0,MESSAGES.length-1);
   document.getElementById('hud-progress').textContent='1 / '+MESSAGES.length;
   setTimeout(()=>showMessage(msgIdx),500);
+  playBGM('quest');
 });
 
 function updateCharImages(){document.getElementById('my-char').src=getLevelByScore(userData.score||0, userData.charTrack).img;}

@@ -236,6 +236,7 @@ requireAuth(async (user) => {
   const quests=userData.quests||{};
   msgIdx=quests.q3_done?0:Math.min(quests.q3_msgIdx||0,MESSAGES.length-1);
   setTimeout(()=>showMessage(msgIdx),500);
+  playBGM('quest');
 });
 
 function updateCharImages(){ document.getElementById('my-char').src=getLevelByScore(userData.score||0, userData.charTrack).img; }
