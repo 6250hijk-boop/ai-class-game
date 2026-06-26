@@ -131,7 +131,7 @@
       <div class="char-name-tag">AI 튜터</div>
       <button class="btn-prev" id="btn-prev" onclick="prevMessage()">◀ 이전</button>
     </div>
-    <div class="dialog-text-box">
+    <div class="dialog-text-box hud-style">
       <div class="dialog-text" id="dialog-text"></div>
       <div class="dialog-next" id="dialog-next" onclick="nextMessage()"></div>
     </div>
@@ -208,7 +208,7 @@ requireAuth(async (user)=>{
   setTimeout(()=>showMessage(msgIdx),500);
 });
 
-function updateCharImages(){document.getElementById('my-char').src=getLevelByScore(userData.score||0).img;}
+function updateCharImages(){document.getElementById('my-char').src=getLevelByScore(userData.score||0, userData.charTrack).img;}
 function updateHUD(){document.getElementById('hud-score').textContent=(userData.score||0)+' 점';}
 
 function showMessage(idx){
@@ -467,12 +467,18 @@ function closeQuiz(){
 }
 
 function checkLevelUp(before,after){
-  const lvB=getLevelByScore(before),lvA=getLevelByScore(after);
+  const lvB=getLevelByScore(before, userData.charTrack),lvA=getLevelByScore(after, userData.charTrack);
   if(lvA.level>lvB.level){
-    const el=document.createElement('div');el.className='levelup-screen';
-    el.innerHTML=`<img src="${lvA.img}" style="height:130px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));">
-      <h1>레벨 업! 🎉</h1><p>Lv.${lvA.level} ${lvA.name}</p>
-      <button class="quiz-check-btn" style="max-width:200px;margin-top:14px;" onclick="this.parentElement.remove()">확인</button>`;
+    const el=document.createElement('div');
+    el.className='levelup-screen';
+    el.innerHTML=`
+      <div class="levelup-container">
+        <div class="levelup-ring"></div>
+        <img src="${lvA.img}" style="height:120px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));position:relative;z-index:1;animation:float 3s ease-in-out infinite;">
+        <h1 style="font-family:'Jua',sans-serif;font-size:36px;color:#f6ad55;margin:0;position:relative;z-index:1;">레벨 업! 🎉</h1>
+        <p style="font-size:18px;color:#63b3ed;margin:0;position:relative;z-index:1;">Lv.${lvA.level} ${lvA.name}</p>
+        <button class="quiz-check-btn" style="max-width:180px;margin-top:8px;position:relative;z-index:1;" onclick="this.parentElement.parentElement.remove()">확인</button>
+      </div>`;
     document.body.appendChild(el);
   }
 }

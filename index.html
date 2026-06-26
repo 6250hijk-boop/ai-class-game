@@ -26,11 +26,15 @@
     /* ── 카드 ── */
     .card{
       width:100%;max-width:440px;
-      background:var(--card);
-      border:1px solid var(--border);
+      background:rgba(26, 34, 53, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99, 179, 237, 0.35);
       border-radius:clamp(16px,3vw,24px);
       padding:clamp(20px,4vw,36px) clamp(18px,4vw,32px);
-      box-shadow:0 8px 40px rgba(0,0,0,0.4),0 0 0 1px rgba(99,179,237,0.05);
+      box-shadow: 0 10px 45px rgba(0,0,0,0.55), 
+                  0 0 30px rgba(99,179,237,0.18), 
+                  inset 0 0 15px rgba(99,179,237,0.05);
+      transition: all 0.3s ease;
     }
 
     /* ── 로고 ── */
@@ -63,10 +67,14 @@
       border:1.5px solid var(--border);border-radius:10px;
       color:var(--text);font-size:clamp(13px,2.5vw,15px);
       font-family:inherit;outline:none;
-      transition:border .2s;
+      transition:all 0.25s ease;
       -webkit-appearance:none;appearance:none;
     }
-    .f input:focus{border-color:var(--primary);background:rgba(99,179,237,0.05);}
+    .f input:focus{
+      border-color:var(--primary);
+      background:rgba(99,179,237,0.08);
+      box-shadow: 0 0 12px rgba(99, 179, 237, 0.35);
+    }
 
     /* ── 버튼 ── */
     .btn{

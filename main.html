@@ -1625,10 +1625,12 @@ function renderCharSelect(){
   const grid=document.getElementById('char-select-grid');
   if(!grid||!userData) return;
   const curScore=userData.score||0;
-  const curLv=getLevelByScore(curScore);
-  const selectedImg=userData.selectedChar||getLevelByScore(curScore).img;
+  const track=userData.charTrack||'robot';
+  const levels=CHAR_TRACKS[track]||CHAR_TRACKS.robot;
+  const curLv=getLevelByScore(curScore, track);
+  const selectedImg=userData.selectedChar||getLevelByScore(curScore, track).img;
 
-  grid.innerHTML=LEVELS.map(lv=>{
+  grid.innerHTML=levels.map(lv=>{
     const unlocked=curScore>=lv.minScore;
     const selected=selectedImg===lv.img;
     return `<div onclick="${unlocked?`selectChar('${lv.img}','${lv.name}')`:'showLockedChar()'}"

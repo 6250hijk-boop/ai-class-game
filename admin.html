@@ -295,7 +295,7 @@ async function loadData() {
   // 통계
   const levelDist = {};
   users.forEach(u => {
-    const lv = getLevelByScore(u.score||0);
+    const lv = getLevelByScore(u.score||0, u.charTrack||'robot');
     levelDist[lv.name] = (levelDist[lv.name]||0) + 1;
   });
   document.getElementById('stats-content').innerHTML = `

@@ -413,7 +413,8 @@ body::before {
 /* 레벨업 */
 .levelup-screen {
   position:fixed; inset:0; z-index:400;
-  background:rgba(0,0,0,0.9);
+  background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(8px);
   display:flex; align-items:center; justify-content:center;
   flex-direction:column; gap:16px;
   animation:fadeIn .3s ease;
@@ -421,6 +422,65 @@ body::before {
 .levelup-screen h1 { font-family:'Jua',sans-serif; font-size:48px; color:var(--accent); }
 .levelup-screen p  { font-size:20px; color:var(--primary); }
 .levelup-char { font-size:100px; animation:float 1s ease-in-out infinite; }
+
+.levelup-container {
+  background: rgba(15, 22, 39, 0.93);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(246, 173, 85, 0.45);
+  box-shadow: 0 0 50px rgba(246, 173, 85, 0.35), inset 0 0 15px rgba(246, 173, 85, 0.1);
+  border-radius: 24px;
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  animation: levelupPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 401;
+}
+
+@keyframes levelupPop {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.levelup-ring {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border: 2px dashed rgba(246, 173, 85, 0.25);
+  border-radius: 50%;
+  animation: levelupSpin 12s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+  top: 15px;
+}
+
+@keyframes levelupSpin {
+  100% { transform: rotate(360deg); }
+}
+
+/* 대화창 사이버네틱 HUD 데코레이션 */
+.dialog-text-box.hud-style {
+  background: rgba(10, 14, 26, 0.92);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(99, 179, 237, 0.4);
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(99, 179, 237, 0.08);
+  position: relative;
+}
+.dialog-text-box.hud-style::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  opacity: 0.4;
+  z-index: 1;
+}
 
 /* 반응형 */
 @media(max-width:768px) {
