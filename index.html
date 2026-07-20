@@ -506,10 +506,11 @@ function agreePrivacy(){
   closePrivacyPolicy();
 }
 
-// 스크롤 이벤트 등록
+// 스크롤 이벤트 및 모바일 가로모드 감지 등록
 document.addEventListener('DOMContentLoaded', ()=>{
   const body = document.querySelector('.policy-body');
   if(body) body.addEventListener('scroll', checkScrollEnd);
+  initMobileOrientationCheck();
 });
 
 async function doFind(){

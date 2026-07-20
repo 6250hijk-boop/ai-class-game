@@ -783,5 +783,79 @@ async function recordQuestProgress(userSession, userLocalData, questId, scoreDel
   }
 }
 
+// ══════════════════════════════════════════
+//  📱 모바일 기기 감지 & 가로모드 회전 안내 유틸리티
+// ══════════════════════════════════════════
+function isMobileDevice() {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  const isTouchSmallScreen = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && Math.min(window.innerWidth, window.innerHeight) <= 900;
+  return isMobileUA || isTouchSmallScreen;
+}
 
+let _userDismissedOrientation = false;
 
+function initMobileOrientationCheck() {
+  // 모바일 디바이스가 아니면 작동하지 않음 (PC/노트북은 무시)
+  if (!isMobileDevice()) return;
+
+  function updateOrientationOverlay() {
+    let overlay = document.getElementById('mobile-rotate-overlay');
+    
+    // 모바일 세로 모드(Portrait) 여부 감지
+    const isPortrait = window.innerHeight > window.innerWidth;
+
+    if (isPortrait && !_userDismissedOrientation) {
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'mobile-rotate-overlay';
+        overlay.style.cssText = `
+          position: fixed; inset: 0; z-index: 99999;
+          background: rgba(10, 14, 26, 0.92);
+          backdrop-filter: blur(10px);
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          padding: 24px; text-align: center; color: #f8fafc; font-family: 'Noto Sans KR', sans-serif;
+          animation: fadeIn .3s ease;
+        `;
+        overlay.innerHTML = `
+          <style>
+            @keyframes phoneRotate {
+              0%, 10% { transform: rotate(0deg); }
+              40%, 60% { transform: rotate(-90deg); }
+              90%, 100% { transform: rotate(0deg); }
+            }
+          </style>
+          <div style="background:rgba(99,179,237,0.12);border:2px solid rgba(99,179,237,0.4);border-radius:24px;padding:32px 24px;max-width:340px;width:90%;box-shadow:0 0 50px rgba(99,179,237,0.25);">
+            <div style="font-size:54px;margin-bottom:16px;display:inline-block;animation:phoneRotate 2.5s ease-in-out infinite;">📱</div>
+            <h3 style="font-family:'Jua',sans-serif;font-size:22px;color:#63b3ed;margin:0 0 10px 0;">화면을 가로로 돌려주세요! 🔄</h3>
+            <p style="font-size:13.5px;color:rgba(255,255,255,0.75);line-height:1.6;margin:0 0 20px 0;">
+              핸드폰을 가로로 누르면 퀘스트 지도와 라벨링 화면을 더 넓고 신나게 즐길 수 있어요 ✨
+            </p>
+            <button onclick="dismissMobileOrientationOverlay()" style="width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;font-family:inherit;">
+              ✕ 세로로 계속하기
+            </button>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      } else {
+        overlay.style.display = 'flex';
+      }
+    } else {
+      if (overlay) overlay.style.display = 'none';
+    }
+  }
+
+  window.dismissMobileOrientationOverlay = function() {
+    _userDismissedOrientation = true;
+    const overlay = document.getElementById('mobile-rotate-overlay');
+    if (overlay) overlay.style.display = 'none';
+  };
+
+  window.addEventListener('resize', updateOrientationOverlay);
+  window.addEventListener('orientationchange', updateOrientationOverlay);
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    updateOrientationOverlay();
+  } else {
+    document.addEventListener('DOMContentLoaded', updateOrientationOverlay);
+  }
+}

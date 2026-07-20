@@ -1578,6 +1578,7 @@ const STORY=[
 let shouldTriggerConfetti = false;
 requireAuth(async (user) => {
   currentUser=user;
+  initMobileOrientationCheck();
 
   const fromQuest = sessionStorage.getItem('from_quest');
   if (fromQuest) {

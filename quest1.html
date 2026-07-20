@@ -222,6 +222,7 @@ requireAuth(async (user) => {
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
   updateHUD(); updateCharImages();
+  initMobileOrientationCheck();
   startQuestTimer(1);
   window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 1));
   const saved=(userData.quests||{}).q1_msgIdx||0;
