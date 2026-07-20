@@ -556,3 +556,200 @@ async function cheerPost(collectionName, docId, userId) {
   return { ok: true, count: cheers.length };
 }
 
+// ══════════════════════════════════════════
+//  📋 사전 / 사후 설문조사 시스템
+// ══════════════════════════════════════════
+const SURVEY_REWARD_XP = 10; // 설문 응답 보상 점수
+
+// 설문 완료 상태 확인
+function checkSurveyStatus(userSession, userLocalData) {
+  const isTemp = userSession.uid === 'student';
+  if (isTemp) {
+    const pre = localStorage.getItem('preSurveyCompleted') === 'true';
+    const post = localStorage.getItem('postSurveyCompleted') === 'true';
+    return { pre, post };
+  } else {
+    return {
+      pre: !!(userLocalData && userLocalData.preSurveyCompleted),
+      post: !!(userLocalData && userLocalData.postSurveyCompleted)
+    };
+  }
+}
+
+// 1. 사전 설문 제출
+async function submitPreSurveyData(userSession, userLocalData, answers) {
+  const isTemp = userSession.uid === 'student';
+  const authorName = userLocalData.charName || userLocalData.name || '익명 학생';
+  const uid = isTemp ? ('temp_' + authorName) : userSession.uid;
+
+  const payload = {
+    uid: uid,
+    authorName: authorName,
+    isTemp: isTemp,
+    answers: answers,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    // Firestore 저장
+    await db.collection('pre_surveys').add(payload);
+
+    // 사용자 완료 상태 업데이트 & XP 보상
+    if (isTemp) {
+      localStorage.setItem('preSurveyCompleted', 'true');
+      localStorage.setItem('preSurveyData', JSON.stringify(payload));
+      userLocalData.preSurveyCompleted = true;
+      userLocalData.score = (userLocalData.score || 0) + SURVEY_REWARD_XP;
+      localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
+    } else if (userSession.uid !== 'admin') {
+      userLocalData.preSurveyCompleted = true;
+      await db.collection('users').doc(userSession.uid).update({
+        preSurveyCompleted: true
+      });
+      await addScore(userSession.uid, SURVEY_REWARD_XP, '사전 설문조사 참여 보상');
+    }
+    return { ok: true, reward: SURVEY_REWARD_XP };
+  } catch (e) {
+    console.error("submitPreSurveyData error:", e);
+    return { ok: false, msg: e.message };
+  }
+}
+
+// 2. 사후 설문 제출
+async function submitPostSurveyData(userSession, userLocalData, answers) {
+  const isTemp = userSession.uid === 'student';
+  const authorName = userLocalData.charName || userLocalData.name || '익명 학생';
+  const uid = isTemp ? ('temp_' + authorName) : userSession.uid;
+
+  const payload = {
+    uid: uid,
+    authorName: authorName,
+    isTemp: isTemp,
+    answers: answers,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    // Firestore 저장
+    await db.collection('post_surveys').add(payload);
+
+    // 사용자 완료 상태 업데이트 & XP 보상
+    if (isTemp) {
+      localStorage.setItem('postSurveyCompleted', 'true');
+      localStorage.setItem('postSurveyData', JSON.stringify(payload));
+      userLocalData.postSurveyCompleted = true;
+      userLocalData.score = (userLocalData.score || 0) + SURVEY_REWARD_XP;
+      localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
+    } else if (userSession.uid !== 'admin') {
+      userLocalData.postSurveyCompleted = true;
+      await db.collection('users').doc(userSession.uid).update({
+        postSurveyCompleted: true
+      });
+      await addScore(userSession.uid, SURVEY_REWARD_XP, '사후 설문조사 참여 보상');
+    }
+    return { ok: true, reward: SURVEY_REWARD_XP };
+  } catch (e) {
+    console.error("submitPostSurveyData error:", e);
+    return { ok: false, msg: e.message };
+  }
+}
+
+// 3. 관리자용: 사전/사후 설문 데이터 목록 불러오기
+async function loadAllSurveyData() {
+  try {
+    const preSnap = await db.collection('pre_surveys').orderBy('created_at', 'desc').get();
+    const postSnap = await db.collection('post_surveys').orderBy('created_at', 'desc').get();
+
+    const preList = preSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const postList = postSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    return { ok: true, preList, postList };
+  } catch (e) {
+    console.error("loadAllSurveyData error:", e);
+    return { ok: false, msg: e.message, preList: [], postList: [] };
+  }
+}
+
+// ══════════════════════════════════════════
+//  ⏱️ 퀘스트 학습 시간 및 점수 추적 시스템
+// ══════════════════════════════════════════
+let _questStartTime = null;
+let _currentQuestId = null;
+
+// 1. 퀘스트 진입 시 타이머 시작
+function startQuestTimer(questId) {
+  _currentQuestId = questId;
+  _questStartTime = Date.now();
+}
+
+// 2. 학습 시간 포맷팅 (초 -> 분/초)
+function formatTimeSpent(seconds) {
+  if (!seconds || seconds <= 0) return '0초';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins === 0) return `${secs}초`;
+  return `${mins}분 ${secs}초`;
+}
+
+// 3. 퀘스트 학습시간 및 점수/완료 상태 기록
+async function recordQuestProgress(userSession, userLocalData, questId, scoreDelta = 0, isComplete = false) {
+  if (!questId) questId = _currentQuestId;
+  if (!questId || !userSession) return;
+
+  let elapsedSec = 0;
+  if (_questStartTime) {
+    elapsedSec = Math.floor((Date.now() - _questStartTime) / 1000);
+    _questStartTime = Date.now(); // 타이머 리셋
+  }
+
+  const qKeyTime = `q${questId}_time`;
+  const qKeyScore = `q${questId}_score`;
+  const qKeyDone = `q${questId}_done`;
+
+  const isTemp = userSession.uid === 'student';
+
+  if (isTemp) {
+    if (!userLocalData) userLocalData = JSON.parse(localStorage.getItem('tempUserData') || '{}');
+    if (!userLocalData.quests) userLocalData.quests = {};
+
+    const curTime = userLocalData.quests[qKeyTime] || 0;
+    const curScore = userLocalData.quests[qKeyScore] || 0;
+
+    userLocalData.quests[qKeyTime] = curTime + elapsedSec;
+    if (scoreDelta > 0) {
+      userLocalData.quests[qKeyScore] = Math.max(curScore, scoreDelta);
+    }
+    if (isComplete) {
+      userLocalData.quests[qKeyDone] = true;
+    }
+    localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
+  } else if (userSession.uid !== 'admin') {
+    try {
+      const userRef = db.collection('users').doc(userSession.uid);
+      await db.runTransaction(async t => {
+        const doc = await t.get(userRef);
+        if (!doc.exists) return;
+        const data = doc.data() || {};
+        const quests = data.quests || {};
+
+        const curTime = quests[qKeyTime] || 0;
+        const curScore = quests[qKeyScore] || 0;
+
+        const updateObj = {};
+        updateObj[`quests.${qKeyTime}`] = curTime + elapsedSec;
+        if (scoreDelta > 0) {
+          updateObj[`quests.${qKeyScore}`] = Math.max(curScore, scoreDelta);
+        }
+        if (isComplete) {
+          updateObj[`quests.${qKeyDone}`] = true;
+        }
+        t.update(userRef, updateObj);
+      });
+    } catch (e) {
+      console.error("recordQuestProgress error:", e);
+    }
+  }
+}
+
+
+

@@ -190,6 +190,8 @@ requireAuth(async (user)=>{
     if(!snap.empty) userData=snap.docs[0].data();
   }
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
+  startQuestTimer(8);
+  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 8));
   renderSamples();
 });
 
@@ -413,6 +415,7 @@ async function drawResults(imgUrl, data){
   const q=(userData.quests||{});
   if(!q.q8_done){
     const xp = 20;
+    recordQuestProgress(currentUser, userData, 8, xp, true);
     if(currentUser.uid==='student'){
       userData.score=(userData.score||0)+xp;
       userData.quests=userData.quests||{};

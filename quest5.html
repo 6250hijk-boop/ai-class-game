@@ -274,6 +274,8 @@ requireAuth(async (user)=>{
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
   // 이전 최고기록
+  startQuestTimer(5);
+  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 5));
   const prev=(userData.quests||{}).q5_best_score||0;
   if(prev>0){
     document.getElementById('intro-score-wrap').style.display='block';
@@ -421,6 +423,7 @@ async function endGame(isGameOver){
   const allCorrect=correctCount===total&&!isGameOver;
   const bonus=allCorrect?30:0;
   const finalScore=score+bonus;
+  recordQuestProgress(currentUser, userData, 5, finalScore, true);
   const pct=Math.round(correctCount/total*100);
 
   if (isGameOver) {

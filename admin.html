@@ -25,6 +25,7 @@
       <a href="#tab-classes" class="quest-item" onclick="showTab('classes')">🏷️ 라벨 클래스 관리</a>
       <a href="#tab-uploads" class="quest-item" onclick="showTab('uploads')">📁 업로드 현황</a>
       <a href="#tab-stats" class="quest-item" onclick="showTab('stats')">📊 전체 통계</a>
+      <a href="#tab-surveys" class="quest-item" onclick="showTab('surveys')">📋 설문 통계</a>
     </div>
     <button class="btn btn-ghost" onclick="logout()"
       style="margin-top:auto;padding:10px;font-size:13px;">🚪 로그아웃</button>
@@ -56,7 +57,7 @@
               <tr>
                 <th>학번</th><th>이름</th><th>아이디</th>
                 <th>캐릭터명</th><th>레벨</th><th>점수</th>
-                <th>퀘스트 진행</th><th>가입일</th>
+                <th>퀘스트 진행</th><th>총 학습 시간</th><th>퀘스트 상세</th><th>가입일</th>
               </tr>
             </thead>
             <tbody id="student-tbody">
@@ -146,6 +147,69 @@
       </div>
     </div>
 
+    <!-- 📋 사전/사후 설문 통계 탭 -->
+    <div id="tab-surveys" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <h3 style="font-family:'Jua',sans-serif;color:var(--primary);font-size:20px;">📋 사전 / 사후 설문조사 결과 통계</h3>
+          <button onclick="loadSurveyAdminData()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
+        </div>
+
+        <!-- 설문 수량 요약 카드 -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;">
+          <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">🟢 사전 설문 응답자</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#63b3ed;" id="srv-pre-count">0명</div>
+          </div>
+          <div style="background:rgba(104,211,145,0.08);border:1px solid rgba(104,211,145,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">🔵 사후 설문 응답자</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#68d391;" id="srv-post-count">0명</div>
+          </div>
+          <div style="background:rgba(246,173,85,0.08);border:1px solid rgba(246,173,85,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">⭐ 사전 AI 흥미/윤리 평균</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#f6ad55;" id="srv-pre-avg">0.0점 / 5.0</div>
+          </div>
+          <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">🌟 사후 프로그램 만족도 평균</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#a78bfa;" id="srv-post-avg">0.0점 / 5.0</div>
+          </div>
+        </div>
+
+        <!-- 리커트 항목별 사전 vs 사후 평균 점수 비교 테이블 -->
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:24px;">
+          <h4 style="font-size:15px;color:var(--text);margin-bottom:14px;">📊 리커트 척도 문항별 평균 점수</h4>
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr><th>구분</th><th>평가 항목</th><th>평균 점수 (5점 만점)</th></tr>
+              </thead>
+              <tbody id="srv-table-body">
+                <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);">로딩 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 주관식 다짐 및 소감 한마디 카드 그리드 -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+          <!-- 사전 다짐 -->
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <h4 style="font-size:15px;color:#63b3ed;margin-bottom:12px;">💬 사전 다짐 한마디 (최신)</h4>
+            <div id="srv-pre-comments" style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;padding-right:4px;">
+              <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">로딩 중...</div>
+            </div>
+          </div>
+          <!-- 사후 소감 -->
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <h4 style="font-size:15px;color:#68d391;margin-bottom:12px;">💬 사후 소감 한마디 (최신)</h4>
+            <div id="srv-post-comments" style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;padding-right:4px;">
+              <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">로딩 중...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 학생 일괄 생성 탭 -->
     <div id="tab-create" style="display:none;">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
@@ -202,11 +266,50 @@
   </main>
 </div>
 
+<!-- 🔍 학생 퀘스트 상세 모달 -->
+<div id="student-quest-modal" class="survey-overlay" style="display:none;">
+  <div class="survey-card" style="max-width: 620px;">
+    <div class="survey-card-header">
+      <h2 id="sq-modal-name">🔍 퀘스트별 학습 상세 현황</h2>
+      <p id="sq-modal-sub">학생의 각 퀘스트별 학습 소요 시간 및 획득 점수 현황입니다.</p>
+    </div>
+    <div class="survey-card-body" style="gap:14px;">
+      <!-- 전체 요약 -->
+      <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.25);border-radius:14px;padding:14px 18px;display:flex;justify-content:space-around;align-items:center;">
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--muted);">총 퀘스트 점수</div>
+          <div style="font-family:'Jua',sans-serif;font-size:22px;color:#f6ad55;" id="sq-modal-total-score">0점</div>
+        </div>
+        <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--muted);">퀘스트 달성률</div>
+          <div style="font-family:'Jua',sans-serif;font-size:22px;color:#68d391;" id="sq-modal-progress">0 / 8</div>
+        </div>
+        <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--muted);">총 학습 소요시간</div>
+          <div style="font-family:'Jua',sans-serif;font-size:22px;color:#63b3ed;" id="sq-modal-total-time">0분 0초</div>
+        </div>
+      </div>
+
+      <!-- 퀘스트 1~8 상세 목록 -->
+      <div id="sq-modal-list" style="display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;padding-right:4px;">
+        <!-- JS로 채워짐 -->
+      </div>
+    </div>
+    <div class="survey-card-footer">
+      <button onclick="closeStudentQuestDetail()" style="width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:white;font-weight:700;cursor:pointer;font-family:inherit;">닫기</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
+let allLoadedUsers = [];
+
 requireAdmin(async () => { 
   try { await loadData(); } 
   catch(e) { console.error('loadData 오류:', e); }
@@ -228,6 +331,7 @@ async function loadData() {
   }
 
   const users = usersSnap.docs.map(d => ({...d.data(), _id: d.id}));
+  allLoadedUsers = users;
   const quizMap = {};
   quizSnap.docs.forEach(d => { quizMap[d.id] = d.data(); });
 
@@ -246,10 +350,18 @@ async function loadData() {
 
   // 학생 테이블
   document.getElementById('student-tbody').innerHTML = users.length === 0
-    ? '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
+    ? '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
     : users.map(u => {
         const lv = getLevelByScore(u.score||0, u.charTrack||'robot');
-        const questDone = Object.keys(u.quests||{}).filter(k=>k.endsWith('_done')).length;
+        const quests = u.quests || {};
+        const questDone = Object.keys(quests).filter(k=>k.endsWith('_done')).length;
+
+        let totalTimeSec = 0;
+        for (let i = 1; i <= 8; i++) {
+          totalTimeSec += Number(quests[`q${i}_time`] || 0);
+        }
+        const formattedTotalTime = formatTimeSpent(totalTimeSec);
+
         return `<tr>
           <td>${u.stunum||'-'}</td>
           <td>${u.name||'-'}</td>
@@ -258,6 +370,12 @@ async function loadData() {
           <td><span style="color:var(--accent);">Lv.${lv.level}</span> ${lv.emoji}</td>
           <td><strong style="color:var(--primary);">${u.score||0}</strong></td>
           <td>${questDone} / 8 완료</td>
+          <td><span style="color:#63b3ed;font-weight:700;">⏱️ ${formattedTotalTime}</span></td>
+          <td>
+            <button class="btn btn-ghost btn-sm" onclick="openStudentQuestDetail('${u._id||u.id}')" style="font-size:12px;padding:4px 10px;color:#63b3ed;border:1px solid rgba(99,179,237,0.3);">
+              🔍 퀘스트 상세
+            </button>
+          </td>
           <td style="color:var(--muted);font-size:12px;">${(u.created_at||'').slice(0,10)}</td>
         </tr>`;
       }).join('');
@@ -324,19 +442,157 @@ async function loadData() {
 }
 
 function showTab(t) {
-  ['students','create','quiz','board','classes','uploads','stats'].forEach(id => {
+  ['students','create','quiz','board','classes','uploads','stats','surveys'].forEach(id => {
     const el=document.getElementById('tab-'+id);
     if(el) el.style.display = id===t?'block':'none';
   });
   document.querySelectorAll('.sidebar .quest-item').forEach((el,i) => {
-    el.classList.toggle('active', ['students','create','quiz','board','classes','uploads','stats'][i]===t);
+    el.classList.toggle('active', ['students','create','quiz','board','classes','uploads','stats','surveys'][i]===t);
   });
   if(t==='board') loadBoardAdmin('board_q1');
   if(t==='classes') loadClasses();
   if(t==='uploads') loadUploads();
+  if(t==='surveys') loadSurveyAdminData();
   if(t==='create'){
     if(!document.querySelector('#create-tbody tr')) initCreateTable();
     loadStudentAccounts();
+  }
+}
+
+// ── 📋 관리자용 사전/사후 설문 데이터 대시보드 로드 ──
+async function loadSurveyAdminData() {
+  const preCountEl = document.getElementById('srv-pre-count');
+  const postCountEl = document.getElementById('srv-post-count');
+  const preAvgEl = document.getElementById('srv-pre-avg');
+  const postAvgEl = document.getElementById('srv-post-avg');
+  const tableBody = document.getElementById('srv-table-body');
+  const preCommentsEl = document.getElementById('srv-pre-comments');
+  const postCommentsEl = document.getElementById('srv-post-comments');
+
+  if (tableBody) tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
+
+  const res = await loadAllSurveyData();
+  if (!res.ok) {
+    if (tableBody) tableBody.innerHTML = `<tr><td colspan="3" style="color:var(--red);text-align:center;padding:20px;">불러오기 오류: ${res.msg}</td></tr>`;
+    return;
+  }
+
+  const preList = res.preList || [];
+  const postList = res.postList || [];
+
+  if (preCountEl) preCountEl.textContent = preList.length + '명';
+  if (postCountEl) postCountEl.textContent = postList.length + '명';
+
+  // 사전 설문 평균
+  let preQ1Sum = 0, preQ2Sum = 0, preQ3Sum = 0;
+  preList.forEach(item => {
+    const a = item.answers || {};
+    preQ1Sum += Number(a.q1 || 0);
+    preQ2Sum += Number(a.q2 || 0);
+    preQ3Sum += Number(a.q3 || 0);
+  });
+  const preCount = preList.length || 1;
+  const preQ1Avg = (preQ1Sum / preCount).toFixed(1);
+  const preQ2Avg = (preQ2Sum / preCount).toFixed(1);
+  const preQ3Avg = (preQ3Sum / preCount).toFixed(1);
+  const preOverallAvg = ((Number(preQ1Avg) + Number(preQ2Avg) + Number(preQ3Avg)) / 3).toFixed(1);
+
+  if (preAvgEl) preAvgEl.textContent = preList.length ? `${preOverallAvg}점 / 5.0` : '0.0점 / 5.0';
+
+  // 사후 설문 평균
+  let postQ1Sum = 0, postQ2Sum = 0, postQ3Sum = 0, postQ4Sum = 0;
+  postList.forEach(item => {
+    const a = item.answers || {};
+    postQ1Sum += Number(a.q1 || 0);
+    postQ2Sum += Number(a.q2 || 0);
+    postQ3Sum += Number(a.q3 || 0);
+    postQ4Sum += Number(a.q4 || 0);
+  });
+  const postCount = postList.length || 1;
+  const postQ1Avg = (postQ1Sum / postCount).toFixed(1);
+  const postQ2Avg = (postQ2Sum / postCount).toFixed(1);
+  const postQ3Avg = (postQ3Sum / postCount).toFixed(1);
+  const postQ4Avg = (postQ4Sum / postCount).toFixed(1);
+  const postOverallAvg = ((Number(postQ1Avg) + Number(postQ2Avg) + Number(postQ3Avg) + Number(postQ4Avg)) / 4).toFixed(1);
+
+  if (postAvgEl) postAvgEl.textContent = postList.length ? `${postOverallAvg}점 / 5.0` : '0.0점 / 5.0';
+
+  // 테이블 데이터 채우기
+  if (tableBody) {
+    tableBody.innerHTML = `
+      <tr>
+        <td><span style="color:#63b3ed;font-weight:700;">🟢 사전 Q1</span></td>
+        <td>나는 평소에 인공지능(AI) 기술에 관심이 많다.</td>
+        <td><strong style="color:#63b3ed;">${preList.length ? preQ1Avg : '-'} 점</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:#63b3ed;font-weight:700;">🟢 사전 Q2</span></td>
+        <td>인공지능(AI)이 우리 사회에 긍정적인 변화를 줄 것이라고 생각한다.</td>
+        <td><strong style="color:#63b3ed;">${preList.length ? preQ2Avg : '-'} 점</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:#63b3ed;font-weight:700;">🟢 사전 Q3</span></td>
+        <td>AI 윤리(저작권, 초상권, 데이터 편향 등)에 대해 들어본 적이 있거나 잘 알고 있다.</td>
+        <td><strong style="color:#63b3ed;">${preList.length ? preQ3Avg : '-'} 점</strong></td>
+      </tr>
+      <tr style="border-top:2px solid var(--border);">
+        <td><span style="color:#68d391;font-weight:700;">🔵 사후 Q1</span></td>
+        <td>이 프로그램을 수행하면서 AI에 대한 흥미와 관심이 높아졌다.</td>
+        <td><strong style="color:#68d391;">${postList.length ? postQ1Avg : '-'} 점</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:#68d391;font-weight:700;">🔵 사후 Q2</span></td>
+        <td>AI 데이터 수집, 라벨링, 머신러닝 학습 과정이 쉽고 재미있게 이해되었다.</td>
+        <td><strong style="color:#68d391;">${postList.length ? postQ2Avg : '-'} 점</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:#68d391;font-weight:700;">🔵 사후 Q3</span></td>
+        <td>AI를 사용할 때 올바른 윤리와 안전 규칙을 지키는 것이 왜 중요한지 깨달았다.</td>
+        <td><strong style="color:#68d391;">${postList.length ? postQ3Avg : '-'} 점</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:#68d391;font-weight:700;">🔵 사후 Q4</span></td>
+        <td>AI 가디언 프로그램에 전반적으로 만족하며 친구들에게 추천하고 싶다.</td>
+        <td><strong style="color:#68d391;">${postList.length ? postQ4Avg : '-'} 점</strong></td>
+      </tr>
+    `;
+  }
+
+  // 주관식 다짐 (사전)
+  if (preCommentsEl) {
+    const preComments = preList.filter(item => item.answers && item.answers.q5);
+    if (!preComments.length) {
+      preCommentsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">작성된 사전 다짐이 없습니다.</div>';
+    } else {
+      preCommentsEl.innerHTML = preComments.map(item => `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <strong style="font-size:13px;color:#63b3ed;">👤 ${item.authorName}</strong>
+            <span style="font-size:11px;color:var(--muted);">${(item.created_at || '').slice(0, 10)}</span>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.5;">"${item.answers.q5}"</div>
+          ${item.answers.q4 ? `<div style="font-size:11px;color:var(--accent);margin-top:6px;">🎯 기대되는 활동: ${item.answers.q4}</div>` : ''}
+        </div>
+      `).join('');
+    }
+  }
+
+  // 주관식 소감 (사후)
+  if (postCommentsEl) {
+    const postComments = postList.filter(item => item.answers && item.answers.q5);
+    if (!postComments.length) {
+      postCommentsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">작성된 사후 소감이 없습니다.</div>';
+    } else {
+      postCommentsEl.innerHTML = postComments.map(item => `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <strong style="font-size:13px;color:#68d391;">👤 ${item.authorName}</strong>
+            <span style="font-size:11px;color:var(--muted);">${(item.created_at || '').slice(0, 10)}</span>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.5;">"${item.answers.q5}"</div>
+        </div>
+      `).join('');
+    }
   }
 }
 
@@ -774,6 +1030,64 @@ function toggleSidebar() {
 function logout() {
   sessionStorage.removeItem('gameUser');
   window.location.href = 'index.html';
+}
+
+// ── 🔍 학생 퀘스트별 학습시간 & 점수 상세 모달 ──
+function openStudentQuestDetail(uid) {
+  const user = allLoadedUsers.find(u => u._id === uid || u.id === uid);
+  if (!user) { alert('학생 정보를 찾을 수 없습니다.'); return; }
+
+  document.getElementById('sq-modal-name').textContent = `🔍 ${user.name || '학생'} (${user.charName || '미설정'}) 퀘스트 상세`;
+  document.getElementById('sq-modal-sub').textContent = `학번: ${user.stunum || '-'} | 아이디: ${user.id || '-'} | 가입일: ${(user.created_at || '').slice(0, 10)}`;
+
+  const quests = user.quests || {};
+  let totalTimeSec = 0;
+  let doneCount = 0;
+  let totalScore = user.score || 0;
+
+  const listHtml = QUESTS.map(q => {
+    const isDone = !!quests[`q${q.id}_done`];
+    const score = quests[`q${q.id}_score`] || 0;
+    const timeSec = quests[`q${q.id}_time`] || 0;
+    totalTimeSec += Number(timeSec);
+    if (isDone) doneCount++;
+
+    const statusBadge = isDone
+      ? `<span style="background:rgba(104,211,145,0.15);border:1px solid #68d391;color:#68d391;font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700;">✅ 완료</span>`
+      : (timeSec > 0
+          ? `<span style="background:rgba(246,173,85,0.15);border:1px solid #f6ad55;color:#f6ad55;font-size:11px;padding:3px 8px;border-radius:6px;font-weight:700;">⏳ 진행 중</span>`
+          : `<span style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:var(--muted);font-size:11px;padding:3px 8px;border-radius:6px;">🔒 미시작</span>`);
+
+    return `
+      <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(99,179,237,0.15);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:22px;">${q.icon}</span>
+          <div>
+            <div style="font-weight:700;color:#f8fafc;font-size:14px;">퀘스트 ${q.id}. ${q.title}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">최저/최고 기록 점수: <strong style="color:#f6ad55;">${score}점</strong></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:#63b3ed;">⏱️ ${formatTimeSpent(timeSec)}</div>
+            <div style="font-size:11px;color:var(--muted);">학습 소요시간</div>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('sq-modal-total-score').textContent = totalScore + '점';
+  document.getElementById('sq-modal-progress').textContent = `${doneCount} / 8 완료`;
+  document.getElementById('sq-modal-total-time').textContent = formatTimeSpent(totalTimeSec);
+  document.getElementById('sq-modal-list').innerHTML = listHtml;
+
+  document.getElementById('student-quest-modal').style.display = 'flex';
+}
+
+function closeStudentQuestDetail() {
+  document.getElementById('student-quest-modal').style.display = 'none';
 }
 </script>
 </body>

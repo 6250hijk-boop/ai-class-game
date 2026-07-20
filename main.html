@@ -836,11 +836,201 @@
     .lb-rank.bronze { background:linear-gradient(135deg,#cd7f32,#8b4513); color:#fff; box-shadow:0 0 10px rgba(205,127,50,.3); }
     .lb-rank.normal { background:rgba(255,255,255,0.08); color:var(--muted); }
     .lb-name { flex: 1; font-size: 14px; font-weight: 600; color: #e2e8f0; }
-    .lb-score {
-      font-size: 15px; font-weight: 800;
-      color: #ffd700;
-      text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-      letter-spacing: 0.5px;
+    /* ── 📋 사전/사후 설문조사 모달 스타일 ── */
+    .survey-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      background: rgba(4, 8, 20, 0.88);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeIn .3s ease;
+    }
+    .survey-card {
+      background: #0f172a;
+      border: 2px solid rgba(99, 179, 237, 0.35);
+      box-shadow: 0 0 50px rgba(99, 179, 237, 0.2), inset 0 0 20px rgba(99, 179, 237, 0.05);
+      border-radius: 24px;
+      max-width: 580px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: surveyPop .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes surveyPop {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .survey-card-header {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(99, 179, 237, 0.08) 0%, transparent 100%);
+      position: relative;
+    }
+    .survey-card-header h2 {
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(20px, 4vw, 24px);
+      color: #63b3ed;
+      margin: 0 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .survey-card-header p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .survey-card-body {
+      padding: 24px 28px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .survey-card-body::-webkit-scrollbar { width: 6px; }
+    .survey-card-body::-webkit-scrollbar-thumb { background: rgba(99, 179, 237, 0.2); border-radius: 10px; }
+
+    .survey-q-box {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 18px;
+      transition: border-color .2s;
+    }
+    .survey-q-box:hover {
+      border-color: rgba(99, 179, 237, 0.25);
+    }
+    .survey-q-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #63b3ed;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .survey-q-text {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #f8fafc;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .likert-group {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .likert-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 10px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s ease;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-family: inherit;
+    }
+    .likert-btn .l-emoji { font-size: 20px; }
+    .likert-btn .l-num { font-size: 12px; font-weight: 700; }
+    .likert-btn:hover {
+      background: rgba(99, 179, 237, 0.15);
+      border-color: rgba(99, 179, 237, 0.4);
+      transform: translateY(-2px);
+    }
+    .likert-btn.selected {
+      background: linear-gradient(135deg, rgba(99, 179, 237, 0.3) 0%, rgba(127, 90, 240, 0.3) 100%);
+      border-color: #63b3ed;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(99, 179, 237, 0.3);
+    }
+    .survey-select-option {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 13.5px;
+      color: #cbd5e1;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .survey-select-option:hover {
+      background: rgba(99, 179, 237, 0.12);
+      border-color: rgba(99, 179, 237, 0.3);
+    }
+    .survey-select-option.selected {
+      background: linear-gradient(135deg, rgba(99, 179, 237, 0.25) 0%, rgba(127, 90, 240, 0.25) 100%);
+      border-color: #63b3ed;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .survey-textarea {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #f8fafc;
+      font-size: 13.5px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 70px;
+      outline: none;
+    }
+    .survey-textarea:focus {
+      border-color: #63b3ed;
+      box-shadow: 0 0 10px rgba(99, 179, 237, 0.2);
+    }
+    .survey-card-footer {
+      padding: 18px 28px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .survey-submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #63b3ed 0%, #4299e1 100%);
+      border: none;
+      border-radius: 14px;
+      color: #0f172a;
+      font-family: 'Jua', sans-serif;
+      font-size: 17px;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(99, 179, 237, 0.3);
+    }
+    .survey-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 179, 237, 0.4);
+    }
+    .survey-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
   </style>
 </head>
@@ -1004,6 +1194,15 @@
     <div class="quest-section">
       <h4>📋 퀘스트</h4>
       <div id="quest-list"></div>
+    </div>
+
+    <!-- 설문조사 메뉴 -->
+    <div class="quest-section" style="margin-bottom:14px;">
+      <h4>📋 설문조사</h4>
+      <button onclick="openSurveyStatusModal()" style="width:100%;padding:10px 12px;background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.25);border-radius:10px;color:#63b3ed;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;transition:all .2s;">
+        <span>📋 사전/사후 설문</span>
+        <span id="sb-survey-status-badge" style="font-size:11px;padding:2px 6px;border-radius:6px;background:rgba(99,179,237,0.2);">확인</span>
+      </button>
     </div>
 
     <!-- 뱃지 보관함 -->
@@ -1190,6 +1389,173 @@
     </div>
 
   </main>
+</div>
+
+<!-- 📋 사전 설문조사 모달 -->
+<div id="pre-survey-modal" class="survey-overlay">
+  <div class="survey-card">
+    <div class="survey-card-header">
+      <h2>🟢 사전 설문조사 (Pre-Survey)</h2>
+      <p>AI 가디언 수업을 시작하기 전, 여러분의 경험과 생각을 나누어 주세요! (완료 시 🎁 +10 XP 지급)</p>
+    </div>
+    <div class="survey-card-body">
+      <!-- Q1 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 01</div>
+        <div class="survey-q-text">나는 평소에 인공지능(AI) 기술에 관심이 많다.</div>
+        <div class="likert-group" id="pre-q1-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q2 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 02</div>
+        <div class="survey-q-text">인공지능(AI)이 우리 사회에 긍정적인 변화를 줄 것이라고 생각한다.</div>
+        <div class="likert-group" id="pre-q2-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q3 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 03</div>
+        <div class="survey-q-text">AI 윤리(저작권, 초상권, 데이터 편향 등)에 대해 들어본 적이 있거나 잘 알고 있다.</div>
+        <div class="likert-group" id="pre-q3-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q4 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 04</div>
+        <div class="survey-q-text">이번 AI 가디언 프로그램에서 가장 기대되는 활동은 무엇인가요?</div>
+        <div id="pre-q4-group">
+          <div class="survey-select-option" onclick="selectOption('pre-q4', 'AI 윤리와 법률 규칙 배우기', this)">⚖️ AI 윤리와 법률 규칙 배우기</div>
+          <div class="survey-select-option" onclick="selectOption('pre-q4', '이미지 데이터 수집 & 라벨링 체험하기', this)">📷 이미지 데이터 수집 & 라벨링 체험하기</div>
+          <div class="survey-select-option" onclick="selectOption('pre-q4', '내가 만든 데이터로 AI 공부시키기 (머신러닝)', this)">🎓 내가 만든 데이터로 AI 공부시키기 (머신러닝)</div>
+          <div class="survey-select-option" onclick="selectOption('pre-q4', 'AI 수업 자료 및 퀴즈 풀어보기', this)">📚 AI 수업 자료 및 퀴즈 풀어보기</div>
+        </div>
+      </div>
+      <!-- Q5 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 05</div>
+        <div class="survey-q-text">프로그램에 임하는 나의 멋진 한 마디 다짐!</div>
+        <textarea id="pre-q5-text" class="survey-textarea" placeholder="예: 즐겁게 완주하겠습니다! AI 가디언이 될 거예요."></textarea>
+      </div>
+    </div>
+    <div class="survey-card-footer">
+      <button class="survey-submit-btn" onclick="submitPreSurvey()">🚀 사전 설문 제출하고 학습 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📋 사후 설문조사 모달 -->
+<div id="post-survey-modal" class="survey-overlay">
+  <div class="survey-card">
+    <div class="survey-card-header">
+      <h2>🔵 사후 설문조사 (Post-Survey)</h2>
+      <p>수업을 모두 마쳤습니다! 여러분의 소중한 의견을 들려주세요. (완료 시 🎁 +10 XP 지급)</p>
+    </div>
+    <div class="survey-card-body">
+      <!-- Q1 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 01</div>
+        <div class="survey-q-text">이 프로그램을 수행하면서 AI에 대한 흥미와 관심이 높아졌다.</div>
+        <div class="likert-group" id="post-q1-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q2 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 02</div>
+        <div class="survey-q-text">AI 데이터 수집, 라벨링, 머신러닝 학습 과정이 쉽고 재미있게 이해되었다.</div>
+        <div class="likert-group" id="post-q2-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q3 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 03</div>
+        <div class="survey-q-text">AI를 사용할 때 올바른 윤리와 안전 규칙을 지키는 것이 왜 중요한지 깨달았다.</div>
+        <div class="likert-group" id="post-q3-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q4 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 04</div>
+        <div class="survey-q-text">AI 가디언 프로그램에 전반적으로 만족하며 친구들에게 추천하고 싶다.</div>
+        <div class="likert-group" id="post-q4-group">
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
+          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
+        </div>
+      </div>
+      <!-- Q5 -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 05</div>
+        <div class="survey-q-text">프로그램을 마치며 느낀 소감이나 선생님/개발자에게 하고 싶은 말!</div>
+        <textarea id="post-q5-text" class="survey-textarea" placeholder="예: 데이터 라벨링이 생각보다 신기했어요. 멋진 학습 경험이었습니다!"></textarea>
+      </div>
+    </div>
+    <div class="survey-card-footer">
+      <button class="survey-submit-btn" onclick="submitPostSurvey()">🎉 사후 설문 제출하고 최종 완료하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📋 설문 현황/수동 실행 모달 -->
+<div id="survey-status-modal" class="survey-overlay">
+  <div class="survey-card" style="max-width: 440px;">
+    <div class="survey-card-header">
+      <h2>📋 나의 설문조사 현황</h2>
+      <p>사전/사후 설문 참여 상태를 확인하고 필요한 설문을 진행하세요.</p>
+    </div>
+    <div class="survey-card-body" style="gap:16px;">
+      <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(99,179,237,0.2);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;color:#f8fafc;font-size:15px;">🟢 사전 설문조사</div>
+          <div id="status-pre-text" style="font-size:12px;color:#94a3b8;margin-top:2px;">-</div>
+        </div>
+        <button id="status-pre-btn" onclick="openPreSurveyModal()" style="padding:8px 14px;background:#63b3ed;border:none;border-radius:10px;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;">참여하기</button>
+      </div>
+
+      <div style="background:rgba(30,41,59,0.5);border:1px solid rgba(99,179,237,0.2);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;color:#f8fafc;font-size:15px;">🔵 사후 설문조사</div>
+          <div id="status-post-text" style="font-size:12px;color:#94a3b8;margin-top:2px;">-</div>
+        </div>
+        <button id="status-post-btn" onclick="openPostSurveyModal()" style="padding:8px 14px;background:#63b3ed;border:none;border-radius:10px;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;">참여하기</button>
+      </div>
+    </div>
+    <div class="survey-card-footer">
+      <button onclick="closeSurveyStatusModal()" style="width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:white;font-weight:700;cursor:pointer;font-family:inherit;">닫기</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1451,6 +1817,10 @@ function initUI(){
 
   // 안내 및 사운드 재생 확인
   checkGuideAndPlay();
+
+  // 사전/사후 설문 상태 업데이트 및 자동 트리거 검사
+  updateSurveyStatusUI();
+  checkAndAutoTriggerSurveys();
 }
 
 // ── 별 파티클 생성 ──
@@ -2291,6 +2661,172 @@ function switchCollabTab(tabName) {
     document.querySelector('.collab-tab-btn[onclick*="freeboard"]').classList.add('active');
     document.getElementById('tab-collab-freeboard').classList.add('active');
     loadFreeBoard();
+  }
+}
+
+// ══════════════════════════════════════════
+//  📋 사전 / 사후 설문조사 프론트엔드 로직
+// ══════════════════════════════════════════
+const surveyAnswers = {
+  pre: { q1: 0, q2: 0, q3: 0, q4: '', q5: '' },
+  post: { q1: 0, q2: 0, q3: 0, q4: 0, q5: '' }
+};
+
+function selectLikert(qKey, val, btnEl) {
+  playSFX('click');
+  const group = btnEl.parentElement;
+  group.querySelectorAll('.likert-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  const parts = qKey.split('-');
+  const type = parts[0];
+  const q = parts[1];
+  surveyAnswers[type][q] = val;
+}
+
+function selectOption(qKey, val, optionEl) {
+  playSFX('click');
+  const group = optionEl.parentElement;
+  group.querySelectorAll('.survey-select-option').forEach(o => o.classList.remove('selected'));
+  optionEl.classList.add('selected');
+  const parts = qKey.split('-');
+  const type = parts[0];
+  const q = parts[1];
+  surveyAnswers[type][q] = val;
+}
+
+async function submitPreSurvey() {
+  surveyAnswers.pre.q5 = (document.getElementById('pre-q5-text').value || '').trim();
+  if (!surveyAnswers.pre.q1 || !surveyAnswers.pre.q2 || !surveyAnswers.pre.q3) {
+    alert('모든 평가 문항(1~3번)에 응답해 주세요!');
+    return;
+  }
+  if (!surveyAnswers.pre.q4) {
+    alert('4번 가장 기대되는 활동을 선택해 주세요!');
+    return;
+  }
+
+  const btn = document.querySelector('#pre-survey-modal .survey-submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
+
+  const res = await submitPreSurveyData(currentUser, userData, surveyAnswers.pre);
+  if (res.ok) {
+    playSFX('complete');
+    showXPPopup('🎁 사전 설문 제출 완료! +' + res.reward + ' XP');
+    closePreSurveyModal();
+    updateSurveyStatusUI();
+    if (typeof updateHUD === 'function') updateHUD();
+  } else {
+    alert('사전 설문 제출에 실패했습니다: ' + res.msg);
+    if (btn) { btn.disabled = false; btn.textContent = '🚀 사전 설문 제출하고 학습 시작하기'; }
+  }
+}
+
+async function submitPostSurvey() {
+  surveyAnswers.post.q5 = (document.getElementById('post-q5-text').value || '').trim();
+  if (!surveyAnswers.post.q1 || !surveyAnswers.post.q2 || !surveyAnswers.post.q3 || !surveyAnswers.post.q4) {
+    alert('모든 평가 문항(1~4번)에 응답해 주세요!');
+    return;
+  }
+
+  const btn = document.querySelector('#post-survey-modal .survey-submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
+
+  const res = await submitPostSurveyData(currentUser, userData, surveyAnswers.post);
+  if (res.ok) {
+    playSFX('complete');
+    showXPPopup('🎉 사후 설문 제출 완료! +' + res.reward + ' XP');
+    closePostSurveyModal();
+    updateSurveyStatusUI();
+    if (typeof updateHUD === 'function') updateHUD();
+  } else {
+    alert('사후 설문 제출에 실패했습니다: ' + res.msg);
+    if (btn) { btn.disabled = false; btn.textContent = '🎉 사후 설문 제출하고 최종 완료하기'; }
+  }
+}
+
+function openPreSurveyModal() {
+  closeSurveyStatusModal();
+  document.getElementById('pre-survey-modal').style.display = 'flex';
+}
+
+function closePreSurveyModal() {
+  document.getElementById('pre-survey-modal').style.display = 'none';
+}
+
+function openPostSurveyModal() {
+  closeSurveyStatusModal();
+  document.getElementById('post-survey-modal').style.display = 'flex';
+}
+
+function closePostSurveyModal() {
+  document.getElementById('post-survey-modal').style.display = 'none';
+}
+
+function openSurveyStatusModal() {
+  playSFX('click');
+  updateSurveyStatusUI();
+  document.getElementById('survey-status-modal').style.display = 'flex';
+}
+
+function closeSurveyStatusModal() {
+  document.getElementById('survey-status-modal').style.display = 'none';
+}
+
+function updateSurveyStatusUI() {
+  if (!currentUser || !userData) return;
+  const status = checkSurveyStatus(currentUser, userData);
+  const badge = document.getElementById('sb-survey-status-badge');
+  const preText = document.getElementById('status-pre-text');
+  const preBtn = document.getElementById('status-pre-btn');
+  const postText = document.getElementById('status-post-text');
+  const postBtn = document.getElementById('status-post-btn');
+
+  if (badge) {
+    if (status.pre && status.post) {
+      badge.textContent = '모두 완료';
+      badge.style.background = 'rgba(104, 211, 145, 0.2)';
+      badge.style.color = '#68d391';
+    } else if (status.pre) {
+      badge.textContent = '사전 완료';
+      badge.style.background = 'rgba(246, 173, 85, 0.2)';
+      badge.style.color = '#f6ad55';
+    } else {
+      badge.textContent = '사전 미작성';
+      badge.style.background = 'rgba(252, 129, 129, 0.2)';
+      badge.style.color = '#fc8181';
+    }
+  }
+
+  if (preText && preBtn) {
+    preText.textContent = status.pre ? '✅ 제출 완료 (+10 XP 획득)' : '❌ 미작성 (작성 시 +10 XP)';
+    preBtn.textContent = status.pre ? '다시 응답하기' : '참여하기';
+  }
+
+  if (postText && postBtn) {
+    postText.textContent = status.post ? '✅ 제출 완료 (+10 XP 획득)' : '❌ 미작성 (작성 시 +10 XP)';
+    postBtn.textContent = status.post ? '다시 응답하기' : '참여하기';
+  }
+}
+
+function checkAndAutoTriggerSurveys() {
+  if (!currentUser || !userData) return;
+  const status = checkSurveyStatus(currentUser, userData);
+
+  // 1. 사전 설문 미작성 시 1.2초 후 자동 팝업
+  if (!status.pre) {
+    setTimeout(() => {
+      openPreSurveyModal();
+    }, 1200);
+    return;
+  }
+
+  // 2. 8개 퀘스트 완료 시 사후 설문 미작성이면 1.5초 후 자동 사후 설문 팝업
+  const quests = userData.quests || {};
+  const doneCount = QUESTS.filter(q => quests['q' + q.id + '_done']).length;
+  if (doneCount >= QUESTS.length && !status.post) {
+    setTimeout(() => {
+      openPostSurveyModal();
+    }, 1500);
   }
 }
 </script>

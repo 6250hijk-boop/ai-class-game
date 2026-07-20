@@ -531,7 +531,9 @@ requireAuth(async (user)=>{
   } else {
     const snap=await db.collection('users').where('id','==',user.id).get();
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
-  }
+  updateHUD();
+  startQuestTimer(7);
+  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 7));
   await loadClasses();
 });
 
@@ -775,6 +777,7 @@ async function saveLabels(){
       const q=(userData.quests||{});
       if(!q.q7_done){
         const xp = 20;
+        recordQuestProgress(currentUser, userData, 7, xp, true);
         if(currentUser.uid==='student'){
           userData.score=(userData.score||0)+xp;
           userData.quests=userData.quests||{};

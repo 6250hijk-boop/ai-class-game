@@ -266,6 +266,8 @@ requireAuth(async (user) => {
   // 이름 치환
   MESSAGES[2].text=MESSAGES[2].text.replace('{{name}}', userData.name||'당신');
   updateHUD(); updateCharImages();
+  startQuestTimer(2);
+  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 2));
 
   // 완료된 퀘스트는 처음부터 다시 시작
   const quests=userData.quests||{};
@@ -815,6 +817,7 @@ let completeShown=false;
 function showComplete(){
   if(completeShown) return;
   completeShown=true;
+  recordQuestProgress(currentUser, userData, 2, 100, true);
   document.getElementById('dialog-next').style.display='none';
   typeText(document.getElementById('dialog-text'),
     '🎉 퀘스트 2 완료!\n인공지능의 아버지들을 잘 배웠어!',()=>{

@@ -232,6 +232,8 @@ requireAuth(async (user) => {
     if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
   }
   updateHUD(); updateCharImages();
+  startQuestTimer(3);
+  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 3));
   document.getElementById('hud-progress').textContent='1 / '+MESSAGES.length;
   const quests=userData.quests||{};
   msgIdx=quests.q3_done?0:Math.min(quests.q3_msgIdx||0,MESSAGES.length-1);
@@ -560,6 +562,7 @@ let completeShown=false;
 function showComplete(){
   if(completeShown) return;
   completeShown=true;
+  recordQuestProgress(currentUser, userData, 3, 100, true);
   const overlay=document.createElement('div');
   overlay.id='complete-overlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;';
