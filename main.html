@@ -2453,8 +2453,6 @@ async function loadDiscussions() {
       const isMe = d.authorId === myId;
       const cheers = d.cheers || [];
       const cheerCount = d.cheerCount || cheers.length;
-      const alreadyCheered = cheers.includes(myId);
-      const date = d.created_at?.slice(0, 16).replace('T', ' ') || '';
       html += `<div class="discuss-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
           <span style="font-size:13px;font-weight:700;color:${isMe ? '#63b3ed' : '#e2e8f0'};">${isMe ? '👤 ' : ''}${d.authorName || '???'}</span>
@@ -2464,11 +2462,30 @@ async function loadDiscussions() {
           </div>
         </div>
         <p style="font-size:14px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${d.content}</p>
-        <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
-                onclick="${alreadyCheered ? '' : `doCheerDiscuss('${doc.id}', this)`}" 
-                ${alreadyCheered ? 'disabled' : ''}>
-          👏 응원 ${cheerCount > 0 ? cheerCount : ''}
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+          <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
+                  onclick="${alreadyCheered ? '' : `doCheerDiscuss('${doc.id}', this)`}" 
+                  ${alreadyCheered ? 'disabled' : ''}>
+            👏 응원 ${cheerCount > 0 ? cheerCount : ''}
+          </button>
+          <button class="cheer-btn" onclick="toggleComments('discuss_ai', '${doc.id}')" style="background:rgba(99,179,237,0.12);border-color:rgba(99,179,237,0.3);color:#63b3ed;">
+            💬 댓글 작성 / 보기
+          </button>
+        </div>
+
+        <!-- 댓글 영역 -->
+        <div id="comments-box-${doc.id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,0.1);">
+          <div id="comments-list-${doc.id}" style="margin-bottom:10px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="comment-input-${doc.id}" placeholder="댓글을 남겨보세요... (+1점)" 
+                   style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;color:white;font-size:13px;outline:none;"
+                   onkeypress="if(event.key==='Enter') submitBoardComment('discuss_ai', '${doc.id}')">
+            <button onclick="submitBoardComment('discuss_ai', '${doc.id}')" 
+                    style="background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:8px;padding:8px 14px;color:#0a0e1a;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">
+              작성
+            </button>
+          </div>
+        </div>
       </div>`;
     });
     list.innerHTML = html;
@@ -2497,15 +2514,19 @@ async function postDiscussion() {
       created_at: new Date().toISOString()
     });
     input.value = '';
-    // +3점 보상
-    if (currentUser.uid === 'student') {
-      userData.score = (userData.score || 0) + 3;
-      localStorage.setItem('tempUserData', JSON.stringify(userData));
-      updateHUD();
-    } else if (currentUser.uid !== 'admin') {
-      await addScore(currentUser.uid, 3, '토론방 게시글 작성');
-    }
+
+    // 게시글 작성 보상 (첫 글 5점, 이후 1점, 최대 8점 제한)
+    const isFirst = (userData.boardXp || 0) === 0;
+    const scoreResult = await addBoardActivityScore(currentUser, userData, isFirst ? 'first_post' : 'post', '토론방 게시글 작성');
+    updateHUD();
     playSFX('correct');
+
+    if (scoreResult.gained > 0) {
+      showXPPopup(`+${scoreResult.gained}점 획득! 📝 (게시판 점수: ${scoreResult.current}/8)`);
+    } else {
+      showXPPopup(`글 작성 완료! (게시판 보상 8점 완료)`);
+    }
+
     loadDiscussions();
   } catch (e) {
     alert('작성 실패: ' + e.message);
@@ -2563,11 +2584,30 @@ async function loadFreeBoard() {
           </div>
         </div>
         <p style="font-size:14px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${d.content}</p>
-        <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
-                onclick="${alreadyCheered ? '' : `doCheerFreeBoard('${doc.id}', this)`}" 
-                ${alreadyCheered ? 'disabled' : ''}>
-          👏 응원 ${cheerCount > 0 ? cheerCount : ''}
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+          <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
+                  onclick="${alreadyCheered ? '' : `doCheerFreeBoard('${doc.id}', this)`}" 
+                  ${alreadyCheered ? 'disabled' : ''}>
+            👏 응원 ${cheerCount > 0 ? cheerCount : ''}
+          </button>
+          <button class="cheer-btn" onclick="toggleComments('class_free_board', '${doc.id}')" style="background:rgba(99,179,237,0.12);border-color:rgba(99,179,237,0.3);color:#63b3ed;">
+            💬 댓글 작성 / 보기
+          </button>
+        </div>
+
+        <!-- 댓글 영역 -->
+        <div id="comments-box-${doc.id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(255,255,255,0.1);">
+          <div id="comments-list-${doc.id}" style="margin-bottom:10px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="comment-input-${doc.id}" placeholder="댓글을 남겨보세요... (+1점)" 
+                   style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;color:white;font-size:13px;outline:none;"
+                   onkeypress="if(event.key==='Enter') submitBoardComment('class_free_board', '${doc.id}')">
+            <button onclick="submitBoardComment('class_free_board', '${doc.id}')" 
+                    style="background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:8px;padding:8px 14px;color:#0a0e1a;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">
+              작성
+            </button>
+          </div>
+        </div>
       </div>`;
     });
     list.innerHTML = html;
@@ -2596,18 +2636,101 @@ async function postFreeBoard() {
       created_at: new Date().toISOString()
     });
     input.value = '';
-    // +3점 보상
-    if (currentUser.uid === 'student') {
-      userData.score = (userData.score || 0) + 3;
-      localStorage.setItem('tempUserData', JSON.stringify(userData));
-      updateHUD();
-    } else if (currentUser.uid !== 'admin') {
-      await addScore(currentUser.uid, 3, '자유 게시판 글 작성');
-    }
+
+    // 게시글 작성 보상 (첫 글 5점, 이후 1점, 최대 8점 제한)
+    const isFirst = (userData.boardXp || 0) === 0;
+    const scoreResult = await addBoardActivityScore(currentUser, userData, isFirst ? 'first_post' : 'post', '자유 게시판 글 작성');
+    updateHUD();
     playSFX('correct');
+
+    if (scoreResult.gained > 0) {
+      showXPPopup(`+${scoreResult.gained}점 획득! 📝 (게시판 점수: ${scoreResult.current}/8)`);
+    } else {
+      showXPPopup(`글 작성 완료! (게시판 보상 8점 완료)`);
+    }
+
     loadFreeBoard();
   } catch (e) {
     alert('작성 실패: ' + e.message);
+  }
+}
+
+// ══════════════ 댓글(Reply) 시스템 ══════════════
+function toggleComments(collName, docId) {
+  const box = document.getElementById(`comments-box-${docId}`);
+  if (!box) return;
+  const isShow = box.style.display !== 'none';
+  box.style.display = isShow ? 'none' : 'block';
+  if (!isShow) {
+    loadComments(collName, docId);
+  }
+}
+
+async function loadComments(collName, docId) {
+  const listEl = document.getElementById(`comments-list-${docId}`);
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:6px;">댓글 로딩 중...</div>';
+  try {
+    const snap = await db.collection(collName).doc(docId).collection('comments')
+      .orderBy('created_at', 'asc').get();
+    if (snap.empty) {
+      listEl.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:12px;padding:6px;">아직 댓글이 없습니다. 첫 댓글을 남겨보세요! 💬</div>';
+      return;
+    }
+    const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+    let html = '';
+    snap.forEach(dDoc => {
+      const c = dDoc.data();
+      const isMe = c.authorId === myId;
+      const date = c.created_at?.slice(5, 16).replace('T', ' ') || '';
+      html += `
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:700;color:${isMe ? '#63b3ed' : '#f6ad55'};">${isMe ? '👤 ' : ''}${c.authorName || '익명'}</span>
+            <span style="font-size:10px;color:var(--muted);">${date}</span>
+          </div>
+          <div style="font-size:13px;color:#e2e8f0;white-space:pre-wrap;line-height:1.5;">${c.content}</div>
+        </div>
+      `;
+    });
+    listEl.innerHTML = html;
+  } catch (e) {
+    console.error('댓글 로드 오류:', e);
+    listEl.innerHTML = '<div style="color:#fc8181;font-size:12px;">댓글 로드 실패</div>';
+  }
+}
+
+async function submitBoardComment(collName, docId) {
+  const input = document.getElementById(`comment-input-${docId}`);
+  const content = (input?.value || '').trim();
+  if (!content) { alert('댓글 내용을 입력해주세요!'); return; }
+  if (!userData.charName) { alert('먼저 캐릭터 이름을 설정해 주세요!'); return; }
+
+  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
+  try {
+    await db.collection(collName).doc(docId).collection('comments').add({
+      content,
+      authorId: myId,
+      authorName: userData.charName || '익명',
+      isTemp: currentUser.uid === 'student',
+      created_at: new Date().toISOString()
+    });
+    input.value = '';
+
+    // 댓글 작성 보상 (+1점, 최대 8점 상한)
+    const scoreResult = await addBoardActivityScore(currentUser, userData, 'comment', '게시판 댓글 작성');
+    updateHUD();
+    playSFX('correct');
+
+    if (scoreResult.gained > 0) {
+      showXPPopup(`+1점 획득! 💬 (게시판 점수: ${scoreResult.current}/8)`);
+    } else {
+      showXPPopup(`댓글 등록! (게시판 보상 8점 완료)`);
+    }
+
+    loadComments(collName, docId);
+  } catch (e) {
+    alert('댓글 등록 실패: ' + e.message);
   }
 }
 

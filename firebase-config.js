@@ -138,6 +138,42 @@ async function saveProgress(uid, key, value) {
 
 // ── 게시판 공통 함수 ──
 const BOARD_DEFAULT_XP = 5; // 게시글 작성 기본 점수
+const MAX_BOARD_XP = 8; // 게시판 활동 총 획득 가능 최대 점수
+
+/**
+ * 게시판 활동(게시글 작성, 댓글 작성)에 따른 점수를 가산합니다 (최대 8점 제한)
+ */
+async function addBoardActivityScore(currentUser, userData, actionType = 'comment', reason = '게시판 활동') {
+  if (!currentUser) return { gained: 0, current: 0, isMax: true };
+  const isTemp = currentUser.uid === 'student';
+
+  let currentBoardXp = Number(userData.boardXp || 0);
+
+  if (currentBoardXp >= MAX_BOARD_XP) {
+    return { gained: 0, current: MAX_BOARD_XP, isMax: true };
+  }
+
+  // 첫 글이면 5점, 그 외 게시글/댓글은 1점
+  let baseReward = (actionType === 'first_post') ? 5 : 1;
+  let gained = Math.min(baseReward, MAX_BOARD_XP - currentBoardXp);
+
+  if (gained > 0) {
+    currentBoardXp += gained;
+    userData.boardXp = currentBoardXp;
+    userData.score = (userData.score || 0) + gained;
+
+    if (isTemp) {
+      localStorage.setItem('tempUserData', JSON.stringify(userData));
+    } else {
+      await addScore(currentUser.uid, gained, reason);
+      await db.collection('users').doc(currentUser.uid).update({
+        boardXp: currentBoardXp
+      }).catch(e => console.error('boardXp update err:', e));
+    }
+  }
+
+  return { gained, current: currentBoardXp, isMax: currentBoardXp >= MAX_BOARD_XP };
+}
 
 async function submitBoardPost(collectionName, userData, currentUser, content, link) {
   if (!content.trim()) return { ok:false, msg:'내용을 입력해주세요.' };
@@ -156,13 +192,9 @@ async function submitBoardPost(collectionName, userData, currentUser, content, l
     created_at: new Date().toISOString(),
   });
 
-  // 점수 지급
-  if (!isTemp) {
-    await addScore(currentUser.uid, BOARD_DEFAULT_XP, `게시글 작성 (${collectionName})`);
-  } else {
-    userData.score = (userData.score||0) + BOARD_DEFAULT_XP;
-    localStorage.setItem('tempUserData', JSON.stringify(userData));
-  }
+  // 점수 지급 (첫 글 5점, 최대 8점 상한)
+  const isFirst = (userData.boardXp || 0) === 0;
+  await addBoardActivityScore(currentUser, userData, isFirst ? 'first_post' : 'post', `게시글 작성 (${collectionName})`);
   return { ok:true, docId:docRef.id };
 }
 
