@@ -123,6 +123,7 @@ requireAuth(async (user)=>{
   startQuestTimer(6);
   window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 6));
   loadMyUploads();
+  playBGM('quest');
 });
 
 // ── 600×600 리사이징 → Blob ──

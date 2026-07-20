@@ -535,6 +535,7 @@ requireAuth(async (user)=>{
   startQuestTimer(7);
   window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 7));
   await loadClasses();
+  playBGM('quest');
 });
 
 async function loadClasses(){

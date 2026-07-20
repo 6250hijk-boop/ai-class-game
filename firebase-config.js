@@ -229,14 +229,14 @@ async function updateBoardPostXP(collectionName, docId, post, newXp, targetUid) 
 const SOUNDS = {
   BGM: {
     main:     'sounds/bgm_main.mp3',
-    quest:    'sounds/bgm_quest.mp3',
+    quest:    'sounds/bgm_quest.mp4',
   },
   SFX: {
-    click:    'sounds/sfx_click.mp3',
-    correct:  'sounds/sfx_correct.mp3',
-    wrong:    'sounds/sfx_wrong.mp3',
-    levelup:  'sounds/sfx_levelup.mp3',
-    complete: 'sounds/sfx_complete.mp3',
+    click:    'sounds/sfx_click.mp4',
+    correct:  'sounds/sfx_correct.mp4',
+    wrong:    'sounds/sfx_wrong.mp4',
+    levelup:  'sounds/sfx_levelup.mp4',
+    complete: 'sounds/sfx_complete.mp4',
   }
 };
 
@@ -255,6 +255,15 @@ function setSoundSettings(bgm, sfx) {
 // BGM 관리
 let _bgmAudio = null;
 let _currentBgm = null;
+let _audioUnlocked = false;
+
+function unlockAudioContext() {
+  if (_audioUnlocked) return;
+  _audioUnlocked = true;
+  if (_currentBgm) {
+    playBGM(_currentBgm);
+  }
+}
 
 function playBGM(key) {
   const settings = getSoundSettings();
@@ -266,7 +275,10 @@ function playBGM(key) {
   _bgmAudio = new Audio(src);
   _bgmAudio.loop = true;
   _bgmAudio.volume = 0.35;
-  _bgmAudio.play().catch(()=>{});
+  _bgmAudio.play().catch(e => {
+    // 자동재생 정책 차단 시 사용자 첫 클릭 시 재시도
+    console.log("BGM Autoplay waiting for user interaction");
+  });
   _currentBgm = key;
 }
 
@@ -302,9 +314,21 @@ function playSFX(key) {
   if (!settings.sfx) return;
   const src = SOUNDS.SFX[key];
   if (!src) return;
-  const audio = new Audio(src);
-  audio.volume = 0.6;
-  audio.play().catch(()=>{});
+  try {
+    const audio = new Audio(src);
+    audio.volume = 0.6;
+    audio.play().catch(e => {});
+  } catch(e){}
+}
+
+// 브라우저 첫 인터랙션 시 오디오 언락 리스너 등록
+if (typeof window !== 'undefined') {
+  const unlockEvents = ['click', 'touchstart', 'keydown'];
+  const handleFirstInteraction = () => {
+    unlockAudioContext();
+    unlockEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
+  };
+  unlockEvents.forEach(evt => window.addEventListener(evt, handleFirstInteraction));
 }
 
 // BGM 볼륨 업데이트

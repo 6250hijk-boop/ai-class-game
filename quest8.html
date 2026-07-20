@@ -193,6 +193,7 @@ requireAuth(async (user)=>{
   startQuestTimer(8);
   window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 8));
   renderSamples();
+  playBGM('quest');
 });
 
 function renderSamples(){
