@@ -25,6 +25,7 @@
       <a href="#tab-classes" class="quest-item" onclick="showTab('classes')">🏷️ 라벨 클래스 관리</a>
       <a href="#tab-uploads" class="quest-item" onclick="showTab('uploads')">📁 업로드 현황</a>
       <a href="#tab-stats" class="quest-item" onclick="showTab('stats')">📊 전체 통계</a>
+      <a href="#tab-surveys" class="quest-item" onclick="showTab('surveys')">📋 설문 통계</a>
     </div>
     <button class="btn btn-ghost" onclick="logout()"
       style="margin-top:auto;padding:10px;font-size:13px;">🚪 로그아웃</button>
@@ -199,6 +200,49 @@
         </div>
       </div>
     </div>
+
+    <!-- 📋 사전/사후 설문 통계 탭 -->
+    <div id="tab-surveys" style="display:none;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <h3 style="font-family:'Jua',sans-serif;color:var(--primary);font-size:20px;">📋 사전 / 사후 설문조사 결과 통계</h3>
+          <button onclick="loadSurveyAdminData()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px;">
+          <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">🟢 사전 설문 응답자</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#63b3ed;" id="srv-pre-count">0명</div>
+          </div>
+          <div style="background:rgba(104,211,145,0.08);border:1px solid rgba(104,211,145,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">🔵 사후 설문 응답자</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#68d391;" id="srv-post-count">0명</div>
+          </div>
+          <div style="background:rgba(246,173,85,0.08);border:1px solid rgba(246,173,85,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">⭐ 사전 평균 점수</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#f6ad55;" id="srv-pre-avg">0.0점 / 5.0</div>
+          </div>
+          <div style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">🌟 사후 평균 점수</div>
+            <div style="font-family:'Jua',sans-serif;font-size:28px;color:#a78bfa;" id="srv-post-avg">0.0점 / 5.0</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:24px;">
+          <h4 style="font-size:15px;color:var(--text);margin-bottom:14px;">📊 리커트 척도 문항별 평균 점수 (5점 만점)</h4>
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr><th>구분</th><th>평가 항목</th><th>평균 점수</th></tr>
+              </thead>
+              <tbody id="srv-table-body">
+                <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);">로딩 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -220,7 +264,6 @@ async function loadData() {
       db.collection('quiz_results').get()
     ]);
   } catch(e) {
-    // 인덱스 없으면 정렬 없이 시도
     [usersSnap, quizSnap] = await Promise.all([
       db.collection('users').get(),
       db.collection('quiz_results').get()
@@ -231,7 +274,6 @@ async function loadData() {
   const quizMap = {};
   quizSnap.docs.forEach(d => { quizMap[d.id] = d.data(); });
 
-  // 통계 카드
   const totalScore = users.reduce((s,u) => s+(u.score||0), 0);
   const avgScore = users.length ? Math.round(totalScore/users.length) : 0;
   const activeUsers = users.filter(u => Object.keys(u.quests||{}).length > 0).length;
@@ -244,7 +286,6 @@ async function loadData() {
   document.getElementById('stat-quiz-total').textContent = totalQuiz;
   document.getElementById('stat-avg-score').textContent = avgScore;
 
-  // 학생 테이블
   document.getElementById('student-tbody').innerHTML = users.length === 0
     ? '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
     : users.map(u => {
@@ -262,7 +303,6 @@ async function loadData() {
         </tr>`;
       }).join('');
 
-  // 퀴즈 테이블
   const quizRows = [];
   users.forEach(u => {
     const qdata = quizMap[u._id] || {};
@@ -292,7 +332,6 @@ async function loadData() {
     ? quizRows.join('')
     : `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">퀴즈 기록이 없습니다</td></tr>`;
 
-  // 통계
   const levelDist = {};
   users.forEach(u => {
     const lv = getLevelByScore(u.score||0, u.charTrack||'robot');
@@ -324,19 +363,131 @@ async function loadData() {
 }
 
 function showTab(t) {
-  ['students','create','quiz','board','classes','uploads','stats'].forEach(id => {
+  ['students','create','quiz','board','classes','uploads','stats','surveys'].forEach(id => {
     const el=document.getElementById('tab-'+id);
     if(el) el.style.display = id===t?'block':'none';
   });
   document.querySelectorAll('.sidebar .quest-item').forEach((el,i) => {
-    el.classList.toggle('active', ['students','create','quiz','board','classes','uploads','stats'][i]===t);
+    el.classList.toggle('active', ['students','create','quiz','board','classes','uploads','stats','surveys'][i]===t);
   });
   if(t==='board') loadBoardAdmin('board_q1');
   if(t==='classes') loadClasses();
   if(t==='uploads') loadUploads();
+  if(t==='surveys') loadSurveyAdminData();
   if(t==='create'){
     if(!document.querySelector('#create-tbody tr')) initCreateTable();
     loadStudentAccounts();
+  }
+}
+
+// ── 📋 사전/사후 설문 데이터 대시보드 로드 ──
+async function loadSurveyAdminData() {
+  const preCountEl = document.getElementById('srv-pre-count');
+  const postCountEl = document.getElementById('srv-post-count');
+  const preAvgEl = document.getElementById('srv-pre-avg');
+  const postAvgEl = document.getElementById('srv-post-avg');
+  const tableBody = document.getElementById('srv-table-body');
+
+  if (tableBody) tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);"><div class="spinner" style="margin:0 auto;"></div></td></tr>';
+
+  const res = await loadAllSurveyData();
+  if (!res.ok) {
+    if (tableBody) tableBody.innerHTML = `<tr><td colspan="3" style="color:var(--red);text-align:center;padding:20px;">불러오기 오류: ${res.msg}</td></tr>`;
+    return;
+  }
+
+  const preList = res.preList || [];
+  const postList = res.postList || [];
+
+  if (preCountEl) preCountEl.textContent = preList.length + '명';
+  if (postCountEl) postCountEl.textContent = postList.length + '명';
+
+  const preQuestions = [
+    "나는 인공지능(AI) 기술과 그 작동 원리에 대해 흥미와 관심이 많다.",
+    "나는 인공지능과 관련된 실습 활동을 자신 있게 해낼 수 있다.",
+    "나는 인공지능이 데이터를 공부하고 학습하는 방식(머신러닝)을 설명할 수 있다.",
+    "나는 AI를 학습시키기 위해 데이터 수집과 라벨링이 왜 필요한지 알고 있다.",
+    "나는 AI가 이미지나 영상에서 물체를 인식/분석(객체 탐지)하는 원리를 알고 있다.",
+    "나는 AI 활용 시 발생하는 저작권, 초상권, 데이터 편향 등의 윤리 문제를 잘 알고 있다.",
+    "나는 AI 기술을 다룰 때 올바른 규칙과 법률을 준수하며 안전하게 사용할 수 있다.",
+    "나는 원하는 AI 모델을 만들기 위해 직접 이미지 데이터를 수집하고 라벨링할 수 있다.",
+    "나는 내가 준비한 데이터로 AI 모델을 학습시키고 결과를 확인할 수 있다.",
+    "나는 실생활 문제나 나만의 아이디어를 해결하는 데 AI 기술을 활용할 수 있다."
+  ];
+
+  const postQuestions = [
+    "본 프로그램을 통해 인공지능(AI) 기술에 대한 흥미와 관심이 높아졌다.",
+    "나는 앞으로도 인공지능 관련 실습 활동을 스스로 해낼 수 있는 자신감이 생겼다.",
+    "나는 인공지능이 데이터를 공부하고 학습하는 방식(머신러닝)을 명확히 이해하게 되었다.",
+    "나는 AI 학습 시 데이터 수집과 라벨링(표시)의 핵심 역할과 필요성을 깨달았다.",
+    "나는 AI가 이미지/영상에서 물체를 인식하고 분석(객체 탐지 등)하는 원리를 이해했다.",
+    "나는 AI 활용 시 인공지능 윤리(저작권, 초상권, 데이터 편향 등)의 중요성을 깊이 인식하게 되었다.",
+    "나는 앞으로 인공지능 기술을 사용할 때 올바른 규칙과 법률을 지켜 안전하게 활용할 것이다.",
+    "나는 원하는 AI 모델을 만들기 위해 직접 이미지 데이터를 수집하고 라벨링할 수 있게 되었다.",
+    "나는 내가 직접 구축한 데이터로 AI를 학습시키고 그 결과를 분석할 수 있게 되었다.",
+    "나는 실생활의 문제나 나만의 아이디어를 해결하는 데 AI 기술을 어떻게 활용할지 아이디어를 떠올릴 수 있다."
+  ];
+
+  const preAvgs = Array(10).fill(0);
+  let preTotalSum = 0;
+  preList.forEach(item => {
+    const a = item.answers || {};
+    for (let i = 1; i <= 10; i++) {
+      const val = Number(a['q' + i] || 0);
+      preAvgs[i - 1] += val;
+      preTotalSum += val;
+    }
+  });
+  const preCount = preList.length || 1;
+  const preAvgFormatted = preAvgs.map(sum => (sum / preCount).toFixed(1));
+  const preOverallAvg = preList.length ? (preTotalSum / (preList.length * 10)).toFixed(1) : '0.0';
+
+  if (preAvgEl) preAvgEl.textContent = preList.length ? `${preOverallAvg}점 / 5.0` : '0.0점 / 5.0';
+
+  const postAvgs = Array(10).fill(0);
+  let postTotalSum = 0;
+  postList.forEach(item => {
+    const a = item.answers || {};
+    for (let i = 1; i <= 10; i++) {
+      const val = Number(a['q' + i] || 0);
+      postAvgs[i - 1] += val;
+      postTotalSum += val;
+    }
+  });
+  const postCount = postList.length || 1;
+  const postAvgFormatted = postAvgs.map(sum => (sum / postCount).toFixed(1));
+  const postOverallAvg = postList.length ? (postTotalSum / (postList.length * 10)).toFixed(1) : '0.0';
+
+  if (postAvgEl) postAvgEl.textContent = postList.length ? `${postOverallAvg}점 / 5.0` : '0.0점 / 5.0';
+
+  if (tableBody) {
+    let rowsHtml = '';
+    preQuestions.forEach((qText, idx) => {
+      const qNum = idx + 1;
+      const avg = preList.length ? preAvgFormatted[idx] : '-';
+      rowsHtml += `
+        <tr>
+          <td><span style="color:#63b3ed;font-weight:700;">🟢 사전 Q${qNum}</span></td>
+          <td>${qText}</td>
+          <td><strong style="color:#63b3ed;">${avg} 점</strong></td>
+        </tr>
+      `;
+    });
+
+    postQuestions.forEach((qText, idx) => {
+      const qNum = idx + 1;
+      const avg = postList.length ? postAvgFormatted[idx] : '-';
+      const borderStyle = idx === 0 ? 'border-top:2px solid var(--border);' : '';
+      rowsHtml += `
+        <tr style="${borderStyle}">
+          <td><span style="color:#68d391;font-weight:700;">🔵 사후 Q${qNum}</span></td>
+          <td>${qText}</td>
+          <td><strong style="color:#68d391;">${avg} 점</strong></td>
+        </tr>
+      `;
+    });
+
+    tableBody.innerHTML = rowsHtml;
   }
 }
 

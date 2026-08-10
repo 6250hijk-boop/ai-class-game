@@ -556,3 +556,113 @@ async function cheerPost(collectionName, docId, userId) {
   return { ok: true, count: cheers.length };
 }
 
+// ══════════════════════════════════════════
+//  📋 사전 / 사후 설문조사 시스템
+// ══════════════════════════════════════════
+const SURVEY_REWARD_XP = 10; // 설문 응답 보상 점수
+
+// 설문 완료 상태 확인
+function checkSurveyStatus(userSession, userLocalData) {
+  const isTemp = userSession.uid === 'student';
+  if (isTemp) {
+    const pre = localStorage.getItem('preSurveyCompleted') === 'true';
+    const post = localStorage.getItem('postSurveyCompleted') === 'true';
+    return { pre, post };
+  } else {
+    return {
+      pre: !!(userLocalData && userLocalData.preSurveyCompleted),
+      post: !!(userLocalData && userLocalData.postSurveyCompleted)
+    };
+  }
+}
+
+// 1. 사전 설문 제출
+async function submitPreSurveyData(userSession, userLocalData, answers) {
+  const isTemp = userSession.uid === 'student';
+  const authorName = userLocalData.charName || userLocalData.name || '익명 학생';
+  const uid = isTemp ? ('temp_' + authorName) : userSession.uid;
+
+  const payload = {
+    uid: uid,
+    authorName: authorName,
+    isTemp: isTemp,
+    answers: answers,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await db.collection('pre_surveys').add(payload);
+
+    if (isTemp) {
+      localStorage.setItem('preSurveyCompleted', 'true');
+      localStorage.setItem('preSurveyData', JSON.stringify(payload));
+      userLocalData.preSurveyCompleted = true;
+      userLocalData.score = (userLocalData.score || 0) + SURVEY_REWARD_XP;
+      localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
+    } else if (userSession.uid !== 'admin') {
+      userLocalData.preSurveyCompleted = true;
+      await db.collection('users').doc(userSession.uid).update({
+        preSurveyCompleted: true
+      });
+      await addScore(userSession.uid, SURVEY_REWARD_XP, '사전 설문조사 참여 보상');
+    }
+    return { ok: true, reward: SURVEY_REWARD_XP };
+  } catch (e) {
+    console.error("submitPreSurveyData error:", e);
+    return { ok: false, msg: e.message };
+  }
+}
+
+// 2. 사후 설문 제출
+async function submitPostSurveyData(userSession, userLocalData, answers) {
+  const isTemp = userSession.uid === 'student';
+  const authorName = userLocalData.charName || userLocalData.name || '익명 학생';
+  const uid = isTemp ? ('temp_' + authorName) : userSession.uid;
+
+  const payload = {
+    uid: uid,
+    authorName: authorName,
+    isTemp: isTemp,
+    answers: answers,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await db.collection('post_surveys').add(payload);
+
+    if (isTemp) {
+      localStorage.setItem('postSurveyCompleted', 'true');
+      localStorage.setItem('postSurveyData', JSON.stringify(payload));
+      userLocalData.postSurveyCompleted = true;
+      userLocalData.score = (userLocalData.score || 0) + SURVEY_REWARD_XP;
+      localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
+    } else if (userSession.uid !== 'admin') {
+      userLocalData.postSurveyCompleted = true;
+      await db.collection('users').doc(userSession.uid).update({
+        postSurveyCompleted: true
+      });
+      await addScore(userSession.uid, SURVEY_REWARD_XP, '사후 설문조사 참여 보상');
+    }
+    return { ok: true, reward: SURVEY_REWARD_XP };
+  } catch (e) {
+    console.error("submitPostSurveyData error:", e);
+    return { ok: false, msg: e.message };
+  }
+}
+
+// 3. 관리자용: 사전/사후 설문 데이터 목록 불러오기
+async function loadAllSurveyData() {
+  try {
+    const preSnap = await db.collection('pre_surveys').orderBy('created_at', 'desc').get();
+    const postSnap = await db.collection('post_surveys').orderBy('created_at', 'desc').get();
+
+    const preList = preSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const postList = postSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    return { ok: true, preList, postList };
+  } catch (e) {
+    console.error("loadAllSurveyData error:", e);
+    return { ok: false, msg: e.message, preList: [], postList: [] };
+  }
+}
+
