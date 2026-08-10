@@ -1006,6 +1006,21 @@
       <div id="quest-list"></div>
     </div>
 
+    <!-- 설문조사 섹션 -->
+    <div class="quest-section">
+      <h4>📋 사전/사후 설문조사</h4>
+      <div class="quest-item" id="sb-pre-survey-item" onclick="openPreSurveyModal()">
+        <div class="quest-check" id="sb-pre-check"></div>
+        <span>🟢 사전 설문조사</span>
+        <span id="sb-pre-status-tag" style="margin-left:auto;font-size:11px;"></span>
+      </div>
+      <div class="quest-item" id="sb-post-survey-item" onclick="openPostSurveyModal()">
+        <div class="quest-check" id="sb-post-check"></div>
+        <span>🔵 사후 설문조사</span>
+        <span id="sb-post-status-tag" style="margin-left:auto;font-size:11px;"></span>
+      </div>
+    </div>
+
     <!-- 뱃지 보관함 -->
     <div class="badge-section">
       <h4>🏆 뱃지 보관함</h4>
@@ -1376,6 +1391,10 @@ function initUI(){
   loadClassGauge();
   loadDiscussions();
   loadFreeBoard();
+
+  // 설문조사 상태 UI 및 자동 트리거
+  updateSurveyStatusUI();
+  checkAutoSurveyTrigger();
 
   // 활성 퀘스트 찾기 (가장 낮은 번호의 미완료 퀘스트, 모두 완료 시 9)
   let activeQuestId = 9;
@@ -2755,6 +2774,7 @@ async function submitPreSurvey() {
     closePreSurveyModal();
     showXPPopup('🎁 사전 설문 제출 완료! +' + res.reward + ' XP');
     updateHUD();
+    updateSurveyStatusUI();
   } else {
     alert('사전 설문 제출에 실패했습니다: ' + res.msg);
     if (btn) { btn.disabled = false; btn.textContent = '🚀 사전 설문 제출하고 학습 시작하기'; }
@@ -2777,23 +2797,69 @@ async function submitPostSurvey() {
     closePostSurveyModal();
     showXPPopup('🎉 사후 설문 제출 완료! +' + res.reward + ' XP');
     updateHUD();
+    updateSurveyStatusUI();
   } else {
     alert('사후 설문 제출에 실패했습니다: ' + res.msg);
     if (btn) { btn.disabled = false; btn.textContent = '🎉 사후 설문 제출하고 최종 완료하기'; }
   }
 }
 
-// 자동 사전 설문 모달 트리거 (페이지 로드 후 1.2초 뒤)
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    if (currentUser && typeof checkSurveyStatus === 'function') {
-      const status = checkSurveyStatus(currentUser, userData);
-      if (!status.pre) {
-        openPreSurveyModal();
-      }
+function updateSurveyStatusUI() {
+  if (!currentUser || typeof checkSurveyStatus !== 'function') return;
+  const status = checkSurveyStatus(currentUser, userData);
+
+  const preCheck = document.getElementById('sb-pre-check');
+  const preTag = document.getElementById('sb-pre-status-tag');
+  if (preCheck && preTag) {
+    if (status.pre) {
+      preCheck.className = 'quest-check done';
+      preCheck.textContent = '✓';
+      preTag.style.color = 'var(--green)';
+      preTag.textContent = '완료';
+    } else {
+      preCheck.className = 'quest-check';
+      preCheck.textContent = '';
+      preTag.style.color = '#f6ad55';
+      preTag.textContent = '미진행';
     }
-  }, 1200);
-});
+  }
+
+  const postCheck = document.getElementById('sb-post-check');
+  const postTag = document.getElementById('sb-post-status-tag');
+  if (postCheck && postTag) {
+    if (status.post) {
+      postCheck.className = 'quest-check done';
+      postCheck.textContent = '✓';
+      postTag.style.color = 'var(--green)';
+      postTag.textContent = '완료';
+    } else {
+      postCheck.className = 'quest-check';
+      postCheck.textContent = '';
+      postTag.style.color = '#63b3ed';
+      postTag.textContent = '미진행';
+    }
+  }
+}
+
+function checkAutoSurveyTrigger() {
+  if (!currentUser || typeof checkSurveyStatus !== 'function') return;
+  const status = checkSurveyStatus(currentUser, userData);
+
+  if (!status.pre) {
+    setTimeout(() => {
+      openPreSurveyModal();
+    }, 800);
+    return;
+  }
+
+  const quests = (userData && userData.quests) || {};
+  const questDoneCount = Object.keys(quests).filter(k => k.endsWith('_done')).length;
+  if (questDoneCount >= 8 && !status.post) {
+    setTimeout(() => {
+      openPostSurveyModal();
+    }, 1200);
+  }
+}
 </script>
 </body>
 </html>
