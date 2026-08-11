@@ -207,21 +207,25 @@ const QUIZZES_2 = [
     ans:2, exp:"익명화(비식별화) 처리는 안전성 원칙의 핵심입니다!" },
 ];
 
-let currentUser=null, userData=null;
+let currentUser=null, userData={charName:'AI',score:0,quests:{},name:'학생'};
 let msgIdx=0, isTyping=false, typingTimer=null;
 let currentQuizSet=null, quizIdx=0, quizScore=0, quizAttempts=0, currentCombo=0, comboBonus=0;
 let orderSlots={}, matchMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
+document.addEventListener('DOMContentLoaded', () => {
+  showMessage(0);
+});
+
 requireAuth(async (user) => {
-  currentUser=user;
+  currentUser=user || {uid:'student', name:'임시학생'};
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
-  } else if(user.uid==='admin'){
+  } else if(user.uid==='admin' || user.isAdmin){
     userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
     try {
-      const snap=await db.collection('users').where('id','==',user.id).get();
+      const snap=await db.collection('users').where('id','==',user.id||user.uid).get();
       if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
       else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
     } catch(e){
@@ -229,11 +233,15 @@ requireAuth(async (user) => {
     }
   }
   userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
+  if(!userData.quests) userData.quests = {};
+
   updateHUD(); updateCharImages();
 
-  msgIdx = 0;
-  showMessage(msgIdx);
-  playBGM('quest');
+  const textEl = document.getElementById('dialog-text');
+  if(!textEl || !textEl.innerHTML || textEl.innerHTML.trim() === ''){
+    showMessage(msgIdx);
+  }
+  try { playBGM('quest'); } catch(e){}
 });
 
 function updateCharImages(){
