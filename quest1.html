@@ -208,7 +208,7 @@ const QUIZZES_2 = [
 ];
 
 let currentUser=null, userData={charName:'AI',score:0,quests:{},name:'학생'};
-let msgIdx=0, isTyping=false, typingTimer=null;
+let msgIdx=0, isTyping=false, typingTimer=null, quizShowing=false, completeShown=false;
 let currentQuizSet=null, quizIdx=0, quizScore=0, quizAttempts=0, currentCombo=0, comboBonus=0;
 let orderSlots={}, matchMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
@@ -300,7 +300,7 @@ function typeText(el,text,cb){
   },22);
 }
 
-let quizShowing = false;
+
 
 function nextMessage(){
   if(quizShowing) return;
@@ -770,7 +770,7 @@ async function skipBoard(){
   showComplete();
 }
 
-let completeShown=false;
+
 function showComplete(){
   if(completeShown) return;
   completeShown=true;
