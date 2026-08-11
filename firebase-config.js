@@ -445,10 +445,11 @@ function showBadgeUnlockModal(badgeId) {
   }
 }
 
-// ── 글로벌 오디오 플로팅 제어 버튼 주입 ──
+// ── 글로벌 오디오 플로팅 제어 버튼 주입 (퀘스트 페이지 간섭 방지를 위해 퀘스트 제외) ──
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
-  if (path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
+  const pageName = path.split('/').pop() || '';
+  if (pageName.startsWith('quest') || path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
     return;
   }
 
