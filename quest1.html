@@ -231,13 +231,8 @@ requireAuth(async (user) => {
   userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   updateHUD(); updateCharImages();
 
-  const quests = userData.quests || {};
-  if (quests.q1_done || (quests.q1_msgIdx || 0) >= MESSAGES.length) {
-    msgIdx = 0;
-  } else {
-    msgIdx = Math.min(quests.q1_msgIdx || 0, MESSAGES.length - 1);
-  }
-  setTimeout(() => showMessage(msgIdx), 500);
+  msgIdx = 0;
+  showMessage(msgIdx);
   playBGM('quest');
 });
 
@@ -278,6 +273,7 @@ function showMessage(idx){
 }
 
 function typeText(el,text,cb){
+  if(typingTimer) clearInterval(typingTimer);
   el.innerHTML=''; isTyping=true;
   document.getElementById('dialog-next').style.opacity='0.3';
   let i=0;
@@ -287,6 +283,7 @@ function typeText(el,text,cb){
       i++;
     } else {
       clearInterval(typingTimer);
+      typingTimer=null;
       el.innerHTML=text.replace(/\n/g,'<br>');
       isTyping=false;
       document.getElementById('dialog-next').style.opacity='1';
@@ -915,12 +912,22 @@ function showQuizConfirm(onConfirm){
       <div class="quiz-confirm-title">퀴즈 시간! 🎯</div>
       <div class="quiz-confirm-desc">지금까지 배운 내용을<br>퀴즈로 확인해볼까요?</div>
       <div class="quiz-confirm-btns">
-        <button class="quiz-confirm-cancel" onclick="document.getElementById('quiz-confirm-overlay').remove();quizShowing=false;">나중에</button>
+        <button class="quiz-confirm-cancel" onclick="cancelQuizConfirm()">나중에</button>
         <button class="quiz-confirm-ok" onclick="document.getElementById('quiz-confirm-overlay').remove();onConfirmCallback();">도전하기! 🚀</button>
       </div>
     </div>`;
   window.onConfirmCallback=onConfirm;
   document.body.appendChild(overlay);
+}
+
+function cancelQuizConfirm(){
+  const old=document.getElementById('quiz-confirm-overlay');
+  if(old) old.remove();
+  quizShowing=false;
+  document.getElementById('dialog-next').style.display='flex';
+  msgIdx++;
+  autoSave();
+  showMessage(msgIdx);
 }
 
 </script>
