@@ -542,13 +542,15 @@ function closeQuiz(){
   quizShowing=false;
   document.getElementById('quiz-overlay').style.display='none';
   if(currentQuizSet===QUIZZES_2){
+    userData.quests=userData.quests||{};
+    userData.quests.q1_done=true;
+    userData.quests.q1_msgIdx=MESSAGES.length;
     if(currentUser.uid==='student'){
-      userData.quests=userData.quests||{};
-      userData.quests.q1_done=true;
-      userData.quests.q1_msgIdx=MESSAGES.length;
       localStorage.setItem('tempUserData',JSON.stringify(userData));
     } else {
-      db.collection('users').doc(currentUser.uid).update({'quests.q1_done':true,'quests.q1_msgIdx':MESSAGES.length});
+      await db.collection('users').doc(currentUser.uid).set({
+        quests: { q1_done: true, q1_msgIdx: MESSAGES.length }
+      }, { merge: true });
     }
     showBoard(); return; // 완료 전 게시판 먼저
   }
@@ -728,10 +730,14 @@ async function deleteMyPost(docId){
 async function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
+  userData.quests=userData.quests||{};
+  userData.quests.q1_done=true;
   if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};
-    userData.quests.q1_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
+  } else {
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: { q1_done: true }
+    }, { merge: true });
   }
   await unlockBadge('ethics_guardian', currentUser, userData);
   showComplete();

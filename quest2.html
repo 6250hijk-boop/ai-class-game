@@ -800,12 +800,14 @@ async function deleteMyPost(docId){
 async function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
+  userData.quests=userData.quests||{};
+  userData.quests.q2_done=true;
   if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};
-    userData.quests.q2_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   } else {
-    await db.collection('users').doc(currentUser.uid).update({'quests.q2_done':true, 'quests.q2_msgIdx':MESSAGES.length});
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: { q2_done: true, q2_msgIdx: MESSAGES.length }
+    }, { merge: true });
   }
   await unlockBadge('truth_seeker', currentUser, userData);
   showComplete();

@@ -413,14 +413,16 @@ async function drawResults(imgUrl, data){
   const q=(userData.quests||{});
   if(!q.q8_done){
     const xp = 20;
+    userData.quests=userData.quests||{};
+    userData.quests.q8_done=true;
     if(currentUser.uid==='student'){
       userData.score=(userData.score||0)+xp;
-      userData.quests=userData.quests||{};
-      userData.quests.q8_done=true;
       localStorage.setItem('tempUserData',JSON.stringify(userData));
     } else {
       await addScore(currentUser.uid,xp,'퀘스트8 테스트 완료');
-      await db.collection('users').doc(currentUser.uid).update({'quests.q8_done':true});
+      await db.collection('users').doc(currentUser.uid).set({
+        quests: { q8_done: true }
+      }, { merge: true });
     }
     await unlockBadge('safety_officer', currentUser, userData);
     document.getElementById('hud-score').textContent=(userData.score||0)+' 점';

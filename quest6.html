@@ -262,14 +262,16 @@ async function uploadAll(){
   const q=(userData.quests||{});
   if(!q.q6_done){
     const xp = 20;
+    userData.quests=userData.quests||{};
+    userData.quests.q6_done=true;
     if(currentUser.uid==='student'){
       userData.score=(userData.score||0)+xp;
-      userData.quests=userData.quests||{};
-      userData.quests.q6_done=true;
       localStorage.setItem('tempUserData',JSON.stringify(userData));
     } else {
       await addScore(currentUser.uid,xp,'퀘스트6 첫 업로드');
-      await db.collection('users').doc(currentUser.uid).update({'quests.q6_done':true});
+      await db.collection('users').doc(currentUser.uid).set({
+        quests: { q6_done: true }
+      }, { merge: true });
     }
     await unlockBadge('data_hunter', currentUser, userData);
     showAlert('🎉 퀘스트 6 완료! +20점! (데이터 사냥꾼 📷 뱃지 획득)','success');

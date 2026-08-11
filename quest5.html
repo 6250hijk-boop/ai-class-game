@@ -446,19 +446,23 @@ async function endGame(isGameOver){
 
   // 저장
   const xp=finalScore;
+  userData.quests=userData.quests||{};
+  userData.quests.q5_done=true;
+  const prevBest=(userData.quests||{}).q5_best_score||0;
+  const newBest=Math.max(prevBest, finalScore);
+  userData.quests.q5_best_score=newBest;
+
   if(currentUser.uid==='student'){
     userData.score=(userData.score||0)+xp;
-    userData.quests=userData.quests||{};
-    userData.quests.q5_done=true;
-    const prev=userData.quests.q5_best_score||0;
-    userData.quests.q5_best_score=Math.max(prev,finalScore);
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   } else {
     await addScore(currentUser.uid,xp,'퀘스트5 퀴즈런');
-    await db.collection('users').doc(currentUser.uid).update({
-      'quests.q5_done':true,
-      'quests.q5_best_score':Math.max((userData.quests||{}).q5_best_score||0, finalScore)
-    });
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: {
+        q5_done: true,
+        q5_best_score: newBest
+      }
+    }, { merge: true });
     await db.collection('quiz_results').doc(currentUser.uid).set({
       q5:firebase.firestore.FieldValue.arrayUnion({
         score:finalScore,correct:correctCount,total,pct,
