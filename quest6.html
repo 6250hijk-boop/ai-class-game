@@ -115,10 +115,18 @@ requireAuth(async (user)=>{
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
   loadMyUploads();
 });
