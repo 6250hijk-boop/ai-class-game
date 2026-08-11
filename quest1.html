@@ -565,7 +565,7 @@ async function finishQuiz(){
   showXPPopup('+'+xp+' 점');
 }
 
-function closeQuiz(){
+async function closeQuiz(){
   quizShowing=false;
   document.getElementById('quiz-overlay').style.display='none';
   if(currentQuizSet===QUIZZES_2){
