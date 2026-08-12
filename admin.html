@@ -331,17 +331,19 @@ async function loadData() {
   let usersSnap, quizSnap;
   try {
     [usersSnap, quizSnap] = await Promise.all([
-      db.collection('users').orderBy('created_at','desc').get(),
+      db.collection('users').get(),
       db.collection('quiz_results').get()
     ]);
   } catch(e) {
+    console.error('loadData error:', e);
     [usersSnap, quizSnap] = await Promise.all([
       db.collection('users').get(),
       db.collection('quiz_results').get()
     ]);
   }
 
-  const users = usersSnap.docs.map(d => ({...d.data(), _id: d.id}));
+  let users = usersSnap.docs.map(d => ({...d.data(), _id: d.id}));
+  users.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
   const quizMap = {};
   quizSnap.docs.forEach(d => { quizMap[d.id] = d.data(); });
 
