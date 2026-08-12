@@ -2452,6 +2452,23 @@ function switchCollabTab(tabName) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(99, 179, 237, 0.4);
   }
+  .survey-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: all .2s;
+  }
+  .survey-textarea:focus {
+    border-color: #63b3ed;
+    background: rgba(255, 255, 255, 0.08);
+  }
 </style>
 
 <!-- 🟢 사전 설문조사 모달 -->
@@ -2719,6 +2736,12 @@ function switchCollabTab(tabName) {
           <button type="button" class="likert-btn" onclick="selectLikert('post-q10', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
         </div>
       </div>
+      <!-- Q11 (주관식 소감) -->
+      <div class="survey-q-box">
+        <div class="survey-q-num">Question 11 (주관식 소감)</div>
+        <div class="survey-q-text">11. 본 소프트웨어에 만족하셨나요? 사용한 소감을 자유롭게 말씀해주세요.</div>
+        <textarea id="post-q11-input" class="survey-textarea" placeholder="소감 및 의견을 자유롭게 작성해 주세요 (선택 사항)" rows="3" oninput="postSurveyAnswers['q11']=this.value"></textarea>
+      </div>
     </div>
     <div class="survey-card-footer">
       <button class="survey-submit-btn" onclick="submitPostSurvey()">🎉 사후 설문 제출하고 최종 완료하기</button>
@@ -2788,6 +2811,9 @@ async function submitPostSurvey() {
       return;
     }
   }
+
+  const q11Inp = document.getElementById('post-q11-input');
+  postSurveyAnswers['q11'] = q11Inp ? q11Inp.value.trim() : (postSurveyAnswers['q11'] || '');
 
   const btn = document.querySelector('#post-survey-modal .survey-submit-btn');
   if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
