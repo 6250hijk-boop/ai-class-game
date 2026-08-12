@@ -261,7 +261,10 @@
             <h3 style="font-family:'Jua',sans-serif;color:var(--primary);font-size:20px;margin-bottom:4px;">⏱️ 기록 및 시간 데이터 통합 관리</h3>
             <p style="font-size:12px;color:var(--muted);margin:0;">학생 가입일, 사전/사후 설문 작성일시, 설문 응답 내용, 퀴즈 및 파일 업로드 시간을 개별 수정/삭제하거나 일괄 변경할 수 있습니다.</p>
           </div>
-          <button onclick="loadRecordsAdminData()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
+          <div style="display:flex;gap:8px;">
+            <button onclick="saveAllRecordChanges()" class="btn btn-primary btn-sm" style="font-weight:700;padding:8px 16px;background:linear-gradient(135deg, #68d391, #38a169);color:#0a0e1a;border:none;border-radius:10px;cursor:pointer;">💾 수정된 여러개 한번에 저장</button>
+            <button onclick="loadRecordsAdminData()" class="btn btn-ghost btn-sm">🔄 새로고침</button>
+          </div>
         </div>
 
         <!-- ⚡ 일괄 처리 도구 카드 -->
@@ -286,13 +289,16 @@
         </div>
 
         <!-- 🔍 서브 탭 필터 -->
-        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-          <button onclick="filterRecordsTab('all')" class="btn btn-ghost btn-sm rec-filter-btn active" id="rec-flt-all">전체 목록</button>
-          <button onclick="filterRecordsTab('users')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-users">👥 학생 가입일</button>
-          <button onclick="filterRecordsTab('pre_surveys')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-pre">🟢 사전 설문</button>
-          <button onclick="filterRecordsTab('post_surveys')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-post">🔵 사후 설문</button>
-          <button onclick="filterRecordsTab('quiz_results')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-quiz">📝 퀴즈 기록</button>
-          <button onclick="filterRecordsTab('uploads')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-uploads">📁 업로드</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="filterRecordsTab('all')" class="btn btn-ghost btn-sm rec-filter-btn active" id="rec-flt-all">전체 목록</button>
+            <button onclick="filterRecordsTab('users')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-users">👥 학생 가입일</button>
+            <button onclick="filterRecordsTab('pre_surveys')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-pre">🟢 사전 설문</button>
+            <button onclick="filterRecordsTab('post_surveys')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-post">🔵 사후 설문</button>
+            <button onclick="filterRecordsTab('quiz_results')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-quiz">📝 퀴즈 기록</button>
+            <button onclick="filterRecordsTab('uploads')" class="btn btn-ghost btn-sm rec-filter-btn" id="rec-flt-uploads">📁 업로드</button>
+          </div>
+          <button onclick="saveAllRecordChanges()" class="btn btn-primary btn-sm" style="font-weight:700;padding:7px 14px;background:#68d391;color:#0a0e1a;border:none;border-radius:8px;cursor:pointer;">💾 수정된 여러개 한번에 저장</button>
         </div>
 
         <!-- 📋 개별 데이터 테이블 -->
@@ -733,6 +739,67 @@ function renderRecordsTable() {
       </tr>
     `;
   }).join('');
+}
+
+async function saveAllRecordChanges() {
+  if (!allRecordsCache || allRecordsCache.length === 0) {
+    alert('수정할 데이터가 없습니다.');
+    return;
+  }
+
+  const modifiedList = [];
+
+  allRecordsCache.forEach(item => {
+    const timeInp = document.getElementById(`rec-time-${item.docId}`);
+    const q11Inp = document.getElementById(`rec-q11-${item.docId}`);
+
+    const newTime = timeInp ? timeInp.value.trim() : item.time;
+    const newQ11 = q11Inp ? q11Inp.value.trim() : (item.q11 || '');
+
+    const timeChanged = newTime !== (item.time || '');
+    const q11Changed = item.type === 'post_surveys' && newQ11 !== (item.q11 || '');
+
+    if (timeChanged || q11Changed) {
+      const updateData = {};
+      if (timeChanged) {
+        if (item.type === 'quiz_results' || item.type === 'uploads') {
+          updateData.created_at = newTime;
+          updateData.timestamp = newTime;
+        } else {
+          updateData.created_at = newTime;
+        }
+      }
+      if (q11Changed) {
+        const answers = item.answers ? { ...item.answers, q11: newQ11 } : { q11: newQ11 };
+        updateData.answers = answers;
+      }
+      modifiedList.push({ type: item.type, docId: item.docId, data: updateData });
+    }
+  });
+
+  if (modifiedList.length === 0) {
+    alert('수정된 항목이 없습니다. 여러 항목의 날짜/시간 또는 소감 내용을 변경하신 후 [💾 수정된 여러개 한번에 저장] 버튼을 누르면 일괄 반영됩니다.');
+    return;
+  }
+
+  if (!confirm(`수정된 ${modifiedList.length}개 항목의 변경사항을 파이어베이스에 한번에 일괄 저장하시겠습니까?`)) {
+    return;
+  }
+
+  try {
+    const batch = db.batch();
+    modifiedList.forEach(m => {
+      const ref = db.collection(m.type).doc(m.docId);
+      batch.update(ref, m.data);
+    });
+
+    await batch.commit();
+    alert(`✅ 총 ${modifiedList.length}개 항목의 변경사항이 성공적으로 일괄 저장되었습니다!`);
+    loadRecordsAdminData();
+  } catch (e) {
+    console.error("saveAllRecordChanges error:", e);
+    alert('❌ 일괄 저장 실패: ' + e.message);
+  }
 }
 
 async function saveRecordItem(type, docId) {
