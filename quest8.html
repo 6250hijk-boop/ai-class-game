@@ -205,7 +205,7 @@ function renderSamples(){
   document.getElementById('sample-grid').innerHTML=SAMPLES.map((s,i)=>`
     <div class="sample-item" onclick="analyzeSampleImage('${s.url}')">
       <img src="${s.url}" alt="${s.label}"
-        onerror="this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none'">
+        onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src=this.src.endsWith('.png')?this.src.replace('.png','.jpg'):this.src.replace('.jpg','.png');}else{this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none';}">
       <div class="lbl">${s.label}</div>
     </div>`).join('');
 }

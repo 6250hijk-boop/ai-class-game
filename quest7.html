@@ -167,7 +167,7 @@
       </div>
       <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
         <img src="images/pm0.png" style="max-width:100%;border-radius:8px;border:1px solid var(--border);"
-          onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block'">
+          onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block';">
         <div id="pm0-fallback" style="display:none;">
           <svg width="100%" viewBox="0 0 300 200" style="max-width:300px;">
             <rect width="300" height="200" fill="#1a2235" rx="8"/>
@@ -402,6 +402,11 @@ function loadPracticeImage(){
     redrawPractice();
   };
   img.onerror=()=>{
+    if(!img.dataset.tried){
+      img.dataset.tried='1';
+      img.src='images/pm3.jpg';
+      return;
+    }
     // 예시 사진 없으면 빈 캔버스
     const c=document.getElementById('practice-img-canvas');
     c.width=400; c.height=300;
