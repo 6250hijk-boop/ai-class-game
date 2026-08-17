@@ -264,15 +264,22 @@ let answered=false, correctCount=0;
 let bestScore=0;
 
 requireAuth(async (user)=>{
-  await showQuestStory(5);
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   // 이전 최고기록
   startQuestTimer(5);
   window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 5));
@@ -450,19 +457,23 @@ async function endGame(isGameOver){
 
   // 저장
   const xp=finalScore;
+  userData.quests=userData.quests||{};
+  userData.quests.q5_done=true;
+  const prevBest=(userData.quests||{}).q5_best_score||0;
+  const newBest=Math.max(prevBest, finalScore);
+  userData.quests.q5_best_score=newBest;
+
   if(currentUser.uid==='student'){
     userData.score=(userData.score||0)+xp;
-    userData.quests=userData.quests||{};
-    userData.quests.q5_done=true;
-    const prev=userData.quests.q5_best_score||0;
-    userData.quests.q5_best_score=Math.max(prev,finalScore);
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   } else {
     await addScore(currentUser.uid,xp,'퀘스트5 퀴즈런');
-    await db.collection('users').doc(currentUser.uid).update({
-      'quests.q5_done':true,
-      'quests.q5_best_score':Math.max((userData.quests||{}).q5_best_score||0, finalScore)
-    });
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: {
+        q5_done: true,
+        q5_best_score: newBest
+      }
+    }, { merge: true });
     await db.collection('quiz_results').doc(currentUser.uid).set({
       q5:firebase.firestore.FieldValue.arrayUnion({
         score:finalScore,correct:correctCount,total,pct,

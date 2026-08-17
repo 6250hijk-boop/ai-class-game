@@ -207,28 +207,41 @@ const QUIZZES_2 = [
     ans:2, exp:"익명화(비식별화) 처리는 안전성 원칙의 핵심입니다!" },
 ];
 
-let currentUser=null, userData=null;
-let msgIdx=0, isTyping=false, typingTimer=null;
+let currentUser=null, userData={charName:'AI',score:0,quests:{},name:'학생'};
+let msgIdx=0, isTyping=false, typingTimer=null, quizShowing=false, completeShown=false;
 let currentQuizSet=null, quizIdx=0, quizScore=0, quizAttempts=0, currentCombo=0, comboBonus=0;
 let orderSlots={}, matchMap={}, currentDragId=null, touchDragId=null, touchClone=null;
 
+document.addEventListener('DOMContentLoaded', () => {
+  showMessage(0);
+});
+
 requireAuth(async (user) => {
-  currentUser=user;
+  currentUser=user || {uid:'student', name:'임시학생'};
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin' || user.isAdmin){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+    try {
+      const snap=await db.collection('users').where('id','==',user.id||user.uid).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
+  if(!userData.quests) userData.quests = {};
+
   updateHUD(); updateCharImages();
-  initMobileOrientationCheck();
-  startQuestTimer(1);
-  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 1));
-  const saved=(userData.quests||{}).q1_msgIdx||0;
-  msgIdx=Math.min(saved,MESSAGES.length-1);
-  setTimeout(()=>showMessage(msgIdx),500);
-  playBGM('quest');
+
+  const textEl = document.getElementById('dialog-text');
+  if(!textEl || !textEl.innerHTML || textEl.innerHTML.trim() === ''){
+    showMessage(msgIdx);
+  }
+  try { playBGM('quest'); } catch(e){}
 });
 
 function updateCharImages(){
@@ -268,6 +281,7 @@ function showMessage(idx){
 }
 
 function typeText(el,text,cb){
+  if(typingTimer) clearInterval(typingTimer);
   el.innerHTML=''; isTyping=true;
   document.getElementById('dialog-next').style.opacity='0.3';
   let i=0;
@@ -277,6 +291,7 @@ function typeText(el,text,cb){
       i++;
     } else {
       clearInterval(typingTimer);
+      typingTimer=null;
       el.innerHTML=text.replace(/\n/g,'<br>');
       isTyping=false;
       document.getElementById('dialog-next').style.opacity='1';
@@ -285,7 +300,7 @@ function typeText(el,text,cb){
   },22);
 }
 
-let quizShowing = false;
+
 
 function nextMessage(){
   if(quizShowing) return;
@@ -316,14 +331,23 @@ function prevMessage(){
 }
 
 async function autoSave(){
-  if(currentUser.uid==='student'){
-    // 비회원도 진행 저장
-    userData.quests=userData.quests||{};
-    userData.quests.q1_msgIdx=msgIdx;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
+  if (!currentUser || !userData) return;
+  userData.quests = userData.quests || {};
+  userData.quests.q1_msgIdx = msgIdx;
+
+  if (currentUser.uid === 'student') {
+    localStorage.setItem('tempUserData', JSON.stringify(userData));
     return;
   }
-  await db.collection('users').doc(currentUser.uid).update({'quests.q1_msgIdx':msgIdx});
+  if (currentUser.uid === 'admin') return;
+
+  try {
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: { q1_msgIdx: msgIdx }
+    }, { merge: true });
+  } catch(e) {
+    console.error('autoSave error:', e);
+  }
 }
 
 document.addEventListener('click',(e)=>{
@@ -541,17 +565,19 @@ async function finishQuiz(){
   showXPPopup('+'+xp+' 점');
 }
 
-function closeQuiz(){
+async function closeQuiz(){
   quizShowing=false;
   document.getElementById('quiz-overlay').style.display='none';
   if(currentQuizSet===QUIZZES_2){
+    userData.quests=userData.quests||{};
+    userData.quests.q1_done=true;
+    userData.quests.q1_msgIdx=MESSAGES.length;
     if(currentUser.uid==='student'){
-      userData.quests=userData.quests||{};
-      userData.quests.q1_done=true;
-      userData.quests.q1_msgIdx=MESSAGES.length;
       localStorage.setItem('tempUserData',JSON.stringify(userData));
     } else {
-      db.collection('users').doc(currentUser.uid).update({'quests.q1_done':true,'quests.q1_msgIdx':MESSAGES.length});
+      await db.collection('users').doc(currentUser.uid).set({
+        quests: { q1_done: true, q1_msgIdx: MESSAGES.length }
+      }, { merge: true });
     }
     showBoard(); return; // 완료 전 게시판 먼저
   }
@@ -731,20 +757,23 @@ async function deleteMyPost(docId){
 async function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
+  userData.quests=userData.quests||{};
+  userData.quests.q1_done=true;
   if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};
-    userData.quests.q1_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
+  } else {
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: { q1_done: true }
+    }, { merge: true });
   }
   await unlockBadge('ethics_guardian', currentUser, userData);
   showComplete();
 }
 
-let completeShown=false;
+
 function showComplete(){
   if(completeShown) return;
   completeShown=true;
-  recordQuestProgress(currentUser, userData, 1, 100, true);
   document.getElementById('dialog-next').style.display='none';
   document.getElementById('speaker-char').src='images/char1-2.png';
   const old=document.getElementById('complete-btns');
@@ -891,12 +920,22 @@ function showQuizConfirm(onConfirm){
       <div class="quiz-confirm-title">퀴즈 시간! 🎯</div>
       <div class="quiz-confirm-desc">지금까지 배운 내용을<br>퀴즈로 확인해볼까요?</div>
       <div class="quiz-confirm-btns">
-        <button class="quiz-confirm-cancel" onclick="document.getElementById('quiz-confirm-overlay').remove();quizShowing=false;">나중에</button>
+        <button class="quiz-confirm-cancel" onclick="cancelQuizConfirm()">나중에</button>
         <button class="quiz-confirm-ok" onclick="document.getElementById('quiz-confirm-overlay').remove();onConfirmCallback();">도전하기! 🚀</button>
       </div>
     </div>`;
   window.onConfirmCallback=onConfirm;
   document.body.appendChild(overlay);
+}
+
+function cancelQuizConfirm(){
+  const old=document.getElementById('quiz-confirm-overlay');
+  if(old) old.remove();
+  quizShowing=false;
+  document.getElementById('dialog-next').style.display='flex';
+  msgIdx++;
+  autoSave();
+  showMessage(msgIdx);
 }
 
 </script>

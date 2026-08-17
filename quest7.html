@@ -167,7 +167,7 @@
       </div>
       <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
         <img src="images/pm0.png" style="max-width:100%;border-radius:8px;border:1px solid var(--border);"
-          onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block'">
+          onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block';">
         <div id="pm0-fallback" style="display:none;">
           <svg width="100%" viewBox="0 0 300 200" style="max-width:300px;">
             <rect width="300" height="200" fill="#1a2235" rx="8"/>
@@ -402,6 +402,11 @@ function loadPracticeImage(){
     redrawPractice();
   };
   img.onerror=()=>{
+    if(!img.dataset.tried){
+      img.dataset.tried='1';
+      img.src='images/pm3.jpg';
+      return;
+    }
     // 예시 사진 없으면 빈 캔버스
     const c=document.getElementById('practice-img-canvas');
     c.width=400; c.height=300;
@@ -528,14 +533,19 @@ requireAuth(async (user)=>{
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
-  updateHUD();
-  startQuestTimer(7);
-  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 7));
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
+  }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   await loadClasses();
-  playBGM('quest');
 });
 
 async function loadClasses(){
@@ -778,15 +788,16 @@ async function saveLabels(){
       const q=(userData.quests||{});
       if(!q.q7_done){
         const xp = 20;
-        recordQuestProgress(currentUser, userData, 7, xp, true);
+        userData.quests=userData.quests||{};
+        userData.quests.q7_done=true;
         if(currentUser.uid==='student'){
           userData.score=(userData.score||0)+xp;
-          userData.quests=userData.quests||{};
-          userData.quests.q7_done=true;
           localStorage.setItem('tempUserData',JSON.stringify(userData));
         } else {
           await addScore(currentUser.uid,xp,'퀘스트7 라벨링 완료');
-          await db.collection('users').doc(currentUser.uid).update({'quests.q7_done':true});
+          await db.collection('users').doc(currentUser.uid).set({
+            quests: { q7_done: true }
+          }, { merge: true });
         }
         await unlockBadge('labeling_expert', currentUser, userData);
         alert('🎉 퀘스트 7 완료! +20점! (라벨링 전문가 🏷️ 뱃지 획득)');

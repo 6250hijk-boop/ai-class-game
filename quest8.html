@@ -184,23 +184,28 @@ requireAuth(async (user)=>{
   currentUser=user;
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{score:0};
+    userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty) userData=snap.docs[0].data();
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-  startQuestTimer(8);
-  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 8));
   renderSamples();
-  playBGM('quest');
 });
 
 function renderSamples(){
   document.getElementById('sample-grid').innerHTML=SAMPLES.map((s,i)=>`
     <div class="sample-item" onclick="analyzeSampleImage('${s.url}')">
       <img src="${s.url}" alt="${s.label}"
-        onerror="this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none'">
+        onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src=this.src.endsWith('.png')?this.src.replace('.png','.jpg'):this.src.replace('.jpg','.png');}else{this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none';}">
       <div class="lbl">${s.label}</div>
     </div>`).join('');
 }
@@ -416,15 +421,16 @@ async function drawResults(imgUrl, data){
   const q=(userData.quests||{});
   if(!q.q8_done){
     const xp = 20;
-    recordQuestProgress(currentUser, userData, 8, xp, true);
+    userData.quests=userData.quests||{};
+    userData.quests.q8_done=true;
     if(currentUser.uid==='student'){
       userData.score=(userData.score||0)+xp;
-      userData.quests=userData.quests||{};
-      userData.quests.q8_done=true;
       localStorage.setItem('tempUserData',JSON.stringify(userData));
     } else {
       await addScore(currentUser.uid,xp,'퀘스트8 테스트 완료');
-      await db.collection('users').doc(currentUser.uid).update({'quests.q8_done':true});
+      await db.collection('users').doc(currentUser.uid).set({
+        quests: { q8_done: true }
+      }, { merge: true });
     }
     await unlockBadge('safety_officer', currentUser, userData);
     document.getElementById('hud-score').textContent=(userData.score||0)+' 점';

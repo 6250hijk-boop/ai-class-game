@@ -241,9 +241,9 @@ const QUIZ_ITEMS = [
 // 퀴즈2 - OX 2문제 + 객관식 1문제
 const QUIZZES_2 = [
   { type:"ox", q:"지도학습에서는 AI에게 문제와 정답을 함께 알려주면서 학습시킨다.", ans:true,
-    exp:"맞아요! 지도학습은 문제와 정답 세트를 함께 제공해서 AI를 학습시키는 방법이에요." },
+    exp:"지도학습은 문제와 정답 세트를 함께 제공해서 AI를 학습시키는 방법이에요." },
   { type:"ox", q:"비지도학습에서는 AI에게 정답이 있는 라벨링된 데이터를 제공한다.", ans:false,
-    exp:"틀렸어요! 비지도학습은 정답(라벨) 없이 데이터만 주고 AI 스스로 패턴을 찾게 해요." },
+    exp:"비지도학습은 정답(라벨) 없이 데이터만 주고 AI 스스로 패턴을 찾게 해요." },
   { type:"mc", q:"다음 중 비지도학습을 활용하기 가장 적합한 사례는?",
     opts:["사진 속 동물이 강아지인지 고양이인지 분류하기","음악 취향을 분석해서 비슷한 음악 추천하기","손글씨 숫자를 0~9로 인식하기","스팸 메일 여부를 '스팸/정상'으로 분류하기"],
     ans:1, exp:"음악 취향 분석은 정답 없이 비슷한 패턴을 묶는 비지도학습의 대표적인 활용 사례예요!" },
@@ -259,10 +259,18 @@ requireAuth(async (user) => {
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   // 이름 치환
   MESSAGES[2].text=MESSAGES[2].text.replace('{{name}}', userData.name||'당신');
   updateHUD(); updateCharImages();
@@ -802,12 +810,14 @@ async function deleteMyPost(docId){
 async function skipBoard(){
   const el=document.getElementById('board-overlay');
   if(el) el.remove();
+  userData.quests=userData.quests||{};
+  userData.quests.q2_done=true;
   if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};
-    userData.quests.q2_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
   } else {
-    await db.collection('users').doc(currentUser.uid).update({'quests.q2_done':true, 'quests.q2_msgIdx':MESSAGES.length});
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: { q2_done: true, q2_msgIdx: MESSAGES.length }
+    }, { merge: true });
   }
   await unlockBadge('truth_seeker', currentUser, userData);
   showComplete();

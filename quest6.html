@@ -115,15 +115,20 @@ requireAuth(async (user)=>{
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-  startQuestTimer(6);
-  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 6));
   loadMyUploads();
-  playBGM('quest');
 });
 
 // ── 600×600 리사이징 → Blob ──
@@ -265,15 +270,16 @@ async function uploadAll(){
   const q=(userData.quests||{});
   if(!q.q6_done){
     const xp = 20;
-    recordQuestProgress(currentUser, userData, 6, xp, true);
+    userData.quests=userData.quests||{};
+    userData.quests.q6_done=true;
     if(currentUser.uid==='student'){
       userData.score=(userData.score||0)+xp;
-      userData.quests=userData.quests||{};
-      userData.quests.q6_done=true;
       localStorage.setItem('tempUserData',JSON.stringify(userData));
     } else {
       await addScore(currentUser.uid,xp,'퀘스트6 첫 업로드');
-      await db.collection('users').doc(currentUser.uid).update({'quests.q6_done':true});
+      await db.collection('users').doc(currentUser.uid).set({
+        quests: { q6_done: true }
+      }, { merge: true });
     }
     await unlockBadge('data_hunter', currentUser, userData);
     showAlert('🎉 퀘스트 6 완료! +20점! (데이터 사냥꾼 📷 뱃지 획득)','success');

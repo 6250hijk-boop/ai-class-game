@@ -138,42 +138,6 @@ async function saveProgress(uid, key, value) {
 
 // ── 게시판 공통 함수 ──
 const BOARD_DEFAULT_XP = 5; // 게시글 작성 기본 점수
-const MAX_BOARD_XP = 8; // 게시판 활동 총 획득 가능 최대 점수
-
-/**
- * 게시판 활동(게시글 작성, 댓글 작성)에 따른 점수를 가산합니다 (최대 8점 제한)
- */
-async function addBoardActivityScore(currentUser, userData, actionType = 'comment', reason = '게시판 활동') {
-  if (!currentUser) return { gained: 0, current: 0, isMax: true };
-  const isTemp = currentUser.uid === 'student';
-
-  let currentBoardXp = Number(userData.boardXp || 0);
-
-  if (currentBoardXp >= MAX_BOARD_XP) {
-    return { gained: 0, current: MAX_BOARD_XP, isMax: true };
-  }
-
-  // 첫 글이면 5점, 그 외 게시글/댓글은 1점
-  let baseReward = (actionType === 'first_post') ? 5 : 1;
-  let gained = Math.min(baseReward, MAX_BOARD_XP - currentBoardXp);
-
-  if (gained > 0) {
-    currentBoardXp += gained;
-    userData.boardXp = currentBoardXp;
-    userData.score = (userData.score || 0) + gained;
-
-    if (isTemp) {
-      localStorage.setItem('tempUserData', JSON.stringify(userData));
-    } else {
-      await addScore(currentUser.uid, gained, reason);
-      await db.collection('users').doc(currentUser.uid).update({
-        boardXp: currentBoardXp
-      }).catch(e => console.error('boardXp update err:', e));
-    }
-  }
-
-  return { gained, current: currentBoardXp, isMax: currentBoardXp >= MAX_BOARD_XP };
-}
 
 async function submitBoardPost(collectionName, userData, currentUser, content, link) {
   if (!content.trim()) return { ok:false, msg:'내용을 입력해주세요.' };
@@ -192,9 +156,13 @@ async function submitBoardPost(collectionName, userData, currentUser, content, l
     created_at: new Date().toISOString(),
   });
 
-  // 점수 지급 (첫 글 5점, 최대 8점 상한)
-  const isFirst = (userData.boardXp || 0) === 0;
-  await addBoardActivityScore(currentUser, userData, isFirst ? 'first_post' : 'post', `게시글 작성 (${collectionName})`);
+  // 점수 지급
+  if (!isTemp) {
+    await addScore(currentUser.uid, BOARD_DEFAULT_XP, `게시글 작성 (${collectionName})`);
+  } else {
+    userData.score = (userData.score||0) + BOARD_DEFAULT_XP;
+    localStorage.setItem('tempUserData', JSON.stringify(userData));
+  }
   return { ok:true, docId:docRef.id };
 }
 
@@ -229,14 +197,14 @@ async function updateBoardPostXP(collectionName, docId, post, newXp, targetUid) 
 const SOUNDS = {
   BGM: {
     main:     'sounds/bgm_main.mp3',
-    quest:    'sounds/bgm_quest.mp4',
+    quest:    'sounds/bgm_quest.mp3',
   },
   SFX: {
-    click:    'sounds/sfx_click.mp4',
-    correct:  'sounds/sfx_correct.mp4',
-    wrong:    'sounds/sfx_wrong.mp4',
-    levelup:  'sounds/sfx_levelup.mp4',
-    complete: 'sounds/sfx_complete.mp4',
+    click:    'sounds/sfx_click.mp3',
+    correct:  'sounds/sfx_correct.mp3',
+    wrong:    'sounds/sfx_wrong.mp3',
+    levelup:  'sounds/sfx_levelup.mp3',
+    complete: 'sounds/sfx_complete.mp3',
   }
 };
 
@@ -255,15 +223,6 @@ function setSoundSettings(bgm, sfx) {
 // BGM 관리
 let _bgmAudio = null;
 let _currentBgm = null;
-let _audioUnlocked = false;
-
-function unlockAudioContext() {
-  if (_audioUnlocked) return;
-  _audioUnlocked = true;
-  if (_currentBgm) {
-    playBGM(_currentBgm);
-  }
-}
 
 function playBGM(key) {
   const settings = getSoundSettings();
@@ -275,10 +234,7 @@ function playBGM(key) {
   _bgmAudio = new Audio(src);
   _bgmAudio.loop = true;
   _bgmAudio.volume = 0.35;
-  _bgmAudio.play().catch(e => {
-    // 자동재생 정책 차단 시 사용자 첫 클릭 시 재시도
-    console.log("BGM Autoplay waiting for user interaction");
-  });
+  _bgmAudio.play().catch(()=>{});
   _currentBgm = key;
 }
 
@@ -314,21 +270,9 @@ function playSFX(key) {
   if (!settings.sfx) return;
   const src = SOUNDS.SFX[key];
   if (!src) return;
-  try {
-    const audio = new Audio(src);
-    audio.volume = 0.6;
-    audio.play().catch(e => {});
-  } catch(e){}
-}
-
-// 브라우저 첫 인터랙션 시 오디오 언락 리스너 등록
-if (typeof window !== 'undefined') {
-  const unlockEvents = ['click', 'touchstart', 'keydown'];
-  const handleFirstInteraction = () => {
-    unlockAudioContext();
-    unlockEvents.forEach(evt => window.removeEventListener(evt, handleFirstInteraction));
-  };
-  unlockEvents.forEach(evt => window.addEventListener(evt, handleFirstInteraction));
+  const audio = new Audio(src);
+  audio.volume = 0.6;
+  audio.play().catch(()=>{});
 }
 
 // BGM 볼륨 업데이트
@@ -501,10 +445,11 @@ function showBadgeUnlockModal(badgeId) {
   }
 }
 
-// ── 글로벌 오디오 플로팅 제어 버튼 주입 ──
+// ── 글로벌 오디오 플로팅 제어 버튼 주입 (퀘스트 페이지 간섭 방지를 위해 퀘스트 제외) ──
 document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
-  if (path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
+  const pageName = path.split('/').pop() || '';
+  if (pageName.startsWith('quest') || path.endsWith('index.html') || path === '/' || path.endsWith('/')) {
     return;
   }
 
@@ -647,10 +592,8 @@ async function submitPreSurveyData(userSession, userLocalData, answers) {
   };
 
   try {
-    // Firestore 저장
     await db.collection('pre_surveys').add(payload);
 
-    // 사용자 완료 상태 업데이트 & XP 보상
     if (isTemp) {
       localStorage.setItem('preSurveyCompleted', 'true');
       localStorage.setItem('preSurveyData', JSON.stringify(payload));
@@ -686,10 +629,8 @@ async function submitPostSurveyData(userSession, userLocalData, answers) {
   };
 
   try {
-    // Firestore 저장
     await db.collection('post_surveys').add(payload);
 
-    // 사용자 완료 상태 업데이트 & XP 보상
     if (isTemp) {
       localStorage.setItem('postSurveyCompleted', 'true');
       localStorage.setItem('postSurveyData', JSON.stringify(payload));
@@ -726,160 +667,3 @@ async function loadAllSurveyData() {
   }
 }
 
-// ══════════════════════════════════════════
-//  ⏱️ 퀘스트 학습 시간 및 점수 추적 시스템
-// ══════════════════════════════════════════
-let _questStartTime = null;
-let _currentQuestId = null;
-
-// 1. 퀘스트 진입 시 타이머 시작
-function startQuestTimer(questId) {
-  _currentQuestId = questId;
-  _questStartTime = Date.now();
-}
-
-// 2. 학습 시간 포맷팅 (초 -> 분/초)
-function formatTimeSpent(seconds) {
-  if (!seconds || seconds <= 0) return '0초';
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins === 0) return `${secs}초`;
-  return `${mins}분 ${secs}초`;
-}
-
-// 3. 퀘스트 학습시간 및 점수/완료 상태 기록
-async function recordQuestProgress(userSession, userLocalData, questId, scoreDelta = 0, isComplete = false) {
-  if (!questId) questId = _currentQuestId;
-  if (!questId || !userSession) return;
-
-  let elapsedSec = 0;
-  if (_questStartTime) {
-    elapsedSec = Math.floor((Date.now() - _questStartTime) / 1000);
-    _questStartTime = Date.now(); // 타이머 리셋
-  }
-
-  const qKeyTime = `q${questId}_time`;
-  const qKeyScore = `q${questId}_score`;
-  const qKeyDone = `q${questId}_done`;
-
-  const isTemp = userSession.uid === 'student';
-
-  if (isTemp) {
-    if (!userLocalData) userLocalData = JSON.parse(localStorage.getItem('tempUserData') || '{}');
-    if (!userLocalData.quests) userLocalData.quests = {};
-
-    const curTime = userLocalData.quests[qKeyTime] || 0;
-    const curScore = userLocalData.quests[qKeyScore] || 0;
-
-    userLocalData.quests[qKeyTime] = curTime + elapsedSec;
-    if (scoreDelta > 0) {
-      userLocalData.quests[qKeyScore] = Math.max(curScore, scoreDelta);
-    }
-    if (isComplete) {
-      userLocalData.quests[qKeyDone] = true;
-    }
-    localStorage.setItem('tempUserData', JSON.stringify(userLocalData));
-  } else if (userSession.uid !== 'admin') {
-    try {
-      const userRef = db.collection('users').doc(userSession.uid);
-      await db.runTransaction(async t => {
-        const doc = await t.get(userRef);
-        if (!doc.exists) return;
-        const data = doc.data() || {};
-        const quests = data.quests || {};
-
-        const curTime = quests[qKeyTime] || 0;
-        const curScore = quests[qKeyScore] || 0;
-
-        const updateObj = {};
-        updateObj[`quests.${qKeyTime}`] = curTime + elapsedSec;
-        if (scoreDelta > 0) {
-          updateObj[`quests.${qKeyScore}`] = Math.max(curScore, scoreDelta);
-        }
-        if (isComplete) {
-          updateObj[`quests.${qKeyDone}`] = true;
-        }
-        t.update(userRef, updateObj);
-      });
-    } catch (e) {
-      console.error("recordQuestProgress error:", e);
-    }
-  }
-}
-
-// ══════════════════════════════════════════
-//  📱 모바일 기기 감지 & 가로모드 회전 안내 유틸리티
-// ══════════════════════════════════════════
-function isMobileDevice() {
-  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-  const isTouchSmallScreen = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && Math.min(window.innerWidth, window.innerHeight) <= 900;
-  return isMobileUA || isTouchSmallScreen;
-}
-
-let _userDismissedOrientation = false;
-
-function initMobileOrientationCheck() {
-  // 모바일 디바이스가 아니면 작동하지 않음 (PC/노트북은 무시)
-  if (!isMobileDevice()) return;
-
-  function updateOrientationOverlay() {
-    let overlay = document.getElementById('mobile-rotate-overlay');
-    
-    // 모바일 세로 모드(Portrait) 여부 감지
-    const isPortrait = window.innerHeight > window.innerWidth;
-
-    if (isPortrait && !_userDismissedOrientation) {
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'mobile-rotate-overlay';
-        overlay.style.cssText = `
-          position: fixed; inset: 0; z-index: 99999;
-          background: rgba(10, 14, 26, 0.92);
-          backdrop-filter: blur(10px);
-          display: flex; flex-direction: column; align-items: center; justify-content: center;
-          padding: 24px; text-align: center; color: #f8fafc; font-family: 'Noto Sans KR', sans-serif;
-          animation: fadeIn .3s ease;
-        `;
-        overlay.innerHTML = `
-          <style>
-            @keyframes phoneRotate {
-              0%, 10% { transform: rotate(0deg); }
-              40%, 60% { transform: rotate(-90deg); }
-              90%, 100% { transform: rotate(0deg); }
-            }
-          </style>
-          <div style="background:rgba(99,179,237,0.12);border:2px solid rgba(99,179,237,0.4);border-radius:24px;padding:32px 24px;max-width:340px;width:90%;box-shadow:0 0 50px rgba(99,179,237,0.25);">
-            <div style="font-size:54px;margin-bottom:16px;display:inline-block;animation:phoneRotate 2.5s ease-in-out infinite;">📱</div>
-            <h3 style="font-family:'Jua',sans-serif;font-size:22px;color:#63b3ed;margin:0 0 10px 0;">화면을 가로로 돌려주세요! 🔄</h3>
-            <p style="font-size:13.5px;color:rgba(255,255,255,0.75);line-height:1.6;margin:0 0 20px 0;">
-              핸드폰을 가로로 누르면 퀘스트 지도와 라벨링 화면을 더 넓고 신나게 즐길 수 있어요 ✨
-            </p>
-            <button onclick="dismissMobileOrientationOverlay()" style="width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;font-family:inherit;">
-              ✕ 세로로 계속하기
-            </button>
-          </div>
-        `;
-        document.body.appendChild(overlay);
-      } else {
-        overlay.style.display = 'flex';
-      }
-    } else {
-      if (overlay) overlay.style.display = 'none';
-    }
-  }
-
-  window.dismissMobileOrientationOverlay = function() {
-    _userDismissedOrientation = true;
-    const overlay = document.getElementById('mobile-rotate-overlay');
-    if (overlay) overlay.style.display = 'none';
-  };
-
-  window.addEventListener('resize', updateOrientationOverlay);
-  window.addEventListener('orientationchange', updateOrientationOverlay);
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    updateOrientationOverlay();
-  } else {
-    document.addEventListener('DOMContentLoaded', updateOrientationOverlay);
-  }
-}

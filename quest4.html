@@ -197,10 +197,18 @@ requireAuth(async (user)=>{
   if(user.uid==='student'){
     const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
     userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
+  } else if(user.uid==='admin'){
+    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
   } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+    try {
+      const snap=await db.collection('users').where('id','==',user.id).get();
+      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
+      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
+    } catch(e){
+      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+    }
   }
+  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
   updateHUD(); updateCharImages();
   startQuestTimer(4);
   window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 4));
@@ -436,14 +444,17 @@ function nextQuiz(){
 async function finishQuiz(){
   const total=QUIZZES.length;
   const xp=qScore*10+(qScore===total?20:0);
+  userData.quests=userData.quests||{};
+  userData.quests.q4_done=true;
   if(currentUser.uid==='student'){
     userData.score=(userData.score||0)+xp;
-    userData.quests=userData.quests||{};userData.quests.q4_done=true;
     localStorage.setItem('tempUserData',JSON.stringify(userData));
     updateHUD();updateCharImages();
   } else {
     await addScore(currentUser.uid,xp,'퀘스트4 퀴즈');
-    await db.collection('users').doc(currentUser.uid).update({'quests.q4_done':true});
+    await db.collection('users').doc(currentUser.uid).set({
+      quests: { q4_done: true }
+    }, { merge: true });
     await db.collection('quiz_results').doc(currentUser.uid).set({
       q4:firebase.firestore.FieldValue.arrayUnion({score:qScore,total,xp,accuracy:Math.round(qScore/total*100),date:new Date().toISOString()})
     },{merge:true});
