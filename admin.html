@@ -291,6 +291,7 @@ async function loadData() {
 
   let users = usersSnap.docs.map(d => ({...d.data(), _id: d.id}));
   users.sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+  window._studentList = users;
   const quizMap = {};
   quizSnap.docs.forEach(d => { quizMap[d.id] = d.data(); });
 
@@ -1002,9 +1003,16 @@ function saveNotionConfig(){
 }
 
 // 노션 전용 최적화 CSV 다운로드
-function downloadNotionCSV(){
-  const list = window._studentList || [];
-  if(!list.length){ alert('학생 목록이 없습니다. 먼저 학생 목록을 로드해 주세요.'); return; }
+async function downloadNotionCSV(){
+  let list = window._studentList || [];
+  if(!list.length && typeof db !== 'undefined'){
+    try {
+      const snap = await db.collection('users').get();
+      list = snap.docs.map(d => ({...d.data(), _id: d.id}));
+      window._studentList = list;
+    } catch(e) { console.error(e); }
+  }
+  if(!list.length){ alert('학생 목록이 없습니다. 먼저 학생 데이터가 있는지 확인해 주세요.'); return; }
   
   const header = '이름,학번,학교,아이디,점수,캐릭터명,가입일';
   const rows = list.map(s => {
@@ -1035,9 +1043,22 @@ async function syncStudentsToNotion(){
     return;
   }
 
-  const list = window._studentList || [];
+  let list = window._studentList || [];
+  if(!list.length && typeof db !== 'undefined'){
+    try {
+      const statusEl0 = document.getElementById('notion-sync-status');
+      if(statusEl0){
+        statusEl0.style.display = 'block';
+        statusEl0.innerHTML = `<div style="color:#63b3ed;">🔄 파이어베이스에서 학생 데이터 불러오는 중...</div>`;
+      }
+      const snap = await db.collection('users').get();
+      list = snap.docs.map(d => ({...d.data(), _id: d.id}));
+      window._studentList = list;
+    } catch(e) { console.error('Firestore load error:', e); }
+  }
+
   if(!list.length){
-    alert('⚠️ 전송할 학생 목록이 없습니다.');
+    alert('⚠️ 파이어베이스에 저장된 학생 목록이 없습니다.');
     return;
   }
 
