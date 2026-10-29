@@ -65,12 +65,12 @@
             <thead>
               <tr>
                 <th>학번</th><th>이름</th><th>아이디</th>
-                <th>캐릭터명</th><th>레벨</th><th>점수</th>
-                <th>퀘스트 진행</th><th>가입일</th>
+                <th>캐릭터 닉네임</th><th>레벨</th><th>점수</th>
+                <th>퀘스트 진행</th><th>가입일</th><th>관리</th>
               </tr>
             </thead>
             <tbody id="student-tbody">
-              <tr><td colspan="8" style="text-align:center;padding:40px;">
+              <tr><td colspan="9" style="text-align:center;padding:40px;">
                 <div class="spinner" style="margin:0 auto;"></div>
               </td></tr>
             </tbody>
@@ -318,19 +318,33 @@ async function loadData() {
   document.getElementById('stat-avg-score').textContent = avgScore;
 
   document.getElementById('student-tbody').innerHTML = users.length === 0
-    ? '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
+    ? '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">등록된 학생이 없습니다</td></tr>'
     : users.map(u => {
         const lv = getLevelByScore(u.score||0, u.charTrack||'robot');
         const questDone = Object.keys(u.quests||{}).filter(k=>k.endsWith('_done')).length;
+        const safeCharName = (u.charName || '').replace(/'/g, "\\'");
+        const safeName = (u.name || u.id || '').replace(/'/g, "\\'");
         return `<tr>
           <td>${u.stunum||'-'}</td>
           <td>${u.name||'-'}</td>
           <td><code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">${u.id||'-'}</code></td>
-          <td>${u.charName||'미설정'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <strong style="color:var(--primary);">${u.charName || '<span style="color:var(--muted);font-weight:normal;">미설정</span>'}</strong>
+              <button onclick="editStudentCharName('${u._id}','${safeCharName}','${safeName}')" class="btn btn-ghost btn-xs" style="padding:2px 6px;font-size:11px;color:#63b3ed;border:1px solid rgba(99,179,237,0.3);" title="닉네임 수정">✏️</button>
+              ${u.charName ? `<button onclick="deleteStudentCharName('${u._id}','${safeCharName}','${safeName}')" class="btn btn-ghost btn-xs" style="padding:2px 6px;font-size:11px;color:#fc8181;border:1px solid rgba(252,129,129,0.3);" title="닉네임 삭제">✕</button>` : ''}
+            </div>
+          </td>
           <td><span style="color:var(--accent);">Lv.${lv.level}</span> ${lv.emoji}</td>
           <td><strong style="color:var(--primary);">${u.score||0}</strong></td>
           <td>${questDone} / 8 완료</td>
           <td style="color:var(--muted);font-size:12px;">${(u.created_at||'').slice(0,10)}</td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <button onclick="editStudentCharName('${u._id}','${safeCharName}','${safeName}')" class="btn btn-ghost btn-xs" style="padding:3px 7px;font-size:11px;color:#63b3ed;border:1px solid rgba(99,179,237,0.3);" title="닉네임 수정">✏️ 닉네임 수정</button>
+              <button onclick="deleteStudentAccount('${u._id}','${safeName}')" class="btn btn-ghost btn-xs" style="padding:3px 7px;font-size:11px;color:#fc8181;border:1px solid rgba(252,129,129,0.3);" title="학생 삭제">🗑️ 삭제</button>
+            </div>
+          </td>
         </tr>`;
       }).join('');
 
@@ -722,28 +736,42 @@ async function loadStudentAccounts(){
           <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">학교</th>
           <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">아이디</th>
           <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">점수</th>
-          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">캐릭터</th>
+          <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">캐릭터(닉네임)</th>
           <th style="padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">관리</th>
         </tr></thead>
-        <tbody>${window._studentList.map(s=>`
+        <tbody>${window._studentList.map(s=>{
+          const safeChar = (s.charName||'').replace(/'/g, "\\'");
+          const safeName = (s.name||s.id||'').replace(/'/g, "\\'");
+          return `
           <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
             <td style="padding:8px 12px;">${s.name||'-'}</td>
             <td style="padding:8px 12px;">${s.stunum||'-'}</td>
             <td style="padding:8px 12px;">${s.school||'-'}</td>
             <td style="padding:8px 12px;color:#63b3ed;font-family:monospace;">${s.id||'-'}</td>
             <td style="padding:8px 12px;color:#f6ad55;font-weight:700;">${s.score||0}점</td>
-            <td style="padding:8px 12px;">${s.charName||'미설정'}</td>
-            <td style="padding:8px 12px;display:flex;gap:6px;">
-              <button onclick="resetPassword('${s.docId}','${s.stunum}')"
+            <td style="padding:8px 12px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span>${s.charName||'<span style="color:var(--muted);">미설정</span>'}</span>
+                <button onclick="editStudentCharName('${s.docId}','${safeChar}','${safeName}')" style="background:none;border:none;cursor:pointer;color:#63b3ed;font-size:11px;" title="닉네임 수정">✏️</button>
+                ${s.charName ? `<button onclick="deleteStudentCharName('${s.docId}','${safeChar}','${safeName}')" style="background:none;border:none;cursor:pointer;color:#fc8181;font-size:11px;" title="닉네임 삭제">✕</button>` : ''}
+              </div>
+            </td>
+            <td style="padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;">
+              <button onclick="editStudentCharName('${s.docId}','${safeChar}','${safeName}')"
                 style="background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3);border-radius:6px;padding:3px 8px;color:#63b3ed;font-size:11px;cursor:pointer;font-family:inherit;">
+                ✏️ 닉네임 수정
+              </button>
+              <button onclick="resetPassword('${s.docId}','${s.stunum}')"
+                style="background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.3);border-radius:6px;padding:3px 8px;color:#f6ad55;font-size:11px;cursor:pointer;font-family:inherit;">
                 🔑 비번초기화
               </button>
-              <button onclick="deleteStudent('${s.docId}','${s.name}')"
+              <button onclick="deleteStudentAccount('${s.docId}','${safeName}')"
                 style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">
                 🗑️ 삭제
               </button>
             </td>
-          </tr>`).join('')}
+          </tr>`;
+        }).join('')}
         </tbody>
       </table></div>`;
   }catch(e){
@@ -831,7 +859,7 @@ async function deleteClass(docId){
   loadClasses();
 }
 
-// ── 업로드 현황 ──
+// ── 업로드 현황 (사진 개별/일괄 삭제 지원) ──
 async function loadUploads(){
   const list=document.getElementById('upload-list');
   list.innerHTML=`<div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto;"></div></div>`;
@@ -846,22 +874,116 @@ async function loadUploads(){
       if(!groups[uid]) groups[uid]={userName:d.userName||uid,files:[]};
       groups[uid].files.push({id:doc.id,...d});
     });
-    list.innerHTML=Object.entries(groups).map(([uid,g])=>`
-      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <strong style="color:var(--primary);">👤 ${g.userName}</strong>
-          <span style="font-size:12px;color:var(--muted);">${g.files.length}장</span>
+    list.innerHTML=Object.entries(groups).map(([uid,g])=>{
+      const safeUserName = (g.userName || uid).replace(/'/g, "\\'");
+      return `
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <strong style="color:var(--primary);font-size:15px;">👤 ${g.userName}</strong>
+            <span style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:10px;">${g.files.length}장</span>
+          </div>
+          <button onclick="deleteUserAllUploads('${uid}', '${safeUserName}')" class="btn btn-ghost btn-xs" style="color:#fc8181;border:1px solid rgba(252,129,129,0.3);background:rgba(252,129,129,0.08);padding:3px 9px;font-size:11px;border-radius:6px;cursor:pointer;">
+            🗑️ 이 학생 사진 전체 삭제 (${g.files.length}장)
+          </button>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          ${g.files.map(f=>`
-            <div style="position:relative;width:80px;height:80px;">
-              <img src="${f.url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+          ${g.files.map(f=>{
+            const safeFileName = (f.originalName || f.fileName || '사진').replace(/'/g, "\\'");
+            return `
+            <div style="position:relative;width:90px;height:90px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);background:rgba(0,0,0,0.2);box-shadow:0 2px 6px rgba(0,0,0,0.3);">
+              <img src="${f.url}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"
+                onclick="window.open('${f.url}', '_blank')" title="클릭하여 원본 사진 보기: ${f.originalName||''}"
                 onerror="this.src='';this.parentElement.style.background='rgba(255,255,255,0.05)'">
-              <div style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px;">${f.fileName||''}</div>
-            </div>`).join('')}
+              <button onclick="event.stopPropagation(); deleteAdminUpload('${f.id}', '${safeFileName}')" title="사진 삭제"
+                style="position:absolute;top:3px;right:3px;background:rgba(220,38,38,0.9);color:white;border:none;border-radius:4px;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.6);transition:background 0.2s;"
+                onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='rgba(220,38,38,0.9)'">
+                🗑️
+              </button>
+              <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);padding:2px 4px;font-size:9.5px;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;pointer-events:none;">
+                ${f.originalName || f.fileName || '파일'}
+              </div>
+            </div>`;
+          }).join('')}
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }catch(e){list.innerHTML=`<div style="color:var(--red);padding:16px;">오류: ${e.message}</div>`;}
+}
+
+// ── 관리자 사진 삭제 함수 ──
+async function deleteAdminUpload(docId, fileName) {
+  if (!confirm(`'${fileName}' 사진을 삭제하시겠습니까?`)) return;
+  try {
+    await db.collection('uploads').doc(docId).delete();
+    alert('✅ 사진이 삭제되었습니다.');
+    loadUploads();
+  } catch(e) {
+    alert('사진 삭제 실패: ' + e.message);
+  }
+}
+
+async function deleteUserAllUploads(userId, userName) {
+  if (!confirm(`'${userName}' 학생이 업로드한 모든 사진을 일괄 삭제하시겠습니까?\n이 작업은 취소할 수 없습니다.`)) return;
+  try {
+    const snap = await db.collection('uploads').where('userId', '==', userId).get();
+    if (snap.empty) {
+      alert('삭제할 사진이 없습니다.');
+      return;
+    }
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    alert(`✅ '${userName}' 학생의 사진 ${snap.size}장이 모두 삭제되었습니다.`);
+    loadUploads();
+  } catch(e) {
+    alert('사진 일괄 삭제 실패: ' + e.message);
+  }
+}
+
+// ── 관리자 학생 닉네임 수정 및 삭제 ──
+async function editStudentCharName(docId, currentCharName, studentName) {
+  const newName = prompt(`[${studentName || '학생'}]의 새로운 캐릭터 닉네임을 입력하세요:`, currentCharName || '');
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) {
+    if (confirm('닉네임을 빈 값(미설정)으로 초기화할까요?')) {
+      await deleteStudentCharName(docId, currentCharName, studentName);
+    }
+    return;
+  }
+  try {
+    await db.collection('users').doc(docId).update({ charName: trimmed });
+    alert(`✅ 닉네임이 '${trimmed}'(으)로 수정되었습니다.`);
+    loadData();
+    if (typeof loadStudentAccounts === 'function') loadStudentAccounts();
+  } catch(e) {
+    alert('닉네임 수정 실패: ' + e.message);
+  }
+}
+
+async function deleteStudentCharName(docId, currentCharName, studentName) {
+  if (!confirm(`[${studentName || '학생'}]의 닉네임 '${currentCharName || ''}'을(를) 삭제(미설정으로 초기화)하시겠습니까?`)) return;
+  try {
+    await db.collection('users').doc(docId).update({ charName: null });
+    alert('✅ 닉네임이 삭제(미설정) 처리되었습니다.');
+    loadData();
+    if (typeof loadStudentAccounts === 'function') loadStudentAccounts();
+  } catch(e) {
+    alert('닉네임 삭제 실패: ' + e.message);
+  }
+}
+
+async function deleteStudentAccount(docId, name) {
+  if (!confirm(`'${name}' 학생 계정을 정말 삭제하시겠습니까?\n모든 학습 기록과 데이터가 함께 삭제됩니다.`)) return;
+  try {
+    await db.collection('users').doc(docId).delete();
+    alert(`✅ '${name}' 학생이 삭제되었습니다.`);
+    loadData();
+    if (typeof loadStudentAccounts === 'function') loadStudentAccounts();
+  } catch(e) {
+    alert('학생 삭제 실패: ' + e.message);
+  }
 }
 
 let currentBoardCollection = 'board_q1';

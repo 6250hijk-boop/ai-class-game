@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>우리 모둠 탐정 아지트 (My Home) - AI 자원순환 탐정단</title>
+  <!-- 저작권 무료 폰트: Pretendard 및 Google Fonts Jua 사용 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-navy: rgb(6, 27, 80);          /* 배경 남색 */
+      --primary-blue: rgb(14, 70, 191);   /* 기본 파랑 */
+      --primary-blue-hover: rgb(24, 85, 219);
+      --primary-blue-dark: rgb(10, 48, 136);
+      --btn-yellow: rgb(254, 218, 53);    /* 버튼 노랑 */
+      --btn-yellow-hover: rgb(255, 230, 80);
+      --accent-cyan: #38BDF8;             /* 조화 보조색 1: 네온 사이언 */
+      --accent-green: #22C55E;            /* 조화 보조색 2: 에메랄드 그린 */
+      --text-white: #FFFFFF;              /* 글씨: 흰색 */
+      --text-white-dim: rgba(255, 255, 255, 0.85);
+      --text-dark: #0F172A;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-navy);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(14, 70, 191, 0.45) 0%, transparent 65%),
+        radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.15) 0%, transparent 50%);
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+      font-size: 18px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 1080px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* ============================================================
+       상단 프로필 헤더 (기본 파랑 rgb(14, 70, 191) 카드)
+       ============================================================ */
+    header {
+      background: var(--primary-blue);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 24px;
+      padding: 20px 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .avatar-box {
+      font-size: 34px;
+      line-height: 1;
+      background: rgba(6, 27, 80, 0.7);
+      border-radius: 20px;
+      width: 58px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--accent-cyan);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+    }
+
+    .user-info h2 {
+      font-family: 'Jua', sans-serif;
+      font-size: 28px;
+      color: var(--text-white);
+      letter-spacing: 0.3px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .user-info p {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .status-badges {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* 헤더 뱃지 필 (모둠, 점수, 탐정단 직급) */
+    .badge-pill {
+      background: rgba(6, 27, 80, 0.65);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-family: 'Jua', sans-serif;
+      font-size: 17px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .badge-team {
+      background: rgba(56, 189, 248, 0.2);
+      border: 1.5px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .badge-score {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1.5px solid var(--accent-green);
+      color: #86EFAC;
+    }
+
+    /* 🧭 퀘스트지도가기 (버튼 노랑 rgb(254, 218, 53)) */
+    .btn-nav-map {
+      background: var(--btn-yellow);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      color: var(--text-dark);
+      font-family: 'Jua', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 10px 22px;
+      border-radius: 18px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 18px rgba(254, 218, 53, 0.45);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-decoration: none;
+    }
+
+    .btn-nav-map:hover {
+      background: var(--btn-yellow-hover);
+      border-color: #FFFFFF;
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(254, 218, 53, 0.65);
+    }
+
+    .btn-nav-map:active {
+      transform: scale(0.97);
+    }
+
+    /* 로그아웃 버튼 */
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1.5px solid rgba(248, 113, 113, 0.5);
+      color: #FECACA;
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      padding: 9px 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.4);
+      color: #FFFFFF;
+      border-color: #EF4444;
+    }
+
+    /* ============================================================
+       1. 실시간 모둠 대기방 (LOBBY CARD) - 기본 파랑 rgb(14, 70, 191)
+       ============================================================ */
+    .lobby-card {
+      background: var(--primary-blue);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 26px;
+      padding: 26px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .lobby-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .lobby-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lobby-title-tag {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      background: rgba(6, 27, 80, 0.6);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .lobby-title-wrap h3 {
+      font-family: 'Jua', sans-serif;
+      font-size: 28px;
+      color: var(--text-white);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    .lobby-badge {
+      background: rgba(6, 27, 80, 0.75);
+      color: #DCFCE7;
+      border: 1.5px solid var(--accent-green);
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: pulseGreen 1.8s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    /* 대기방 플레이어 그리드 */
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px;
+    }
+
+    .player-card {
+      background: rgba(6, 27, 80, 0.72);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      border-radius: 20px;
+      padding: 18px 14px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .player-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-cyan);
+    }
+
+    .player-card.is-me {
+      background: rgba(6, 27, 80, 0.9);
+      border: 2.5px solid var(--accent-green);
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35), 0 0 16px rgba(34, 197, 94, 0.2);
+    }
+
+    .player-card.empty-slot {
+      background: rgba(6, 27, 80, 0.35);
+      border: 2px dashed rgba(255, 255, 255, 0.25);
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .player-avatar {
+      font-size: 36px;
+      line-height: 1;
+      background: rgba(14, 70, 191, 0.5);
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 2px solid var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+    }
+
+    .player-name {
+      font-family: 'Jua', sans-serif;
+      font-size: 20px;
+      color: var(--text-white);
+    }
+
+    .player-tag {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #BAE6FD;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .player-tag.me {
+      background: rgba(34, 197, 94, 0.25);
+      color: #DCFCE7;
+      border-color: var(--accent-green);
+      font-weight: 800;
+    }
+
+    /* 우리 모둠 AI 파트너 이름 짓기 박스 */
+    .ai-setup-banner {
+      background: rgba(6, 27, 80, 0.7);
+      border: 2px solid rgba(56, 189, 248, 0.4);
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .ai-info-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ai-icon-large {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--primary-blue));
+      border: 2px solid #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 900;
+      color: #FFFFFF;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+      animation: bounce 2.2s infinite ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .ai-text h4 {
+      font-family: 'Jua', sans-serif;
+      font-size: 23px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-text h4 span {
+      color: var(--btn-yellow) !important;
+      text-shadow: 0 0 10px rgba(254, 218, 53, 0.5);
+    }
+
+    .ai-text p {
+      font-size: 14px;
+      color: var(--text-white-dim);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .ai-edit-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex: 1;
+      max-width: 460px;
+      min-width: 270px;
+    }
+
+    .ai-input {
+      flex: 1;
+      padding: 13px 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      outline: none;
+      color: var(--text-dark);
+      background: #FFFFFF;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .ai-input:focus {
+      border-color: var(--btn-yellow);
+      box-shadow: 0 0 0 3px rgba(254, 218, 53, 0.5);
+    }
+
+    /* AI 이름 정하기 버튼: 버튼 노랑 rgb(254, 218, 53) */
+    .btn-ai-save {
+      background: var(--btn-yellow);
+      color: var(--text-dark);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      padding: 13px 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 6px 16px rgba(254, 218, 53, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-ai-save:hover {
+      background: var(--btn-yellow-hover);
+      border-color: #FFFFFF;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(254, 218, 53, 0.6);
+    }
+
+    .btn-ai-save:active {
+      transform: scale(0.96);
+    }
+
+    /* ============================================================
+       빠른 메뉴 바 (설문조사 & 대시보드 배너)
+       ============================================================ */
+    .quick-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    .banner-card {
+      background: var(--primary-blue);
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      color: var(--text-white);
+      padding: 22px 24px;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .banner-card:hover {
+      background: var(--primary-blue-hover);
+      border-color: #FFFFFF;
+      transform: translateY(-3px) scale(1.01);
+      box-shadow: 0 14px 34px rgba(14, 70, 191, 0.55), 0 0 16px rgba(56, 189, 248, 0.4);
+    }
+
+    .banner-card:active {
+      transform: scale(0.98);
+    }
+
+    .banner-text h3 {
+      font-family: 'Jua', sans-serif;
+      font-size: 23px;
+      color: var(--text-white);
+      margin-bottom: 4px;
+      letter-spacing: 0.2px;
+    }
+
+    .banner-text p {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-white-dim);
+    }
+
+    /* 배너 카드 내부 버튼: 버튼 노랑 rgb(254, 218, 53) */
+    .banner-btn-tag {
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      background: var(--btn-yellow);
+      color: var(--text-dark);
+      padding: 8px 16px;
+      border-radius: 14px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(254, 218, 53, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      transition: all 0.2s ease;
+    }
+
+    .banner-card:hover .banner-btn-tag {
+      background: var(--btn-yellow-hover);
+      border-color: #FFFFFF;
+      transform: translateX(3px);
+    }
+
+    /* ============================================================
+       실시간 학급 랭킹 하단 바
+       ============================================================ */
+    footer {
+      background: var(--primary-blue);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 18px 24px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-white);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    footer strong {
+      color: var(--btn-yellow);
+      font-family: 'Jua', sans-serif;
+      font-size: 19px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    #liveRanking {
+      color: var(--text-white);
+      font-weight: 500;
+    }
+
+    @media (max-width: 680px) {
+      header { padding: 18px; flex-direction: column; align-items: flex-start; }
+      .user-info h2 { font-size: 24px; }
+      .ai-setup-banner { flex-direction: column; align-items: stretch; }
+      .ai-edit-form { max-width: 100%; }
+      .status-badges { width: 100%; justify-content: flex-start; }
+      .banner-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ============================================================
+       상단 학생 & 모둠 프로필 (기본 파랑 rgb(14, 70, 191) 카드)
+       ============================================================ -->
+  <header>
+    <div class="user-profile">
+      <div class="avatar-box" id="dispMyAvatar" style="overflow:hidden; padding:0;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <div class="user-info">
+        <h2 id="dispStudent">학생 탐정단</h2>
+        <p id="dispAiName">모둠 AI: 로딩 중...</p>
+      </div>
+    </div>
+
+    <div class="status-badges">
+      <div class="badge-pill badge-team" id="dispTeamBadge">모둠: 로딩 중...</div>
+      <div class="badge-pill badge-score" id="dispScore">10점</div>
+      <div class="badge-pill" id="dispBadge">신입 탐정단</div>
+      <!-- 🧭 퀘스트지도가기: 버튼 노랑 rgb(254, 218, 53) -->
+      <a href="main.html" class="btn-nav-map" title="8대 퀘스트 지도로 이동">🧭 퀘스트지도가기</a>
+      <button class="btn-logout" onclick="logout()">로그아웃</button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       1. 실시간 모둠 대기방 (LOBBY) - 기본 파랑 카드
+       ============================================================ -->
+  <section class="lobby-card">
+    <div class="lobby-top">
+      <div class="lobby-title-wrap">
+        <span class="lobby-title-tag">대기실</span>
+        <h3 id="lobbyMainTitle">우리 모둠 아지트</h3>
+      </div>
+      <div class="lobby-badge">
+        <span class="pulse-dot"></span>
+        <span id="lobbyMemberCount">실시간 접속 1명</span>
+      </div>
+    </div>
+
+    <!-- 대기방 모둠원 아바타 목록 -->
+    <div class="players-grid" id="lobbyPlayersGrid">
+      <div class="player-card">
+        <div class="player-avatar" style="font-family:'Jua',sans-serif; font-size:22px; color:#38BDF8;">탐</div>
+        <div class="player-name">로딩 중...</div>
+        <div class="player-tag">접속 중</div>
+      </div>
+    </div>
+
+    <!-- 우리 모둠 AI 파트너 이름 짓기/수정 바 -->
+    <div class="ai-setup-banner">
+      <div class="ai-info-left">
+        <div class="ai-icon-large">AI</div>
+        <div class="ai-text">
+          <h4>우리 모둠 AI: <span id="lobbyAiNameDisplay">에코봇</span></h4>
+          <p id="lobbyAiAuthorInfo">마지막 설정: 로딩 중...</p>
+        </div>
+      </div>
+
+      <div class="ai-edit-form">
+        <input type="text" id="inlineAiInput" class="ai-input" placeholder="우리 모둠 AI 이름 짓기 (예: 에코봇, 초록이)" maxlength="15">
+        <!-- AI 이름 정하기 버튼: 버튼 노랑 rgb(254, 218, 53) -->
+        <button id="inlineAiSaveBtn" class="btn-ai-save">AI 이름 정하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       설문조사 빠른 이동 바 (사전 설문 & 사후 설문)
+       ============================================================ -->
+  <div class="quick-bar">
+    <a href="survey.html" class="banner-card">
+      <div class="banner-text">
+        <h3>자원순환 탐정단 사전 설문</h3>
+        <p>탐정단 활동 시작 전 나의 생각 알아보기</p>
+      </div>
+      <div class="banner-btn-tag">사전설문 ➔</div>
+    </a>
+
+    <a href="post_survey.html" class="banner-card">
+      <div class="banner-text">
+        <h3>자원순환 탐정단 사후 설문</h3>
+        <p>8대 퀘스트 완료 후 나의 성장과 생각 돌아보기</p>
+      </div>
+      <div class="banner-btn-tag">사후설문 ➔</div>
+    </a>
+  </div>
+
+  <!-- ============================================================
+       하단 랭킹 현황
+       ============================================================ -->
+  <footer>
+    <strong>🏆 실시간 모둠 랭킹:</strong>
+    <span id="liveRanking">참여 모둠 정보를 불러오는 중...</span>
+  </footer>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, arrayUnion, arrayRemove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdx4xwK3XIzgw_4hFEohnMe64dc4LDB00",
+    authDomain: "elemeelementary-textbook.firebaseapp.com",
+    projectId: "elemeelementary-textbook",
+    storageBucket: "elemeelementary-textbook.firebasestorage.app",
+    messagingSenderId: "713149004420",
+    appId: "1:713149004420:web:8483273681e16f5a8fa0d1",
+    measurementId: "G-TZT282J9E8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let teamCode = localStorage.getItem("elementary_teamCode") || "";
+  let studentId = localStorage.getItem("elementary_studentId") || "";
+  let studentName = localStorage.getItem("elementary_studentName") || "학생 탐정";
+  let currentAiName = localStorage.getItem("elementary_aiName") || "에코봇";
+
+  // 로그인 정보가 없을 경우 안전 처리 (로컬 테스트 지원)
+  if (!studentId && !teamCode) {
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      window.location.href = "index.html";
+    } else {
+      teamCode = "1모둠";
+      studentId = "test_student";
+      studentName = "체험 탐정";
+      localStorage.setItem("elementary_teamCode", teamCode);
+      localStorage.setItem("elementary_studentId", studentId);
+      localStorage.setItem("elementary_studentName", studentName);
+    }
+  }
+
+  // 상단 헤더 및 아지트 제목 기본 표시
+  const teamHomeName = teamCode ? `${teamCode}의 아지트` : "우리 모둠 아지트";
+  document.title = `${teamHomeName} - AI 자원순환 탐정단`;
+  const lobbyTitleEl = document.getElementById("lobbyMainTitle");
+  if (lobbyTitleEl) {
+    lobbyTitleEl.textContent = `${teamHomeName}`;
+  }
+
+  document.getElementById("dispStudent").textContent = `${studentName} 탐정`;
+  document.getElementById("dispTeamBadge").textContent = `${teamCode || '모둠'}`;
+  document.getElementById("dispAiName").textContent = `모둠 AI: ${currentAiName}`;
+
+  // 아지트 대원 캐릭터 아바타 (남색 배경과 완벽하게 어우러지는 네온/파스텔 배지 스타일)
+  const AVATAR_PALETTES = [
+    { bg: "rgba(56, 189, 248, 0.25)", color: "#BAE6FD", border: "#38BDF8" },
+    { bg: "rgba(34, 197, 94, 0.25)", color: "#BBF7D0", border: "#22C55E" },
+    { bg: "rgba(254, 218, 53, 0.25)", color: "#FEF08A", border: "#FEDA35" },
+    { bg: "rgba(168, 85, 247, 0.25)", color: "#E9D5FF", border: "#C084FC" },
+    { bg: "rgba(244, 63, 94, 0.25)", color: "#FECDD3", border: "#FB7185" },
+    { bg: "rgba(99, 102, 241, 0.25)", color: "#C7D2FE", border: "#818CF8" }
+  ];
+
+  function getAvatarForName(name) {
+    const initial = (name && name.length > 0) ? name.charAt(0) : "탐";
+    let hash = 0;
+    for (let i = 0; i < (name || "").length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const pal = AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length];
+    return `<div style="width:100%; height:100%; border-radius:50%; background:${pal.bg}; color:${pal.color}; border:2.5px solid ${pal.border}; display:flex; align-items:center; justify-content:center; font-family:'Jua',sans-serif; font-size:24px; font-weight:bold; box-shadow:0 0 10px ${pal.border};">${initial}</div>`;
+  }
+
+  // 상단 프로필 내 캐릭터 아바타 표시
+  const myAvatarEl = document.getElementById("dispMyAvatar");
+  if (myAvatarEl) {
+    myAvatarEl.innerHTML = getAvatarForName(studentName);
+  }
+
+  // 대기방 렌더링 함수
+  function renderLobby(members = [], lastAuthor = "") {
+    const grid = document.getElementById("lobbyPlayersGrid");
+    const countSpan = document.getElementById("lobbyMemberCount");
+
+    // 최소 현재 접속자 포함
+    if (!members.includes(studentName)) {
+      members.push(studentName);
+    }
+
+    countSpan.textContent = `실시간 접속 ${members.length}명`;
+
+    let html = members.map((member) => {
+      const isMe = member === studentName;
+      const avatar = getAvatarForName(member);
+      return `
+        <div class="player-card ${isMe ? 'is-me' : ''}">
+          <div class="player-avatar">${avatar}</div>
+          <div class="player-name">${member}</div>
+          <div class="player-tag ${isMe ? 'me' : ''}">${isMe ? '나 (접속 중)' : '동료 탐정'}</div>
+        </div>
+      `;
+    }).join('');
+
+    // 빈 슬롯 카드 (팀원 초대 안내)
+    html += `
+      <div class="player-card empty-slot">
+        <div class="player-avatar" style="border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.7);font-size:20px;background:rgba(255,255,255,0.05);">+</div>
+        <div class="player-name" style="color:rgba(255,255,255,0.7);font-size:17px;">모둠원 대기 중</div>
+        <div class="player-tag" style="background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);border-color:rgba(255,255,255,0.2);">'${teamCode}' 입장</div>
+      </div>
+    `;
+
+    grid.innerHTML = html;
+
+    // AI 파트너 정보 갱신
+    document.getElementById("lobbyAiNameDisplay").textContent = currentAiName;
+    document.getElementById("lobbyAiAuthorInfo").textContent = lastAuthor 
+      ? `마지막 설정: [${lastAuthor}] 탐정` 
+      : `모둠원 누구나 아래에서 이름을 바꿀 수 있어요!`;
+  }
+
+  // 접속 시 내 이름을 대기방 멤버로 재확인 등록 및 하트비트 전송
+  if (teamCode && studentName) {
+    updateDoc(doc(db, "teams", teamCode), {
+      members: arrayUnion(studentName),
+      [`presence.${studentId}`]: {
+        name: studentName,
+        lastSeen: Date.now()
+      },
+      lastActive: serverTimestamp()
+    }).catch(e => console.warn(e));
+  }
+
+  // 1. 실시간 모둠(Team) 데이터 구독
+  if (teamCode) {
+    onSnapshot(doc(db, "teams", teamCode), (docSnap) => {
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.aiName) {
+          currentAiName = d.aiName;
+          document.getElementById("dispAiName").textContent = `모둠 AI: ${d.aiName}`;
+          localStorage.setItem("elementary_aiName", d.aiName);
+        }
+        if (d.score !== undefined) {
+          document.getElementById("dispScore").textContent = `${d.score}점`;
+          localStorage.setItem("elementary_score", d.score.toString());
+        }
+        if (d.badge) {
+          document.getElementById("dispBadge").textContent = `${d.badge}`;
+        }
+
+        renderLobby(d.members || [], d.lastStudentName || "");
+      } else {
+        renderLobby([studentName], "");
+      }
+    });
+  }
+
+  // 2. 메인화면 AI 파트너 이름 정하기/변경 버튼 이벤트
+  const inlineAiInput = document.getElementById("inlineAiInput");
+  const inlineAiSaveBtn = document.getElementById("inlineAiSaveBtn");
+
+  inlineAiSaveBtn.addEventListener("click", async () => {
+    const newAi = inlineAiInput.value.trim();
+    if (!newAi) {
+      alert("우리 모둠 AI 파트너 이름을 입력해주세요.");
+      inlineAiInput.focus();
+      return;
+    }
+
+    inlineAiSaveBtn.disabled = true;
+    inlineAiSaveBtn.textContent = "저장 중...";
+
+    try {
+      // 모둠 문서에 새 AI 이름 및 마지막 설정 학생 기록
+      const teamRef = doc(db, "teams", teamCode);
+      await updateDoc(teamRef, {
+        aiName: newAi,
+        lastStudentName: studentName,
+        updatedAt: serverTimestamp()
+      });
+
+      // 내 학생 정보에도 반영
+      const stuRef = doc(db, "students", studentId);
+      await setDoc(stuRef, { aiPartnerName: newAi }, { merge: true });
+
+      localStorage.setItem("elementary_aiName", newAi);
+      currentAiName = newAi;
+      document.getElementById("dispAiName").textContent = `모둠 AI: ${newAi}`;
+      document.getElementById("lobbyAiNameDisplay").textContent = newAi;
+      document.getElementById("lobbyAiAuthorInfo").textContent = `마지막 설정: [${studentName}] 탐정`;
+
+      inlineAiInput.value = "";
+      alert(`우리 모둠의 AI 이름이 '${newAi}'(으)로 설정되었습니다.\n같은 모둠 친구들에게 실시간 반영되었습니다.`);
+    } catch (e) {
+      console.error(e);
+      alert("AI 이름 저장 중 오류가 발생했습니다: " + e.message);
+    } finally {
+      inlineAiSaveBtn.disabled = false;
+      inlineAiSaveBtn.textContent = "AI 이름 정하기";
+    }
+  });
+
+  // 엔터 키 지원
+  inlineAiInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") inlineAiSaveBtn.click();
+  });
+
+  // 3. 창 닫기/새로고침 시 자동 퇴장 처리 (beforeunload / pagehide)
+  const leaveRoom = () => {
+    if (teamCode && studentName) {
+      try {
+        updateDoc(doc(db, "teams", teamCode), {
+          members: arrayRemove(studentName)
+        });
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+  };
+
+  window.addEventListener("beforeunload", leaveRoom);
+  window.addEventListener("pagehide", leaveRoom);
+
+  // 4. 실시간 학급 모둠 랭킹 현황
+  const teamRankQuery = query(collection(db, "teams"), orderBy("score", "desc"), limit(6));
+  onSnapshot(teamRankQuery, (snapshot) => {
+    const list = [];
+    snapshot.forEach(docSnap => {
+      const d = docSnap.data();
+      list.push(`${d.teamCode || docSnap.id}(${d.score || 0}점 - ${d.aiName || '에코봇'})`);
+    });
+    document.getElementById("liveRanking").textContent = list.join("  ｜  ") || "모둠 랭킹 정보를 불러오는 중...";
+  });
+
+  window.logout = async function() {
+    if (teamCode && studentName) {
+      try {
+        await updateDoc(doc(db, "teams", teamCode), {
+          members: arrayRemove(studentName)
+        });
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    localStorage.removeItem("elementary_studentId");
+    localStorage.removeItem("elementary_teamCode");
+    localStorage.removeItem("elementary_isAdmin");
+    window.location.href = "index.html";
+  };
+</script>
+</body>
+</html>

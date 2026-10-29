@@ -2,568 +2,1062 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <title>퀘스트 4: 인공지능 공부시키기</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>QUEST 4: AI공부자료에 이름표 붙이기 | AI 자원순환 탐정단</title>
+  <!-- 저작권 무료 폰트: Pretendard 및 Google Fonts Jua 사용 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;overflow:hidden;user-select:none;font-family:'Noto Sans KR',sans-serif;}
-    .game-screen{position:fixed;inset:0;background:#000;}
-    .game-bg{position:absolute;inset:0;background:url('images/bgq4-1.png') center/cover no-repeat;}
-    .game-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(0,0,0,0.82) 100%);}
-    .ai-notice{position:absolute;top:52px;left:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.6);z-index:25;backdrop-filter:blur(4px);max-width:calc(100vw - 24px);}
-
-    /* 캐릭터: robot 왼쪽(좌우반전), char4 오른쪽 */
-    .my-char{
-      position:absolute;bottom:clamp(155px,21vw,210px);left:3%;
-      height:clamp(110px,33vh,320px);object-fit:contain;
-      filter:drop-shadow(4px 4px 10px rgba(0,0,0,0.9)) brightness(0.85);
-      animation:myFloat 3s ease-in-out infinite .5s;z-index:10;
-      transform:scaleX(-1);
-    }
-    .speaker-char{
-      position:absolute;bottom:clamp(155px,21vw,210px);right:3%;
-      height:clamp(110px,33vh,320px);object-fit:contain;
-      filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9));
-      animation:charFloat 3s ease-in-out infinite;z-index:10;
-    }
-    @keyframes charFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-    @keyframes myFloat{0%,100%{transform:scaleX(-1) translateY(0);}50%{transform:scaleX(-1) translateY(-8px);}}
-
-    /* HUD */
-    .game-hud{position:absolute;top:0;left:0;right:0;padding:10px 14px;display:flex;align-items:center;gap:8px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);z-index:20;}
-    .hud-back{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:white;font-size:12px;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;}
-    .hud-title{font-family:'Jua',sans-serif;font-size:clamp(11px,2.2vw,14px);color:white;text-shadow:0 2px 4px rgba(0,0,0,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .hud-right{display:flex;gap:6px;margin-left:auto;flex-shrink:0;}
-    .hud-score{background:rgba(167,139,250,0.25);border:1px solid rgba(167,139,250,0.4);border-radius:20px;padding:4px 10px;font-size:12px;color:#a78bfa;font-weight:700;white-space:nowrap;}
-    .hud-progress{background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;}
-
-    /* 대화창 */
-    .dialog-box{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:0 clamp(8px,3vw,20px) clamp(10px,2vh,16px);}
-    .dialog-top-bar{display:flex;align-items:center;gap:8px;}
-    .char-name-tag{display:inline-block;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;font-weight:700;font-family:'Jua',sans-serif;padding:5px 16px;border-radius:10px 10px 0 0;font-size:clamp(12px,3vw,15px);box-shadow:0 -2px 10px rgba(167,139,250,0.3);}
-    .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;transition:all .2s;}
-    .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(167,139,250,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(90px,13vh,125px);max-height:clamp(150px,26vh,220px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
-    .dialog-text{font-size:clamp(14px,2.4vw,17px);line-height:1.85;color:#e2e8f0;white-space:pre-line;}
-    .dialog-next{position:absolute;bottom:12px;right:12px;width:26px;height:26px;background:rgba(167,139,250,0.2);border:2px solid rgba(167,139,250,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:arrowBounce 1s ease-in-out infinite;}
-    .dialog-next::after{content:'▼';font-size:10px;color:#a78bfa;}
-    @keyframes arrowBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
-
-    /* 빔프로젝터 이미지 */
-    .study-img-overlay{
-      position:absolute;
-      top:clamp(46px,8vw,60px);left:50%;
-      transform:translateX(-50%);
-      z-index:15;
-      width:clamp(240px,64vw,660px);
-      max-height:clamp(160px,44vh,440px);
-      object-fit:contain;
-      border-radius:12px;
-      box-shadow:0 0 60px rgba(0,0,0,0.95),0 0 0 4px rgba(255,255,255,0.18),0 0 0 8px rgba(0,0,0,0.4);
-      animation:projectorIn .5s ease;
-    }
-    @keyframes projectorIn{from{opacity:0;transform:translateX(-50%) scale(0.88);}to{opacity:1;transform:translateX(-50%) scale(1);}}
-
-    /* 퀴즈 오버레이 */
-    .quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-box{background:#111827;border:1px solid rgba(167,139,250,0.3);border-radius:20px;width:100%;max-width:560px;padding:clamp(18px,3vw,28px);animation:slideUp .4s ease;box-shadow:0 0 80px rgba(167,139,250,0.15);max-height:92vh;overflow-y:auto;}
-    @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
-    .quiz-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-    .quiz-header h2{font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;}
-    .quiz-step{font-size:12px;color:rgba(255,255,255,0.4);margin-left:auto;}
-    .quiz-check-btn{width:100%;padding:12px;margin-top:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
-    .quiz-check-btn:hover{transform:translateY(-2px);}
-    .quiz-result{text-align:center;padding:16px 0;}
-    .quiz-result .big-emoji{font-size:clamp(48px,8vw,64px);margin-bottom:12px;}
-    .xp-gain{color:#f6ad55;font-size:clamp(16px,3vw,20px);margin-bottom:16px;}
-    .levelup-screen{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
-    .levelup-screen h1{font-family:'Jua',sans-serif;font-size:clamp(32px,6vw,48px);color:#f6ad55;}
-    .xp-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#a78bfa,#f6ad55);color:#0a0e1a;font-weight:700;font-size:clamp(18px,4vw,24px);padding:14px 36px;border-radius:18px;z-index:500;animation:popIn .4s ease,fadeOutUp .5s ease 1.5s forwards;pointer-events:none;}
-    @keyframes popIn{from{transform:translate(-50%,-50%) scale(.5);opacity:0;}to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
-    @keyframes fadeOutUp{to{opacity:0;transform:translate(-50%,-70%);}}
-    @media(max-width:480px){
-      .my-char,.speaker-char{height:clamp(90px,25vh,180px);}
-      .study-img-overlay{width:clamp(180px,70vw,320px);}
+    :root {
+      --bg-blue: rgb(14, 70, 191);        /* 배경 파랑 r14, g70, b191 */
+      --card-navy: rgb(6, 27, 80);        /* 기타 남색 r6, g27, b80 */
+      --btn-yellow: rgb(254, 218, 53);    /* 버튼 노랑 r254, g218, b53 */
+      --btn-yellow-hover: rgb(255, 230, 80);
+      --accent-cyan: #38BDF8;
+      --accent-green: #22C55E;
+      --text-white: #FFFFFF;              /* 글씨: 흰색 */
+      --text-white-dim: rgba(255, 255, 255, 0.85);
+      --radius: 20px;
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
     }
 
-    /* 퀴즈 확인 팝업 */
-    .quiz-confirm-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-confirm-box{background:#111827;border:2px solid rgba(167, 139, 250, 0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(167, 139, 250, 0.2);animation:slideUp .4s ease;}
-    .quiz-confirm-emoji{font-size:clamp(44px,8vw,64px);margin-bottom:14px;}
-    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:#a78bfa;margin-bottom:8px;}
-    .quiz-confirm-desc{font-size:clamp(13px,2.5vw,15px);color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;}
-    .quiz-confirm-btns{display:flex;gap:10px;}
-    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
-    .quiz-confirm-ok:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(167, 139, 250, 0.4);}
-    .quiz-confirm-cancel{padding:clamp(12px,2.5vw,14px) clamp(16px,3vw,20px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:clamp(13px,2.5vw,15px);cursor:pointer;font-family:inherit;}
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg-blue);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.2), transparent 35%),
+        radial-gradient(circle at 90% 90%, rgba(254, 218, 53, 0.15), transparent 35%),
+        linear-gradient(to bottom, rgb(14, 70, 191), rgb(8, 50, 145));
+      color: var(--text-white);
+      min-height: 100vh;
+    }
+
+    /* ── 선택 화면 ── */
+    .select-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .select-header {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-logo-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      transition: transform 0.2s ease;
+    }
+
+    .header-logo-link:hover {
+      transform: scale(1.05);
+    }
+
+    .header-bs-logo {
+      height: 42px;
+      max-width: 130px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+    }
+
+    .btn-quest-map {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(254, 218, 53, 0.4);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+    }
+
+    .btn-quest-map:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(254, 218, 53, 0.6);
+    }
+
+    .btn-back {
+      background: var(--btn-yellow);
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      color: #0F172A;
+      padding: 8px 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .select-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 28px;
+      color: var(--text-white);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .select-desc {
+      font-size: 16px;
+      color: var(--text-white-dim);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* 선택 메뉴 카드: 흰색 배경에 검정 글씨, 클릭 시 노란색으로 변화 */
+    .menu-card {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: #FFFFFF !important;
+      border: 2.5px solid #CBD5E1;
+      border-radius: 20px;
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      color: #0F172A !important;
+    }
+
+    .menu-card:hover {
+      border-color: var(--btn-yellow);
+      background: #FFFDF0 !important;
+      transform: translateY(-2px);
+    }
+
+    .menu-card:active {
+      background: var(--btn-yellow) !important;
+      border-color: #F59E0B !important;
+      transform: scale(0.98);
+    }
+
+    .menu-icon { font-size: 44px; flex-shrink: 0; }
+    .menu-num { font-family: 'Jua', sans-serif; font-size: 14px; color: #1E40AF; margin-bottom: 2px; }
+    .menu-name { font-family: 'Jua', sans-serif; font-size: 22px; color: #0F172A; margin-bottom: 4px; }
+    .menu-desc { font-size: 14px; font-weight: 600; color: #475569; }
+    .menu-arrow { margin-left: auto; font-size: 24px; color: #0F172A; font-weight: bold; }
+
+    /* ── 라벨링 도구 전체 레이아웃 ── */
+    .labeler-layout { display: flex; height: 100vh; flex-direction: column; background: var(--card-navy); color: white; }
+    .top-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--card-navy); border-bottom: 2px solid rgba(255, 255, 255, 0.2); flex-shrink: 0; flex-wrap: wrap; }
+    .top-bar .title { font-family: 'Jua', sans-serif; font-size: 20px; color: var(--btn-yellow); }
+    .content-area { display: flex; flex: 1; overflow: hidden; }
+    .img-sidebar { width: 140px; background: rgba(14, 70, 191, 0.35); border-right: 2px solid rgba(255, 255, 255, 0.2); overflow-y: auto; flex-shrink: 0; }
+    .img-thumb { cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.2); position: relative; }
+    .img-thumb img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+    .img-thumb.active { outline: 4px solid var(--btn-yellow); }
+    .img-thumb .labeled-dot { position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-green); border: 2px solid white; }
+    .img-thumb .num { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 11px; padding: 2px 4px; text-align: center; }
+
+    .canvas-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: #080C14; }
+    .canvas-wrap { flex: 1; position: relative; overflow: hidden; background: #000; cursor: crosshair; }
+    #img-canvas { position: absolute; top: 0; left: 0; }
+    #draw-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
+
+    .right-panel { width: 220px; background: var(--card-navy); border-left: 2px solid rgba(255, 255, 255, 0.2); display: flex; flex-direction: column; overflow: hidden; }
+    .panel-section { padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+    .panel-title { font-family: 'Jua', sans-serif; font-size: 16px; color: var(--btn-yellow); margin-bottom: 8px; }
+    
+    /* 클래스 선택 버튼: 흰색 배경에 검정 글씨, 클릭 시 노란색으로 변화 */
+    .class-btn { 
+      width: 100%; 
+      padding: 10px 12px; 
+      margin-bottom: 6px; 
+      border: 2px solid #CBD5E1; 
+      border-radius: 12px; 
+      background: #FFFFFF !important; 
+      color: #0F172A !important; 
+      font-size: 14px; 
+      font-weight: 800; 
+      cursor: pointer; 
+      text-align: left; 
+      transition: all .2s; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .class-btn:hover { border-color: var(--btn-yellow); background: #FFFDF0 !important; }
+    .class-btn.active, .class-btn:active { 
+      background: var(--btn-yellow) !important; 
+      border-color: #F59E0B !important; 
+      color: #0F172A !important;
+      font-weight: 800; 
+      transform: scale(1.02); 
+    }
+    .class-dot { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+    .boxes-list { flex: 1; overflow-y: auto; padding: 10px; }
+    .box-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; margin-bottom: 6px; cursor: pointer; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.12); color: #FFFFFF; }
+    .box-item.selected { background: rgba(254,218,53,0.3); border: 1.5px solid var(--btn-yellow); }
+    .box-del { margin-left: auto; background: #EF5350; border: none; border-radius: 6px; padding: 4px 8px; color: white; font-size: 12px; cursor: pointer; }
+
+    .bottom-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--card-navy); border-top: 2px solid rgba(255, 255, 255, 0.2); flex-shrink: 0; flex-wrap: wrap; }
+    .tool-btn { padding: 8px 14px; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; background: rgba(255,255,255,0.15); color: white; font-family: 'Jua', sans-serif; font-size: 15px; cursor: pointer; transition: all .2s; }
+    .tool-btn:hover { background: rgba(255,255,255,0.25); }
+    .tool-btn.active { background: var(--btn-yellow); color: #0F172A; font-weight: bold; }
+    .save-status { font-size: 14px; font-weight: bold; color: var(--btn-yellow); margin-left: auto; }
+    .empty-canvas { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; color: #90A4AE; font-size: 18px; font-weight: bold; }
+
+    .tutorial-wrap, .practice-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius);
+      color: var(--text-white);
+    }
+    .tutorial-step {
+      background: rgba(14, 70, 191, 0.35);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+      color: var(--text-white);
+    }
+    .tip-box {
+      background: rgba(254, 218, 53, 0.2);
+      border: 1px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-top: 8px;
+      font-weight: 700;
+    }
+
+    /* ── 튜토리얼 & 연습하기 서브 레이아웃 ── */
+    .tutorial-wrap, .practice-wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+    .tutorial-step { background: #FFFFFF; border: 3px solid #C8E6C9; border-radius: 20px; padding: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.04); }
+    .tutorial-step h3 { font-family: 'Jua', sans-serif; font-size: 22px; margin-bottom: 10px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .tutorial-step p { font-size: 15px; color: #455A64; line-height: 1.6; font-weight: 600; margin-bottom: 10px; }
+    .tip-box { background: #E8F5E9; border-left: 5px solid #2E7D32; border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #1B5E20; font-weight: 600; margin-top: 8px; }
+
+    .practice-canvas-wrap { position: relative; width: 100%; border-radius: 16px; overflow: hidden; background: #000; margin-bottom: 14px; border: 3px solid #37474F; }
+    .practice-canvas-wrap canvas { width: 100%; display: block; }
+    .practice-guide { background: #E8F5E9; border: 2px solid #A5D6A7; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: bold; color: #1B5E20; margin-bottom: 12px; line-height: 1.5; }
+
+    @media (max-width: 600px) {
+      .right-panel { width: 160px; }
+      .img-sidebar { width: 90px; }
+      .select-title { font-size: 24px; }
+    }
   </style>
+  <script src="quest-intro.js"></script>
 </head>
 <body>
 
-<div id="quiz-overlay" class="quiz-overlay" style="display:none;">
-  <div class="quiz-box">
-    <div class="quiz-header">
-      <h2 id="quiz-title">📝 라벨링 퀴즈!</h2>
-      <span id="quiz-step" class="quiz-step"></span>
+<!-- ════════════════════════════════════════ -->
+<!--  화면 1: 메뉴 선택                         -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-select">
+  <div class="select-wrap">
+    <div class="select-header">
+      <div class="header-left">
+        <a href="main.html" class="header-logo-link" title="메인 화면으로 이동">
+          <img src="images/bs-logo.png" alt="AI 자원순환 탐정단" class="header-bs-logo">
+        </a>
+        <a href="main.html" class="btn-quest-map" title="퀘스트 지도로 이동">🧭 퀘스트지도가기</a>
+      </div>
+      <div style="font-family:'Jua',sans-serif; font-size:18px; color:var(--btn-yellow);" id="dispScore">0점</div>
     </div>
-    <div id="quiz-content"></div>
+
+    <div>
+      <div class="select-title">QUEST 4: AI공부자료에 이름표 붙이기</div>
+      <div class="select-desc">AI가 물체를 제대로 알아볼 수 있도록 사진 속 재활용품에 네모 상자 이름표를 붙여줘요!</div>
+    </div>
+
+    <div class="menu-card" onclick="showScreen('tutorial')">
+      <div>
+        <div class="menu-num">1단계</div>
+        <div class="menu-name">라벨링 튜토리얼 (방법 배우기)</div>
+        <div class="menu-desc">바운딩박스 라벨링이 무엇이고 왜 필요한지 배워요</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-card" onclick="showScreen('practice')">
+      <div>
+        <div class="menu-num">2단계</div>
+        <div class="menu-name">라벨링 연습하기 (도구 익히기)</div>
+        <div class="menu-desc">샘플 사진에 직접 네모 상자를 드래그해서 그려봐요</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-card" onclick="showScreen('labeler')">
+      <div>
+        <div class="menu-num">3단계</div>
+        <div class="menu-name">실전 라벨링하기 (나의 수집 데이터)</div>
+        <div class="menu-desc">3차시에서 직접 등록한 수집 사진에 라벨을 붙여요</div>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
   </div>
 </div>
 
-<div class="game-screen">
-  <div class="game-bg"></div>
-  <div class="ai-notice">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
-  <img class="my-char" id="my-char" src="images/robot_1.png" alt="내캐릭터">
-  <img class="speaker-char" id="speaker-char" src="images/char4.png" alt="AI튜터">
-  <img id="study-img" class="study-img-overlay" style="display:none;" alt="학습자료">
+<!-- ════════════════════════════════════════ -->
+<!--  화면 2: 튜토리얼                          -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-tutorial" style="display:none;">
+  <div class="tutorial-wrap">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button onclick="showScreen('select')" class="btn-back" style="padding:6px 12px; font-size:14px;">뒤로</button>
+      <h2 style="font-family:'Jua',sans-serif; font-size:24px; color:#2E7D32;">라벨링 튜토리얼</h2>
+    </div>
 
-  <div class="game-hud">
-    <a href="main.html" class="hud-back">← 메인</a>
-    <div class="hud-title">🎓 퀘스트 4: 인공지능 공부시키기</div>
-    <div class="hud-right">
-      <div class="hud-progress" id="hud-progress">1 / 1</div>
-      <div class="hud-score" id="hud-score">0 점</div>
+    <div class="tutorial-step">
+      <h3>1. 데이터 라벨링(Labeling)이란?</h3>
+      <p>사진 속 물체에 이름표(라벨)를 달아 <strong>AI에게 정답을 가르쳐주는 작업</strong>이에요.<br>
+      AI는 정답 라벨이 표시된 데이터를 수천 장 배움으로써 사진 속 자원순환 품목을 올바르게 구별하게 됩니다!</p>
+      <div class="tip-box">AI는 혼자서 물체를 인식하지 못해요. 사람이 먼저 위치와 종류를 명확히 지정해줘야 해요!</div>
+    </div>
+
+    <div class="tutorial-step">
+      <h3>2. 바운딩 박스 (Bounding Box)</h3>
+      <p>사진 속 물체를 꽉 감싸는 <strong>직사각형 사각형 박스</strong>를 바운딩 박스라고 해요.<br>
+      마우스나 손가락으로 드래그해서 물체 크기에 맞게 그립니다.</p>
+
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px;">
+        <div style="background:#E8F5E9; border:2px solid #81C784; border-radius:12px; padding:12px 14px;">
+          <div style="font-weight:bold; font-size:16px; color:#2E7D32; margin-bottom:4px;">종이류 / 우유팩</div>
+          <div style="font-size:14px; color:#37474F;">펼쳐진 종이 상자나 우유팩 전체를 바운딩 박스로 감싸요.</div>
+        </div>
+        <div style="background:#E1F5FE; border:2px solid #4FC3F7; border-radius:12px; padding:12px 14px;">
+          <div style="font-weight:bold; font-size:16px; color:#0288D1; margin-bottom:4px;"> 플라스틱</div>
+          <div style="font-size:14px; color:#37474F;">투명 페트병, 음료 용기의 뚜껑부터 바닥까지 전체가 들어가게 그립니다.</div>
+        </div>
+        <div style="background:#FFF3E0; border:2px solid #FFB74D; border-radius:12px; padding:12px 14px;">
+          <div style="font-weight:bold; font-size:16px; color:#E65100; margin-bottom:4px;">캔 / 고철</div>
+          <div style="font-size:14px; color:#37474F;">음료수 캔, 통조림 캔 등 금속 용기 전체를 감싸요.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tutorial-step">
+      <h3>3. 올바른 라벨링 규칙</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
+        <div style="background:#E8F5E9; border:2px solid #66BB6A; border-radius:14px; padding:14px; text-align:center;">
+          <div style="font-size:16px; font-weight:bold; color:#2E7D32; margin-bottom:6px;">좋은 예시</div>
+          <div style="font-size:13px; color:#555; line-height:1.5;">물체의 가장자리에딱 맞게 그리기<br>여백이 최소화되도록 감싸기</div>
+        </div>
+        <div style="background:#FFEBEE; border:2px solid #EF5350; border-radius:14px; padding:14px; text-align:center;">
+          <div style="font-size:16px; font-weight:bold; color:#C62828; margin-bottom:6px;">나쁜 예시</div>
+          <div style="font-size:13px; color:#555; line-height:1.5;">너무 크게 그려 여백 남기기<br>물체 일부가 잘리게 그리기</div>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="showScreen('practice')" class="btn-back" style="width:100%; justify-content:center; padding:14px; background:linear-gradient(135deg,#4CAF50,#2E7D32); color:white; font-size:18px;">
+      연습하러 가기
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  화면 3: 연습하기                          -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-practice" style="display:none;">
+  <div class="practice-wrap">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button onclick="showScreen('select')" class="btn-back" style="padding:6px 12px; font-size:14px;">뒤로</button>
+      <h2 style="font-family:'Jua',sans-serif; font-size:24px; color:#2E7D32;">라벨링 연습하기</h2>
+    </div>
+
+    <div class="practice-guide" id="practice-guide">
+      아래 품목 중 <strong>클래스를 선택</strong>하고 마우스나 손가락으로 사진 위를 드래그해서 네모 박스를 그려보세요!
+    </div>
+
+    <div style="margin-bottom:10px;">
+      <div style="font-size:14px; font-weight:bold; color:#2E7D32; margin-bottom:6px;">① 클래스(종류) 선택:</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;" id="practice-class-btns"></div>
+    </div>
+
+    <div style="font-size:14px; font-weight:bold; color:#2E7D32; margin-bottom:6px;">② 드래그하여 박스 그리기:</div>
+    <div class="practice-canvas-wrap">
+      <canvas id="practice-img-canvas"></canvas>
+      <canvas id="practice-draw-canvas" style="position:absolute; top:0; left:0;"
+        onmousedown="practiceStartDraw(event)" onmousemove="practiceMoveDraw(event)" onmouseup="practiceEndDraw(event)"
+        ontouchstart="practiceTouchStart(event)" ontouchmove="practiceTouchMove(event)" ontouchend="practiceTouchEnd(event)">
+      </canvas>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button onclick="practiceUndo()" class="tool-btn" style="background:#37474F; border:none;">되돌리기</button>
+      <button onclick="practiceClear()" class="tool-btn" style="background:#C62828; border:none;">전체삭제</button>
+      <div id="practice-box-count" style="font-size:15px; font-weight:bold; color:#2E7D32; margin-left:auto;">박스: 0개</div>
+    </div>
+
+    <div id="practice-box-list" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
+
+    <div id="practice-complete-msg" style="display:none; background:#E8F5E9; border:2px solid #81C784; border-radius:14px; padding:14px; font-size:16px; font-weight:bold; color:#2E7D32; text-align:center;">
+      참 잘했어요! 이제 나의 실전 수집 사진으로 라벨링을 시작해봅시다!
+    </div>
+
+    <button onclick="showScreen('labeler')" class="btn-back" style="width:100%; justify-content:center; padding:14px; background:linear-gradient(135deg,#4CAF50,#2E7D32); color:white; font-size:18px; margin-top:10px;">
+      실전 라벨링하러 가기
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  화면 4: 실전 라벨링                       -->
+<!-- ════════════════════════════════════════ -->
+<div id="screen-labeler" style="display:none;" class="labeler-layout">
+  <div class="top-bar">
+    <a href="main.html" class="header-logo-link" title="메인 화면으로 이동">
+      <img src="images/bs-logo.png" alt="AI 자원순환 탐정단" class="header-bs-logo" style="height:32px;">
+    </a>
+    <button onclick="showScreen('select')" class="tool-btn" style="padding:6px 12px; font-size:13px;">뒤로</button>
+    <a href="main.html" class="btn-quest-map" style="padding:6px 12px; font-size:13px; text-decoration:none;">🧭 퀘스트지도가기</a>
+    <div class="title">라벨링 체육관 (실전)</div>
+
+    <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+      <span id="progress-label" style="font-size:14px; font-weight:bold; color:#FFF9C4;"></span>
     </div>
   </div>
 
-  <div class="dialog-box">
-    <div class="dialog-top-bar">
-      <div class="char-name-tag">AI 튜터</div>
-      <button class="btn-prev" id="btn-prev" onclick="prevMessage()">◀ 이전</button>
+  <div class="content-area">
+    <!-- 왼쪽 수집 사진 사이드바 -->
+    <div class="img-sidebar" id="img-sidebar">
+      <div style="padding:10px; font-family:'Jua',sans-serif; font-size:14px; color:#A5D6A7; border-bottom:1px solid #455A64;">내 사진 목록</div>
+      <div id="thumb-list"></div>
     </div>
-    <div class="dialog-text-box hud-style">
-      <div class="dialog-text" id="dialog-text"></div>
-      <div class="dialog-next" id="dialog-next" onclick="nextMessage()"></div>
+
+    <!-- 중앙 캔버스 영역 -->
+    <div class="canvas-area">
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="img-canvas"></canvas>
+        <canvas id="draw-canvas"
+          onmousedown="startDraw(event)" onmousemove="moveDraw(event)" onmouseup="endDraw(event)"
+          onmouseleave="crosshairX=-1;crosshairY=-1;redrawCanvas(currentImg?._imageEl);"
+          ontouchstart="touchStartDraw(event)" ontouchmove="touchMoveDraw(event)" ontouchend="touchEndDraw(event)">
+        </canvas>
+        <div class="empty-canvas" id="empty-msg">
+          <div style="font-size:50px;"></div>
+          <div>왼쪽에서 사진을 클릭하세요</div>
+        </div>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="tool-btn active" id="tool-draw" onclick="setTool('draw')">그리기</button>
+        <button class="tool-btn" id="tool-select" onclick="setTool('select')">선택</button>
+        <button class="tool-btn" onclick="undoLast()">되돌리기</button>
+        <button class="tool-btn" onclick="clearBoxes()" style="background:#EF5350;">전체삭제</button>
+        <div class="save-status" id="save-status"></div>
+      </div>
+    </div>
+
+    <!-- 오른쪽 클래스 & 박스 사이드바 -->
+    <div class="right-panel">
+      <div class="panel-section">
+        <div class="panel-title">1. 클래스(종류) 선택</div>
+        <div id="class-buttons"></div>
+      </div>
+      <div class="panel-title" style="padding:10px 12px 0;">2. 지정된 박스 목록</div>
+      <div class="boxes-list" id="boxes-list"></div>
     </div>
   </div>
 </div>
 
+<!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
+
 <script>
-const MESSAGES = [
-  { text:"안녕하세요. AI튜터입니다. 😊\n라벨링은 인공지능에게 '세상을 보는 기준'을\n심어주는 아주 정교한 작업이에요." },
-  { text:"단순히 박스 치는 것을 넘어\n모델이 헷갈리지 않게 일관성을 유지하는 것이\n중요해요." },
-  { text:"첫째, 경계 기준을 잘 잡아야 해요. 📏", type:"img", img:"study4-1" },
-  { text:"라벨링을 하기 전에 기준을 잘 잡아야 해요.\n물체의 끝부분만 잡을 것인지,\n그림자까지 포함할 것인지." },
-  { text:"물체의 가려진 부분도 체크할 것인지,\n보이는 부분만 체크할 것인지.\n너무 멀리 있는 물체는 무시할 것인지\n라벨링할 것인지." },
-  { text:"대충하면 AI가 알아서 배우겠지? 라는 생각은 안 돼요.\n우리가 준 오답까지 성실하게 학습하기 때문에\n이게 제일 중요해요! ⚠️" },
-  { text:"둘째, 물체의 외곽선에 최대한\n딱 맞게 박스를 그려야 합니다. 🎯", type:"img", img:"study4-2" },
-  { text:"여백이 너무 많으면 배경을\n물체의 특성으로 오해할 수 있어요." },
-  { text:"물체의 픽셀이 박스 경계에 거의 닿을 정도로\n정교하게 그려야 해요." },
-  { text:"셋째, 클래스의 일관성을 유지해야 합니다. 🏷️", type:"img", img:"study4-3" },
-  { text:"같은 물체를 다르게 부르면\nAI는 혼란에 빠집니다." },
-  { text:"어떨 때는 '사과' 어떤 때는 'apple'로\n라벨링 하면 안 됩니다." },
-  { text:"그리고 대분류(과일)-소분류(사과)로 할지,\n처음부터 사과로만 할지\n미리 정해야 합니다." },
-  { text:"", type:"hide_img" },
-  { text:"요즘에는 라벨링을 일일이 수동으로\n할 필요는 없어요. 🤖" },
-  { text:"이미 학습된 모델로 1차 라벨링하고\n사람은 수정만 하는 방식이 있어요." },
-  { text:"자, 지금까지 라벨링에 대해 배웠어요!\n퀴즈로 확인해볼까요? 📝", type:"quiz" },
-];
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdx4xwK3XIzgw_4hFEohnMe64dc4LDB00",
+    authDomain: "elemeelementary-textbook.firebaseapp.com",
+    projectId: "elemeelementary-textbook",
+    storageBucket: "elemeelementary-textbook.firebasestorage.app",
+    messagingSenderId: "713149004420",
+    appId: "1:713149004420:web:8483273681e16f5a8fa0d1"
+  };
 
-// 퀴즈
-const QUIZZES = [
-  {
-    type:"photo_multi",
-    title:"문제 1. 라벨링에 적합한 사진 고르기",
-    desc:"라벨링하기 좋은 사진을 선택하세요! (1개 선택)",
-    photos:["q4-1-1","q4-1-2"],
-    answers:["q4-1-2"],
-    selectCount:1,
-    exp:"q4-1-2가 정답이에요! 물체가 잘 보이고 외곽선이 명확한 사진이 라벨링에 적합해요."
-  },
-  {
-    type:"ox",
-    q:"라벨링할 때 '사과'와 'apple'을 번갈아 써도 AI가 알아서 같은 것으로 인식한다.",
-    ans:false,
-    exp:"클래스 이름은 일관성 있게 통일해야 해요! 다르게 쓰면 AI는 다른 물체로 인식합니다."
-  },
-  {
-    type:"ox",
-    q:"라벨링 박스를 물체보다 크게 여유 있게 그리면 AI가 더 잘 인식할 수 있다.",
-    ans:false,
-    exp:"여백이 많으면 배경도 물체의 특성으로 학습해요. 외곽선에 딱 맞게 그려야 합니다!"
-  },
-];
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
 
-let currentUser=null, userData=null;
-let msgIdx=0, isTyping=false, typingTimer=null, quizShowing=false;
-let qIdx=0, qScore=0, selectedPhotos=[];
+  const studentId = localStorage.getItem("elementary_studentId");
+  const studentName = localStorage.getItem("elementary_studentName") || "학생 탐정";
 
-requireAuth(async (user)=>{
-  currentUser=user;
-  if(user.uid==='student'){
-    const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
-  } else if(user.uid==='admin'){
-    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
-  } else {
+  if (!studentId) {
+    window.location.href = "index.html";
+  }
+
+  // 자원순환 품목 클래스 정의
+  const DEFAULT_CLASSES = [
+    { name: "종이류/우유팩", color: "#66BB6A" },
+    { name: "플라스틱", color: "#29B6F6" },
+    { name: "캔/고철", color: "#FFA726" },
+    { name: "유리병", color: "#AB47BC" },
+    { name: "비닐류", color: "#FF7043" },
+    { name: "기타", color: "#90A4AE" }
+  ];
+
+  // 화면 전환 함수
+  function showScreen(name) {
+    ['select','tutorial','practice','labeler'].forEach(s => {
+      const el = document.getElementById('screen-' + s);
+      if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById('screen-' + name);
+    if (target) {
+      target.style.display = (name === 'labeler') ? 'flex' : 'block';
+    }
+    if (name === 'practice') initPractice();
+    if (name === 'labeler') initLabeler();
+  }
+
+  // 초기 유저 점수 로드
+  async function initUser() {
     try {
-      const snap=await db.collection('users').where('id','==',user.id).get();
-      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
-      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
-    } catch(e){
-      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
+      const docSnap = await db.collection("students").doc(studentId).get();
+      if (docSnap.exists) {
+        document.getElementById('dispScore').textContent = `${docSnap.data().score || 0}점`;
+      } else {
+        const score = localStorage.getItem("elementary_score") || "0";
+        document.getElementById('dispScore').textContent = `${score}점`;
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // ════════════════════════════════════════
+  //  2단계: 연습하기 캔버스 로직
+  // ════════════════════════════════════════
+  let practiceSelectedClass = 0;
+  let practiceBoxes = [], practiceIsDrawing = false;
+  let practiceStartX = 0, practiceStartY = 0, practiceCurrentBox = null;
+
+  function initPractice() {
+    renderPracticeClassBtns();
+    setupPracticeCanvas();
+  }
+
+  function renderPracticeClassBtns() {
+    document.getElementById('practice-class-btns').innerHTML = DEFAULT_CLASSES.map((c, i) => `
+      <button onclick="practiceSelectClass(${i})"
+        style="padding:8px 14px; border:2px solid ${i === practiceSelectedClass ? c.color : '#CCCCCC'};
+               border-radius:20px; background:${i === practiceSelectedClass ? c.color + '22' : 'white'};
+               color:${i === practiceSelectedClass ? c.color : '#555'};
+               font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
+        <span style="width:12px; height:12px; border-radius:3px; background:${c.color};"></span>
+        [${i}] ${c.name}
+      </button>`).join('');
+  }
+
+  function practiceSelectClass(i) {
+    practiceSelectedClass = i;
+    renderPracticeClassBtns();
+  }
+
+  let practiceBgImage = null;
+
+  function setupPracticeCanvas() {
+    const ic = document.getElementById('practice-img-canvas');
+    const dc = document.getElementById('practice-draw-canvas');
+    ic.width = dc.width = 600;
+    ic.height = dc.height = 360;
+
+    const ctx = ic.getContext('2d');
+    ctx.fillStyle = '#263238'; ctx.fillRect(0, 0, ic.width, ic.height);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 20px Pretendard'; ctx.textAlign = 'center';
+    ctx.fillText('예시: q4-1 수집 사진 불러오는 중...', 300, 180);
+
+    const candidateSources = [
+      'images/q4-1.png',
+      'images/q4-1.jpg',
+      'images/q4-1.jpeg',
+      'images/q4-1',
+      'Images/q4-1.png',
+      'Images/q4-1.jpg'
+    ];
+    let candidateIndex = 0;
+
+    const img = new Image();
+    img.onload = () => {
+      practiceBgImage = img;
+      ctx.clearRect(0, 0, ic.width, ic.height);
+      ctx.fillStyle = '#111111';
+      ctx.fillRect(0, 0, ic.width, ic.height);
+
+      // 600x360 캔버스에 가로세로 비율 유지하며 중앙 맞춤 렌더링
+      const s = Math.min(ic.width / img.width, ic.height / img.height);
+      const dw = img.width * s;
+      const dh = img.height * s;
+      const dx = (ic.width - dw) / 2;
+      const dy = (ic.height - dh) / 2;
+      ctx.drawImage(img, dx, dy, dw, dh);
+      redrawPractice();
+    };
+
+    img.onerror = () => {
+      candidateIndex++;
+      if (candidateIndex < candidateSources.length) {
+        img.src = candidateSources[candidateIndex];
+      } else {
+        // 스마트 폴백 캔버스 일러스트
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, 600, 360);
+        
+        // 투명 페트병 일러스트
+        ctx.fillStyle = '#dbeafe'; ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 3;
+        ctx.fillRect(80, 80, 100, 190); ctx.strokeRect(80, 80, 100, 190);
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(80, 130, 100, 70);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px Pretendard';
+        ctx.fillText('비닐 라벨', 130, 170);
+
+        // 우유팩 일러스트
+        ctx.fillStyle = '#fef3c7'; ctx.strokeStyle = '#f59e0b';
+        ctx.fillRect(240, 90, 110, 180); ctx.strokeRect(240, 90, 110, 180);
+        ctx.fillStyle = '#92400e'; ctx.font = 'bold 16px Pretendard';
+        ctx.fillText('우유팩', 295, 180);
+
+        // 알루미늄 캔 일러스트
+        ctx.fillStyle = '#e2e8f0'; ctx.strokeStyle = '#64748b';
+        ctx.fillRect(410, 110, 100, 160); ctx.strokeRect(410, 110, 100, 160);
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 16px Pretendard';
+        ctx.fillText('알루미늄 캔', 460, 190);
+
+        ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 18px Pretendard';
+        ctx.fillText('예시 사진 (q4-1)', 300, 45);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '14px Pretendard';
+        ctx.fillText('마우스/손가락으로 드래그해서 상자를 그려보세요!', 300, 315);
+        redrawPractice();
+      }
+    };
+
+    img.src = candidateSources[0];
+    redrawPractice();
+  }
+
+  function redrawPractice() {
+    const dc = document.getElementById('practice-draw-canvas');
+    const dctx = dc.getContext('2d');
+    dctx.clearRect(0,0,dc.width,dc.height);
+
+    practiceBoxes.forEach((box, i) => {
+      const cls = DEFAULT_CLASSES[box.classIdx] || { color: '#FFF', name: '?' };
+      dctx.strokeStyle = cls.color; dctx.lineWidth = 3;
+      dctx.strokeRect(box.x, box.y, box.w, box.h);
+      dctx.fillStyle = cls.color + '33'; dctx.fillRect(box.x, box.y, box.w, box.h);
+      dctx.fillStyle = cls.color; dctx.font = 'bold 13px Pretendard';
+      dctx.fillRect(box.x, box.y - 20, Math.max(70, cls.name.length * 12), 20);
+      dctx.fillStyle = '#FFFFFF'; dctx.fillText('[' + box.classIdx + '] ' + cls.name, box.x + 4, box.y - 5);
+    });
+
+    if (practiceCurrentBox) {
+      const cls = DEFAULT_CLASSES[practiceSelectedClass] || { color: '#FFF' };
+      dctx.strokeStyle = cls.color; dctx.lineWidth = 2; dctx.setLineDash([6, 4]);
+      dctx.strokeRect(practiceCurrentBox.x, practiceCurrentBox.y, practiceCurrentBox.w, practiceCurrentBox.h);
+      dctx.setLineDash([]);
     }
-  }
-  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
-  updateHUD(); updateCharImages();
-  startQuestTimer(4);
-  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 4));
-  const quests=userData.quests||{};
-  msgIdx=quests.q4_done?0:Math.min(quests.q4_msgIdx||0,MESSAGES.length-1);
-  document.getElementById('hud-progress').textContent='1 / '+MESSAGES.length;
-  setTimeout(()=>showMessage(msgIdx),500);
-  playBGM('quest');
-});
-
-function updateCharImages(){document.getElementById('my-char').src=getLevelByScore(userData.score||0, userData.charTrack).img;}
-function updateHUD(){document.getElementById('hud-score').textContent=(userData.score||0)+' 점';}
-
-function showMessage(idx){
-  if(idx>=MESSAGES.length){showComplete();return;}
-  const msg=MESSAGES[idx];
-  document.getElementById('hud-progress').textContent=`${idx+1} / ${MESSAGES.length}`;
-  document.getElementById('btn-prev').style.display=idx>0?'flex':'none';
-  document.getElementById('dialog-next').style.display='flex';
-
-  const imgEl=document.getElementById('study-img');
-  if(msg.type==='img'){
-    imgEl.src='images/'+msg.img+'.png';
-    imgEl.style.display='block';
-  } else if(msg.type==='hide_img'){
-    imgEl.style.display='none';
+    renderPracticeBoxList();
   }
 
-  // 빈 텍스트 메시지는 자동으로 넘김
-  if(!msg.text){
-    setTimeout(()=>{msgIdx++;autoSave();showMessage(msgIdx);},300);
-    return;
+  function getPracticePos(e) {
+    const c = document.getElementById('practice-draw-canvas');
+    const rect = c.getBoundingClientRect();
+    const scaleX = c.width / rect.width, scaleY = c.height / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
   }
 
-  typeText(document.getElementById('dialog-text'),msg.text,()=>{
-    if(msg.type==='quiz'){
-      document.getElementById('dialog-next').style.display='none';
-      quizShowing=true;
-      setTimeout(()=>showQuizConfirm(()=>startQuiz()),600);
+  function practiceStartDraw(e) {
+    const pos = getPracticePos(e);
+    practiceIsDrawing = true; practiceStartX = pos.x; practiceStartY = pos.y;
+    practiceCurrentBox = { x: pos.x, y: pos.y, w: 0, h: 0 };
+  }
+  function practiceMoveDraw(e) {
+    if (!practiceIsDrawing) return;
+    const pos = getPracticePos(e);
+    practiceCurrentBox = { x: Math.min(practiceStartX, pos.x), y: Math.min(practiceStartY, pos.y), w: Math.abs(pos.x - practiceStartX), h: Math.abs(pos.y - practiceStartY) };
+    redrawPractice();
+  }
+  function practiceEndDraw(e) {
+    if (!practiceIsDrawing) return;
+    practiceIsDrawing = false;
+    if (practiceCurrentBox && practiceCurrentBox.w > 15 && practiceCurrentBox.h > 15) {
+      practiceBoxes.push({ ...practiceCurrentBox, classIdx: practiceSelectedClass });
+      if (practiceBoxes.length >= 2) {
+        document.getElementById('practice-complete-msg').style.display = 'block';
+      }
     }
-  });
-}
-
-function typeText(el,text,cb){
-  el.textContent='';isTyping=true;
-  document.getElementById('dialog-next').style.opacity='0.3';
-  let i=0;
-  typingTimer=setInterval(()=>{
-    if(i<text.length){el.textContent=text.slice(0,i+1);i++;}
-    else{clearInterval(typingTimer);el.textContent=text;isTyping=false;document.getElementById('dialog-next').style.opacity='1';if(cb)cb();}
-  },22);
-}
-
-function nextMessage(){
-  if(quizShowing) return;
-  if(isTyping){
-    clearInterval(typingTimer);
-    const msg=MESSAGES[msgIdx];
-    document.getElementById('dialog-text').textContent=msg.text||'';
-    isTyping=false;
-    document.getElementById('dialog-next').style.opacity='1';
-    if(msg.type==='img'){document.getElementById('study-img').src='images/'+msg.img+'.png';document.getElementById('study-img').style.display='block';}
-    if(msg.type==='quiz'){document.getElementById('dialog-next').style.display='none';quizShowing=true;setTimeout(()=>showQuizConfirm(()=>startQuiz()),400);}
-    return;
+    practiceCurrentBox = null;
+    redrawPractice();
   }
-  msgIdx++;autoSave();showMessage(msgIdx);
-}
-function prevMessage(){
-  if(quizShowing) return;
-  if(isTyping){clearInterval(typingTimer);isTyping=false;}
-  if(msgIdx>0){msgIdx--;showMessage(msgIdx);}
-}
-async function autoSave(){
-  if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};userData.quests.q4_msgIdx=msgIdx;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));return;
+
+  function practiceTouchStart(e) { e.preventDefault(); practiceStartDraw(e); }
+  function practiceTouchMove(e) { e.preventDefault(); practiceMoveDraw(e); }
+  function practiceTouchEnd(e) { e.preventDefault(); practiceEndDraw(e); }
+
+  function practiceUndo() { practiceBoxes.pop(); redrawPractice(); }
+  function practiceClear() {
+    practiceBoxes = [];
+    document.getElementById('practice-complete-msg').style.display = 'none';
+    redrawPractice();
   }
-  await db.collection('users').doc(currentUser.uid).update({'quests.q4_msgIdx':msgIdx});
-}
 
-document.addEventListener('click',(e)=>{
-  if(quizShowing) return;
-  if(document.getElementById('board-overlay')) return;
-  if(document.getElementById('complete-btns')) return;
-  if(e.target.closest('.dialog-next')||e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
-  nextMessage();
-});
-document.addEventListener('keydown',(e)=>{
-  if(quizShowing) return;
-  if(document.getElementById('board-overlay')) return;
-  if(document.getElementById('complete-btns')) return;
-  if(e.code==='Space'||e.code==='Enter') nextMessage();
-  if(e.code==='ArrowLeft') prevMessage();
-});
-
-// ══ 퀴즈 ══
-function startQuiz(){
-  qIdx=0;qScore=0;selectedPhotos=[];
-  document.getElementById('quiz-overlay').style.display='flex';
-  renderQuiz();
-}
-
-function renderQuiz(){
-  const q=QUIZZES[qIdx];
-  document.getElementById('quiz-step').textContent=`${qIdx+1} / ${QUIZZES.length}`;
-  if(q.type==='photo_multi') renderPhotoQuiz(q);
-  else renderOX(q);
-}
-
-// 사진 선택
-function renderPhotoQuiz(q){
-  selectedPhotos=[];
-  document.getElementById('quiz-title').textContent='📸 라벨링 퀴즈!';
-  document.getElementById('quiz-content').innerHTML=`
-    <div style="font-size:clamp(14px,2.5vw,16px);font-weight:700;color:#e2e8f0;margin-bottom:6px;">${q.title}</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:14px;">${q.desc}</div>
-    <div style="display:grid;grid-template-columns:repeat(${q.photos.length},1fr);gap:clamp(6px,2vw,12px);margin-bottom:14px;" id="photo-grid">
-      ${q.photos.map(p=>`
-        <div id="ph-${p}" onclick="togglePhoto('${p}','${q.type}')"
-          style="border-radius:10px;overflow:hidden;cursor:pointer;
-                 border:3px solid rgba(255,255,255,0.1);transition:all .2s;
-                 aspect-ratio:1;position:relative;">
-          <img src="images/${p}.png" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;"
-            onerror="this.parentElement.style.background='rgba(167,139,250,0.1)';this.style.display='none'">
-          <div id="check-${p}" style="display:none;position:absolute;top:6px;right:6px;
-               background:#a78bfa;border-radius:50%;width:26px;height:26px;
-               align-items:center;justify-content:center;font-size:15px;color:white;">✓</div>
-        </div>`).join('')}
-    </div>
-    <div id="photo-hint" style="font-size:12px;color:rgba(167,139,250,0.7);margin-bottom:10px;text-align:center;">사진을 선택하세요</div>
-    <div id="quiz-feedback"></div>
-    <button id="confirm-btn" onclick="confirmPhoto()"
-      style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);
-             border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);
-             font-weight:700;cursor:pointer;font-family:inherit;opacity:0.4;pointer-events:none;">
-      ✅ 선택 완료
-    </button>`;
-}
-
-function togglePhoto(photoId,quizType){
-  const el=document.getElementById('ph-'+photoId);
-  const check=document.getElementById('check-'+photoId);
-  const q=QUIZZES[qIdx];
-  if(selectedPhotos.includes(photoId)){
-    selectedPhotos=selectedPhotos.filter(p=>p!==photoId);
-    el.style.borderColor='rgba(255,255,255,0.1)';el.style.transform='';
-    check.style.display='none';
-  } else {
-    if(quizType==='photo_single'||q.selectCount===1){
-      selectedPhotos.forEach(p=>{
-        document.getElementById('ph-'+p).style.borderColor='rgba(255,255,255,0.1)';
-        document.getElementById('ph-'+p).style.transform='';
-        document.getElementById('check-'+p).style.display='none';
-      });
-      selectedPhotos=[];
-    }
-    if(selectedPhotos.length>=q.selectCount) return;
-    selectedPhotos.push(photoId);
-    el.style.borderColor='#a78bfa';el.style.transform='scale(1.04)';
-    check.style.display='flex';
-  }
-  const hint=document.getElementById('photo-hint');
-  hint.textContent=selectedPhotos.length?`${selectedPhotos.length}개 선택됨 - 완료 버튼을 눌러주세요`:'사진을 선택하세요';
-  const btn=document.getElementById('confirm-btn');
-  const ready=selectedPhotos.length===q.selectCount;
-  btn.style.opacity=ready?'1':'0.4';btn.style.pointerEvents=ready?'auto':'none';
-}
-
-function confirmPhoto(){
-  const q=QUIZZES[qIdx];
-  const correct=q.answers.length===selectedPhotos.length&&q.answers.every(a=>selectedPhotos.includes(a));
-  if(correct) qScore++;
-  q.photos.forEach(p=>{
-    const el=document.getElementById('ph-'+p);
-    if(q.answers.includes(p)){el.style.borderColor='#68d391';el.style.boxShadow='0 0 12px rgba(104,211,145,0.5)';}
-    else if(selectedPhotos.includes(p)){el.style.borderColor='#fc8181';el.style.boxShadow='0 0 12px rgba(252,129,129,0.5)';}
-  });
-  document.getElementById('confirm-btn').style.display='none';
-  document.getElementById('quiz-feedback').innerHTML=`
-    <div style="padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.5;margin-bottom:10px;
-         background:rgba(${correct?'104,211,145':'252,129,129'},0.12);
-         border:1px solid ${correct?'#68d391':'#fc8181'};color:${correct?'#68d391':'#fc8181'};">
-      ${correct?'✅ 정답!':'❌ 오답!'} ${q.exp}
-    </div>
-    <button onclick="nextQuiz()" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;">
-      다음 문제 →
-    </button>`;
-}
-
-// OX 퀴즈
-function renderOX(q){
-  document.getElementById('quiz-title').textContent='⭕❌ OX 퀴즈!';
-  document.getElementById('quiz-content').innerHTML=`
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(167,139,250,0.2);border-radius:12px;padding:16px;margin-bottom:18px;font-size:clamp(14px,2.5vw,16px);line-height:1.7;color:#e2e8f0;">${q.q}</div>
-    <div style="display:flex;gap:12px;">
-      <button onclick="selectOX(true,this)"
-        style="flex:1;padding:clamp(16px,4vw,24px);background:rgba(104,211,145,0.1);
-               border:2px solid rgba(104,211,145,0.3);border-radius:14px;
-               color:#68d391;font-size:clamp(28px,6vw,40px);cursor:pointer;font-family:inherit;transition:all .2s;"
-        onmouseover="this.style.background='rgba(104,211,145,0.2)'" onmouseout="if(!this.disabled)this.style.background='rgba(104,211,145,0.1)'">⭕</button>
-      <button onclick="selectOX(false,this)"
-        style="flex:1;padding:clamp(16px,4vw,24px);background:rgba(252,129,129,0.1);
-               border:2px solid rgba(252,129,129,0.3);border-radius:14px;
-               color:#fc8181;font-size:clamp(28px,6vw,40px);cursor:pointer;font-family:inherit;transition:all .2s;"
-        onmouseover="this.style.background='rgba(252,129,129,0.2)'" onmouseout="if(!this.disabled)this.style.background='rgba(252,129,129,0.1)'">❌</button>
-    </div>
-    <div id="quiz-feedback" style="margin-top:12px;"></div>`;
-}
-
-function selectOX(val,btn){
-  const q=QUIZZES[qIdx];
-  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
-  const ok=val===q.ans;
-  if(ok) qScore++;
-  btn.style.transform='scale(1.06)';
-  document.getElementById('quiz-feedback').innerHTML=`
-    <div style="padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.5;
-         background:rgba(${ok?'104,211,145':'252,129,129'},0.12);
-         border:1px solid ${ok?'#68d391':'#fc8181'};color:${ok?'#68d391':'#fc8181'};">
-      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
-    </div>
-    <button onclick="nextQuiz()" style="width:100%;padding:12px;margin-top:10px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:11px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;">
-      ${qIdx+1<QUIZZES.length?'다음 문제 →':'결과 보기 →'}
-    </button>`;
-}
-
-function nextQuiz(){
-  qIdx++;
-  if(qIdx>=QUIZZES.length) finishQuiz();
-  else renderQuiz();
-}
-
-async function finishQuiz(){
-  const total=QUIZZES.length;
-  const xp=qScore*10+(qScore===total?20:0);
-  userData.quests=userData.quests||{};
-  userData.quests.q4_done=true;
-  if(currentUser.uid==='student'){
-    userData.score=(userData.score||0)+xp;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-    updateHUD();updateCharImages();
-  } else {
-    await addScore(currentUser.uid,xp,'퀘스트4 퀴즈');
-    await db.collection('users').doc(currentUser.uid).set({
-      quests: { q4_done: true }
-    }, { merge: true });
-    await db.collection('quiz_results').doc(currentUser.uid).set({
-      q4:firebase.firestore.FieldValue.arrayUnion({score:qScore,total,xp,accuracy:Math.round(qScore/total*100),date:new Date().toISOString()})
-    },{merge:true});
-    userData.score=(userData.score||0)+xp;
-    updateHUD();updateCharImages();
-    checkLevelUp(userData.score-xp,userData.score);
-  }
-  await unlockBadge('young_scientist', currentUser, userData);
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-result">
-      <div class="big-emoji">${qScore===total?'🏆':qScore>=2?'👍':'💪'}</div>
-      <h3>${qScore} / ${total} 정답</h3>
-      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(qScore/total*100)}%</div>
-      <div class="xp-gain">+${xp} 점 획득!</div>
-      <button class="quiz-check-btn" onclick="closeQuiz()">계속하기 →</button>
-    </div>`;
-  showXPPopup('+'+xp+' 점');
-}
-
-function closeQuiz(){
-  quizShowing=false;
-  document.getElementById('quiz-overlay').style.display='none';
-  showComplete();
-}
-
-function checkLevelUp(before,after){
-  const lvB=getLevelByScore(before, userData.charTrack),lvA=getLevelByScore(after, userData.charTrack);
-  if(lvA.level>lvB.level){
-    const el=document.createElement('div');
-    el.className='levelup-screen';
-    el.innerHTML=`
-      <div class="levelup-container">
-        <div class="levelup-ring"></div>
-        <img src="${lvA.img}" style="height:120px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));position:relative;z-index:1;animation:float 3s ease-in-out infinite;">
-        <h1 style="font-family:'Jua',sans-serif;font-size:36px;color:#f6ad55;margin:0;position:relative;z-index:1;">레벨 업! 🎉</h1>
-        <p style="font-size:18px;color:#63b3ed;margin:0;position:relative;z-index:1;">Lv.${lvA.level} ${lvA.name}</p>
-        <button class="quiz-check-btn" style="max-width:180px;margin-top:8px;position:relative;z-index:1;" onclick="this.parentElement.parentElement.remove()">확인</button>
+  function renderPracticeBoxList() {
+    document.getElementById('practice-box-count').textContent = `박스: ${practiceBoxes.length}개`;
+    document.getElementById('practice-box-list').innerHTML = practiceBoxes.map((b, i) => {
+      const cls = DEFAULT_CLASSES[b.classIdx] || { color: '#FFF', name: '?' };
+      return `<div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:white; border-radius:10px; border:2px solid ${cls.color}; font-weight:bold;">
+        <span style="width:12px; height:12px; border-radius:3px; background:${cls.color};"></span>
+        <span>[${b.classIdx}] ${cls.name}</span>
+        <button onclick="practiceDeleteBox(${i})" style="margin-left:auto; background:#FFEBEE; border:none; border-radius:6px; padding:4px 8px; color:#C62828; font-weight:bold; cursor:pointer;">삭제</button>
       </div>`;
-    document.body.appendChild(el);
+    }).join('');
   }
-}
 
-let completeShown=false;
-function showComplete(){
-  if(completeShown) return;
-  completeShown=true;
-  recordQuestProgress(currentUser, userData, 4, 100, true);
-  const overlay=document.createElement('div');
-  overlay.id='complete-overlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML=`
-    <div style="background:#111827;border:2px solid rgba(167,139,250,0.4);border-radius:24px;
-         padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;
-         box-shadow:0 0 60px rgba(167,139,250,0.2);animation:slideUp .4s ease;">
-      <div style="font-size:56px;margin-bottom:12px;">🏅</div>
-      <h2 style="font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);color:#a78bfa;margin-bottom:6px;">퀘스트 4 완료!</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;">
-        데이터 라벨링을<br>성공적으로 배웠어요! 🏷️
-      </p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button onclick="window.location.href='quest5.html'"
-          style="padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;">
-          다음 퀘스트 → 배운내용 확인하기 ✅
-        </button>
-        <button onclick="replayQuest()"
-          style="padding:12px;background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.4);border-radius:12px;color:#f6ad55;font-size:14px;cursor:pointer;font-family:inherit;">
-          🔄 다시 하기
-        </button>
-        <button onclick="goMain()"
-          style="padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;font-family:inherit;">
-          🏠 메인으로 돌아가기
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-}
+  function practiceDeleteBox(i) { practiceBoxes.splice(i, 1); redrawPractice(); }
 
-function replayQuest(){
-  if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};userData.quests.q4_msgIdx=0;userData.quests.q4_done=false;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-  } else {
-    db.collection('users').doc(currentUser.uid).update({'quests.q4_msgIdx':0,'quests.q4_done':false});
+  // ════════════════════════════════════════
+  //  3단계: 실전 라벨링 로직
+  // ════════════════════════════════════════
+  let myImages = [], currentImgIdx = -1, currentImg = null;
+  let allBoxes = {};
+  let isDrawing = false, startX = 0, startY = 0, currentBox = null;
+  let selectedClassIdx = 0, selectedBoxIdx = -1, currentTool = 'draw';
+  let scale = 1, offsetX = 0, offsetY = 0;
+  let crosshairX = -1, crosshairY = -1;
+  let labelerInited = false;
+
+  async function initLabeler() {
+    if (labelerInited) return;
+    labelerInited = true;
+    renderClassButtons();
+    await loadMyImages();
+    setupResize();
   }
-  window.location.reload();
-}
-function goMain(){sessionStorage.setItem('from_quest','1');window.location.href='main.html';}
 
-// 퀴즈 시작 확인 팝업
-function showQuizConfirm(onConfirm){
-  const old=document.getElementById('quiz-confirm-overlay');
-  if(old) old.remove();
-  const overlay=document.createElement('div');
-  overlay.id='quiz-confirm-overlay';
-  overlay.className='quiz-confirm-overlay';
-  overlay.innerHTML=`
-    <div class="quiz-confirm-box">
-      <div class="quiz-confirm-emoji">🎓</div>
-      <div class="quiz-confirm-title">퀴즈 시간! 🎯</div>
-      <div class="quiz-confirm-desc">지금까지 배운 내용을<br>퀴즈로 확인해볼까요?</div>
-      <div class="quiz-confirm-btns">
-        <button class="quiz-confirm-cancel" onclick="document.getElementById('quiz-confirm-overlay').remove();quizShowing=false;">나중에</button>
-        <button class="quiz-confirm-ok" onclick="document.getElementById('quiz-confirm-overlay').remove();onConfirmCallback();">도전하기! 🚀</button>
-      </div>
-    </div>`;
-  window.onConfirmCallback=onConfirm;
-  document.body.appendChild(overlay);
-}
+  function renderClassButtons() {
+    document.getElementById('class-buttons').innerHTML = DEFAULT_CLASSES.map((c, i) => `
+      <button class="class-btn ${i === selectedClassIdx ? 'active' : ''}"
+        style="background:${c.color}33; border-color:${i === selectedClassIdx ? c.color : 'transparent'};"
+        onclick="selectClass(${i})">
+        <span class="class-dot" style="background:${c.color};"></span>
+        [${i}] ${c.name}
+      </button>`).join('');
+  }
 
+  function selectClass(i) {
+    selectedClassIdx = i;
+    renderClassButtons();
+  }
+
+  async function loadMyImages() {
+    try {
+      const snap = await db.collection('uploads')
+        .where('userId', '==', studentId)
+        .orderBy('created_at', 'desc').get();
+      myImages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(e) {
+      const snap = await db.collection('uploads').where('userId', '==', studentId).get();
+      myImages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      myImages.sort((a,b) => (b.created_at || '').localeCompare(a.created_at || ''));
+    }
+
+    try {
+      const labelSnap = await db.collection('labels').where('userId', '==', studentId).get();
+      labelSnap.docs.forEach(d => {
+        const data = d.data();
+        allBoxes[data.imageId] = data.boxes || [];
+      });
+    } catch(e) {}
+
+    updateProgress();
+
+    document.getElementById('thumb-list').innerHTML = myImages.map((img, i) => `
+      <div class="img-thumb ${i === currentImgIdx ? 'active' : ''}" id="thumb-${i}" onclick="selectImage(${i})">
+        <img src="${img.url}" onerror="this.style.display='none'">
+        ${allBoxes[img.id]?.length ? '<div class="labeled-dot"></div>' : ''}
+        <div class="num">${i+1}</div>
+      </div>`).join('');
+
+    if (myImages.length > 0) selectImage(0);
+    else document.getElementById('empty-msg').style.display = 'flex';
+  }
+
+  function updateProgress() {
+    const labeled = myImages.filter(img => allBoxes[img.id]?.length > 0).length;
+    document.getElementById('progress-label').textContent = `${labeled}/${myImages.length} 완료`;
+  }
+
+  function selectImage(idx) {
+    currentImgIdx = idx;
+    const img = myImages[idx];
+    currentImg = img;
+    document.getElementById('empty-msg').style.display = 'none';
+    document.querySelectorAll('.img-thumb').forEach((el, i) => el.classList.toggle('active', i === idx));
+    renderBoxList();
+
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => { fitImageToCanvas(image); redrawCanvas(image); };
+    image.onerror = () => {
+      const img2 = new Image();
+      img2.onload = () => { fitImageToCanvas(img2); redrawCanvas(img2); };
+      img2.src = img.url + '?t=' + Date.now();
+      currentImg._imageEl = img2;
+    };
+    image.src = img.url;
+    currentImg._imageEl = image;
+  }
+
+  function fitImageToCanvas(image) {
+    const wrap = document.getElementById('canvas-wrap');
+    const cw = wrap.clientWidth, ch = wrap.clientHeight;
+    scale = Math.min(cw / image.width, ch / image.height, 1);
+    const dw = image.width * scale, dh = image.height * scale;
+    offsetX = (cw - dw) / 2; offsetY = (ch - dh) / 2;
+    ['img-canvas','draw-canvas'].forEach(id => {
+      const c = document.getElementById(id);
+      c.width = cw; c.height = ch;
+    });
+  }
+
+  function redrawCanvas(imageEl) {
+    if (!imageEl) return;
+    const imgC = document.getElementById('img-canvas');
+    const drawC = document.getElementById('draw-canvas');
+    const ic = imgC.getContext('2d');
+    const dc = drawC.getContext('2d');
+
+    ic.clearRect(0, 0, imgC.width, imgC.height);
+    dc.clearRect(0, 0, drawC.width, drawC.height);
+
+    ic.fillStyle = '#111111';
+    ic.fillRect(0, 0, imgC.width, imgC.height);
+    ic.drawImage(imageEl, offsetX, offsetY, imageEl.width * scale, imageEl.height * scale);
+
+    const boxes = allBoxes[currentImg.id] || [];
+    boxes.forEach((box, i) => {
+      const cls = DEFAULT_CLASSES[box.classIdx] || { color: '#FFF', name: '?' };
+      const x = offsetX + box.x * scale, y = offsetY + box.y * scale;
+      const w = box.w * scale, h = box.h * scale;
+
+      dc.strokeStyle = cls.color; dc.lineWidth = (i === selectedBoxIdx) ? 4 : 2.5;
+      dc.strokeRect(x, y, w, h);
+      dc.fillStyle = cls.color + '44'; dc.fillRect(x, y, w, h);
+      dc.fillStyle = cls.color; dc.font = 'bold 13px Pretendard';
+      dc.fillRect(x, y - 18, Math.max(70, cls.name.length * 10), 18);
+      dc.fillStyle = '#FFFFFF'; dc.fillText('[' + box.classIdx + '] ' + cls.name, x + 3, y - 4);
+    });
+
+    if (currentBox) {
+      const cls = DEFAULT_CLASSES[selectedClassIdx] || { color: '#FFF' };
+      dc.strokeStyle = cls.color; dc.lineWidth = 2.5; dc.setLineDash([5, 3]);
+      dc.strokeRect(currentBox.x, currentBox.y, currentBox.w, currentBox.h);
+      dc.setLineDash([]);
+    }
+
+    // 십자선 가이드
+    if (crosshairX >= 0 && crosshairY >= 0 && !isDrawing) {
+      dc.save();
+      dc.globalAlpha = 0.8; dc.strokeStyle = '#000000'; dc.lineWidth = 3; dc.setLineDash([4, 4]);
+      dc.beginPath(); dc.moveTo(crosshairX, 0); dc.lineTo(crosshairX, drawC.height); dc.stroke();
+      dc.beginPath(); dc.moveTo(0, crosshairY); dc.lineTo(drawC.width, crosshairY); dc.stroke();
+
+      dc.globalAlpha = 1.0; dc.strokeStyle = '#FFD54F'; dc.lineWidth = 1.5;
+      dc.beginPath(); dc.moveTo(crosshairX, 0); dc.lineTo(crosshairX, drawC.height); dc.stroke();
+      dc.beginPath(); dc.moveTo(0, crosshairY); dc.lineTo(drawC.width, crosshairY); dc.stroke();
+      dc.setLineDash([]);
+      dc.restore();
+    }
+  }
+
+  function getCanvasPos(e) {
+    const c = document.getElementById('draw-canvas');
+    const rect = c.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function startDraw(e) {
+    if (currentTool !== 'draw' || !currentImg) return;
+    const pos = getCanvasPos(e);
+    isDrawing = true; startX = pos.x; startY = pos.y;
+    currentBox = { x: pos.x, y: pos.y, w: 0, h: 0 };
+  }
+  function moveDraw(e) {
+    const pos = getCanvasPos(e);
+    crosshairX = pos.x; crosshairY = pos.y;
+    if (!isDrawing || !currentImg) { redrawCanvas(currentImg?._imageEl); return; }
+    currentBox = { x: Math.min(startX, pos.x), y: Math.min(startY, pos.y), w: Math.abs(pos.x - startX), h: Math.abs(pos.y - startY) };
+    redrawCanvas(currentImg._imageEl);
+  }
+  function endDraw(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+    if (currentBox && currentBox.w > 10 && currentBox.h > 10) {
+      const img = currentImg._imageEl;
+      const imgBox = {
+        classIdx: selectedClassIdx,
+        x: (currentBox.x - offsetX) / scale,
+        y: (currentBox.y - offsetY) / scale,
+        w: currentBox.w / scale,
+        h: currentBox.h / scale
+      };
+      imgBox.x = Math.max(0, imgBox.x); imgBox.y = Math.max(0, imgBox.y);
+      if (img) { imgBox.w = Math.min(img.width - imgBox.x, imgBox.w); imgBox.h = Math.min(img.height - imgBox.y, imgBox.h); }
+
+      if (!allBoxes[currentImg.id]) allBoxes[currentImg.id] = [];
+      allBoxes[currentImg.id].push(imgBox);
+      renderBoxList(); saveLabels(); updateThumb(); updateProgress();
+    }
+    currentBox = null; redrawCanvas(currentImg._imageEl);
+  }
+
+  function touchStartDraw(e) { e.preventDefault(); startDraw(e); }
+  function touchMoveDraw(e) { e.preventDefault(); moveDraw(e); }
+  function touchEndDraw(e) { e.preventDefault(); endDraw(e); }
+
+  function setTool(t) {
+    currentTool = t;
+    document.getElementById('tool-draw').classList.toggle('active', t === 'draw');
+    document.getElementById('tool-select').classList.toggle('active', t === 'select');
+    document.getElementById('draw-canvas').style.cursor = (t === 'draw') ? 'crosshair' : 'default';
+  }
+
+  function undoLast() {
+    if (!currentImg || !allBoxes[currentImg.id]?.length) return;
+    allBoxes[currentImg.id].pop();
+    renderBoxList(); saveLabels(); updateThumb(); updateProgress(); redrawCanvas(currentImg._imageEl);
+  }
+
+  function clearBoxes() {
+    if (!currentImg) return;
+    if (!confirm('이 사진의 모든 박스를 삭제할까요?')) return;
+    allBoxes[currentImg.id] = [];
+    renderBoxList(); saveLabels(); updateThumb(); updateProgress(); redrawCanvas(currentImg._imageEl);
+  }
+
+  function deleteBox(i) {
+    allBoxes[currentImg.id].splice(i, 1);
+    renderBoxList(); saveLabels(); updateThumb(); updateProgress(); redrawCanvas(currentImg._imageEl);
+  }
+
+  function renderBoxList() {
+    const boxes = allBoxes[currentImg?.id] || [];
+    document.getElementById('boxes-list').innerHTML = boxes.length
+      ? boxes.map((b, i) => {
+          const cls = DEFAULT_CLASSES[b.classIdx] || { color: '#FFF', name: '?' };
+          return `<div class="box-item ${i === selectedBoxIdx ? 'selected' : ''}" onclick="selectBox(${i})">
+            <span class="box-dot" style="background:${cls.color}; width:10px; height:10px; border-radius:3px;"></span>
+            <span>[${b.classIdx}] ${cls.name}</span>
+            <button class="box-del" onclick="event.stopPropagation();deleteBox(${i})"></button>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:13px; color:#90A4AE; padding:8px;">상자를 그려주세요</div>`;
+  }
+
+  function selectBox(i) {
+    selectedBoxIdx = (i === selectedBoxIdx) ? -1 : i;
+    renderBoxList(); redrawCanvas(currentImg._imageEl);
+  }
+
+  async function saveLabels() {
+    if (!currentImg) return;
+    document.getElementById('save-status').textContent = '저장 중...';
+    try {
+      const boxes = allBoxes[currentImg.id] || [];
+      const snap = await db.collection('labels').where('userId', '==', studentId).where('imageId', '==', currentImg.id).get();
+
+      if (snap.empty) {
+        await db.collection('labels').add({ userId: studentId, imageId: currentImg.id, imageUrl: currentImg.url, boxes, updated_at: new Date().toISOString() });
+      } else {
+        await snap.docs[0].ref.update({ boxes, updated_at: new Date().toISOString() });
+      }
+
+      await db.collection('uploads').doc(currentImg.id).update({ labeled: boxes.length > 0 });
+      document.getElementById('save-status').textContent = '저장됨';
+      setTimeout(() => document.getElementById('save-status').textContent = '', 2000);
+
+      // 점수 보상 (+30점)
+      if (boxes.length > 0) {
+        const userRef = db.collection('students').doc(studentId);
+        const userDoc = await userRef.get();
+        if (userDoc.exists) {
+          const data = userDoc.data();
+          if (!data.q4_done) {
+            const currentScore = data.score || 0;
+            const questsDone = data.questsDone || 0;
+            await userRef.set({
+              score: currentScore + 30,
+              questsDone: Math.max(questsDone, 4),
+              q4_done: true,
+              q4Done: true
+            }, { merge: true });
+            localStorage.setItem("elementary_score", currentScore + 30);
+            localStorage.setItem("quest4_completed", "true");
+            localStorage.setItem("elementary_q4_done", "true");
+            alert("Quest 4 라벨링 성공! (+30점 획득)");
+          }
+        }
+      }
+    } catch(e) {
+      console.error(e);
+      document.getElementById('save-status').textContent = '저장 실패';
+    }
+  }
+
+  function updateThumb() {
+    const thumb = document.getElementById('thumb-' + currentImgIdx);
+    if (!thumb) return;
+    const dot = thumb.querySelector('.labeled-dot');
+    if (allBoxes[currentImg.id]?.length) {
+      if (!dot) {
+        const d = document.createElement('div');
+        d.className = 'labeled-dot';
+        thumb.appendChild(d);
+      }
+    } else {
+      dot?.remove();
+    }
+  }
+
+  function setupResize() {
+    window.addEventListener('resize', () => {
+      if (currentImg?._imageEl) fitImageToCanvas(currentImg._imageEl);
+      redrawCanvas(currentImg?._imageEl);
+    });
+  }
+
+  initUser();
 </script>
 </body>
 </html>

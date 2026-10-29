@@ -2,340 +2,1528 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-  <title>퀘스트 6: 데이터 수집하기</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>QUEST 6: 오류박물관 | AI 자원순환 탐정단</title>
+  
+  <!-- 저작권 무료 폰트: Pretendard 및 Google Fonts Jua -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;}
-    .page-wrap{max-width:700px;margin:0 auto;padding:clamp(16px,3vw,28px);}
-    .page-title{font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);color:#a78bfa;margin-bottom:6px;}
-    .page-desc{font-size:clamp(13px,2.3vw,14px);color:var(--muted);margin-bottom:24px;line-height:1.6;}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(16px,3vw,24px);margin-bottom:16px;}
-    .card h3{font-size:clamp(14px,2.5vw,16px);margin-bottom:14px;color:var(--primary);margin-top:0;}
-    .btn{display:inline-flex;align-items:center;gap:6px;padding:clamp(10px,2vw,13px) clamp(14px,3vw,22px);border:none;border-radius:11px;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;text-decoration:none;}
-    .btn-primary{background:linear-gradient(135deg,#a78bfa,#7c3aed);color:white;}
-    .btn-primary:hover{transform:translateY(-2px);}
-    .btn-ghost{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);}
-    .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important;}
-    .upload-zone{border:2px dashed rgba(167,139,250,0.4);border-radius:16px;padding:clamp(24px,5vw,40px) 20px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(167,139,250,0.04);margin-bottom:16px;}
-    .upload-zone:hover,.upload-zone.dragover{border-color:#a78bfa;background:rgba(167,139,250,0.1);}
-    .upload-zone .icon{font-size:clamp(32px,7vw,48px);margin-bottom:10px;}
-    .upload-zone h3{font-size:clamp(14px,3vw,17px);margin-bottom:4px;color:var(--text);}
-    .upload-zone p{font-size:clamp(11px,2.2vw,13px);color:var(--muted);margin:0;}
-    #file-input{display:none;}
-    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(75px,16vw,105px),1fr));gap:clamp(5px,1.5vw,10px);margin-bottom:12px;}
-    .preview-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:rgba(255,255,255,0.03);}
-    .preview-item img{width:100%;height:100%;object-fit:cover;display:block;}
-    .remove-btn{position:absolute;top:4px;right:4px;background:rgba(252,129,129,0.9);border:none;border-radius:50%;width:22px;height:22px;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-    .status-badge{position:absolute;bottom:0;left:0;right:0;padding:3px 4px;font-size:10px;text-align:center;font-weight:600;}
-    .status-pending{background:rgba(246,173,85,0.9);color:#0a0e1a;}
-    .status-done{background:rgba(104,211,145,0.9);color:#0a0e1a;}
-    .status-error{background:rgba(252,129,129,0.9);color:white;}
-    .progress-wrap{background:rgba(255,255,255,0.08);border-radius:20px;height:clamp(8px,2vw,12px);overflow:hidden;margin:10px 0;}
-    .progress-bar{height:100%;background:linear-gradient(90deg,#a78bfa,#63b3ed);border-radius:20px;transition:width .2s;}
-    .progress-text{font-size:clamp(12px,2.2vw,13px);color:var(--muted);min-height:18px;margin-top:4px;}
-    .uploaded-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;}
-    .uploaded-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0;}
-    .del-btn{background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;flex-shrink:0;}
-    .alert{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;}
-    .alert-success{background:rgba(104,211,145,0.12);border:1px solid #68d391;color:#68d391;}
-    .alert-error{background:rgba(252,129,129,0.12);border:1px solid #fc8181;color:#fc8181;}
-    @media(max-width:480px){.page-wrap{padding:12px;}}
+    :root {
+      --bg-blue: rgb(14, 70, 191);
+      --card-navy: rgb(6, 27, 80);
+      --btn-yellow: rgb(254, 218, 53);
+      --btn-yellow-hover: #fde047;
+      --text-white: #FFFFFF;
+      --text-white-dim: rgba(255, 255, 255, 0.85);
+      --answer-bg: #FFFFFF;
+      --answer-text: #0F172A;
+      --radius: 22px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: var(--bg-blue);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(6, 27, 80, 0.5), transparent 40%),
+        linear-gradient(to bottom, rgb(14, 70, 191), rgb(10, 52, 148));
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* 상단 앱 HUD 네비게이션 */
+    .app-header {
+      width: 100%;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6, 27, 80, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+
+    .header-logo-link:hover {
+      transform: scale(1.04);
+    }
+
+    .header-bs-logo {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .btn-quest-map {
+      background: var(--btn-yellow);
+      border: 2px solid #eab308;
+      color: #0F172A;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Jua', sans-serif;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-quest-map:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .header-title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .badge-chasi {
+      font-family: 'Jua', sans-serif;
+      font-size: 12px;
+      color: var(--btn-yellow);
+      background: rgba(254, 218, 53, 0.15);
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      width: fit-content;
+      font-weight: bold;
+      border: 1px solid rgba(254, 218, 53, 0.4);
+    }
+
+    .header-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 20px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .student-badge {
+      background: rgba(14, 70, 191, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-badge {
+      background: rgba(6, 27, 80, 0.8);
+      border: 2px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-sound {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      color: #FFFFFF;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    /* 메인 컨테이너 */
+    .app-container {
+      width: 100%;
+      max-width: 960px;
+      padding: 20px 16px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 인트로 배너 */
+    .intro-banner {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow);
+      color: var(--text-white);
+    }
+
+    .intro-icon {
+      font-size: 48px;
+      flex-shrink: 0;
+      background: rgba(14, 70, 191, 0.4);
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .intro-text h2 {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--text-white);
+      margin-bottom: 4px;
+    }
+
+    .intro-text p {
+      font-size: 14.5px;
+      color: var(--text-white-dim);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* 탭 메뉴 */
+    .museum-nav-tabs {
+      display: flex;
+      gap: 10px;
+      background: var(--card-navy);
+      padding: 8px;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      background: #FFFFFF;
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      color: #0F172A;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      background: #fef08a;
+      color: #0F172A;
+    }
+
+    .tab-btn.active {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      font-weight: bold;
+    }
+
+    /* 메인 카드 패널 */
+    .museum-section {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      color: var(--text-white);
+    }
+
+    .section-header-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 오류 전시관 카드 그리드 */
+    .museum-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .museum-card {
+      background: rgba(14, 70, 191, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      color: var(--text-white);
+    }
+
+    .museum-card:hover {
+      border-color: var(--btn-yellow);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .museum-img-wrap {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #0f172a;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .museum-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .museum-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .detection-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 4px 10px;
+      border-radius: 10px;
+      border: 1.5px solid #fca5a5;
+    }
+
+    .uploader-text {
+      font-size: 13px;
+      color: var(--text-white-dim);
+      font-weight: 600;
+    }
+
+    /* 태그 목록 영역 */
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 6px 0;
+    }
+
+    .tag-badge {
+      background: #FFFFFF;
+      color: #0F172A;
+      border: 1.5px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    /* 태그 추가 폼 */
+    .tag-add-form {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .tag-input {
+      flex: 1;
+      background: #FFFFFF;
+      color: #0F172A;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: 'Pretendard', sans-serif;
+      outline: none;
+      user-select: text;
+    }
+
+    .tag-input:focus {
+      border-color: var(--btn-yellow);
+      background: #fffbeb;
+    }
+
+    .btn-add-tag {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-family: 'Jua', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-add-tag:hover {
+      background: var(--btn-yellow-hover);
+    }
+
+    .quick-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .quick-tag-chip {
+      background: #FFFFFF;
+      border: 1.5px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0F172A;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-tag-chip:hover, .quick-tag-chip:active {
+      background: var(--btn-yellow);
+      border-color: #eab308;
+      color: #0F172A;
+    }
+
+    /* ==================== 1전시관 태그 통계 그래프 (2전시관 상단 배치) ==================== */
+    .tag-stats-chart-card {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      color: var(--text-white);
+    }
+
+    .tag-stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-stats-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 19px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag-stats-badge {
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--btn-yellow);
+      color: #0F172A;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid #eab308;
+    }
+
+    .tag-chart-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tag-chart-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tag-chart-label-group {
+      width: 170px;
+      min-width: 170px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag-rank-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-white);
+    }
+
+    .tag-rank-badge.top-rank {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: 1px solid #eab308;
+    }
+
+    .tag-chart-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tag-chart-bar-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tag-chart-bar-track {
+      flex: 1;
+      height: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tag-chart-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #60a5fa, #3b82f6);
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tag-chart-bar-fill.top-bar {
+      background: linear-gradient(90deg, var(--btn-yellow), #eab308);
+    }
+
+    .tag-chart-value-group {
+      min-width: 80px;
+      text-align: right;
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .tag-count-text {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--btn-yellow);
+    }
+
+    .tag-pct-text {
+      font-size: 12px;
+      color: var(--text-white-dim);
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .tag-chart-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+      .tag-chart-label-group {
+        width: 100%;
+      }
+    }
+
+    /* ==================== 2단계: AI 한계와 사람의 역할 한문장 작성 ==================== */
+    .reflection-builder-card {
+      background: rgba(6, 27, 80, 0.95);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      color: var(--text-white);
+    }
+
+    .sentence-template-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .template-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .template-input-label {
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      color: var(--btn-yellow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .template-input {
+      width: 100%;
+      background: #FFFFFF;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: 'Pretendard', sans-serif;
+      font-weight: 600;
+      color: #0F172A;
+      outline: none;
+      user-select: text;
+    }
+
+    .template-input:focus {
+      border-color: var(--btn-yellow);
+      background: #fffbeb;
+      box-shadow: 0 0 0 4px rgba(254, 218, 53, 0.25);
+    }
+
+    .final-sentence-preview {
+      background: #FFFFFF;
+      border: 2px solid var(--btn-yellow);
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-family: 'Jua', sans-serif;
+      font-size: 19px;
+      color: #0F172A;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .final-sentence-preview span.hl {
+      color: #1d4ed8;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .btn-submit-thought {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: 2px solid #eab308;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: all 0.2s;
+      font-weight: bold;
+    }
+
+    .btn-submit-thought:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    /* 토론 게시판 피드 */
+    .reflection-feed-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .reflection-card {
+      background: rgba(14, 70, 191, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--text-white);
+    }
+
+    .reflection-card.is-me {
+      background: rgba(6, 27, 80, 0.6);
+      border-color: var(--btn-yellow);
+    }
+
+    .reflection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .author-name {
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      color: var(--btn-yellow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .reflection-body {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: 17px;
+      color: #0F172A;
+      line-height: 1.5;
+      border-left: 4px solid var(--btn-yellow);
+    }
+
+    .reflection-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-white-dim);
+    }
+
+    .reaction-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-react {
+      background: #FFFFFF;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0F172A;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .btn-react:hover {
+      background: var(--btn-yellow);
+      border-color: #eab308;
+      color: #0F172A;
+    }
+
+    .del-btn {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 3px 8px;
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* 최종 완료 배지 상자 */
+    .cert-box {
+      background: var(--card-navy);
+      border: 3px solid var(--btn-yellow);
+      border-radius: 24px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-top: 24px;
+      box-shadow: var(--shadow);
+      color: var(--text-white);
+    }
+
+    .cert-icon { font-size: 52px; margin-bottom: 8px; }
+    .cert-title { font-family: 'Jua', sans-serif; font-size: 26px; color: var(--btn-yellow); margin-bottom: 6px; }
+
+    /* 토스트 알림창 */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.9);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 700;
+      z-index: 1000;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      pointer-events: none;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
+  <script src="quest-intro.js"></script>
 </head>
 <body>
-<div class="page-wrap">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-    <a href="main.html" onclick="sessionStorage.setItem('from_quest','1')"
-      style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;text-decoration:none;">← 메인</a>
-    <div id="hud-score" style="background:rgba(167,139,250,0.2);border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:4px 12px;font-size:13px;color:#a78bfa;font-weight:700;margin-left:auto;">0 점</div>
-  </div>
 
-  <div class="page-title">📁 퀘스트 6: 데이터 수집하기</div>
-  <div class="page-desc">AI 학습에 사용할 사진을 업로드하세요.<br>사진은 자동으로 600×600px로 변환됩니다!</div>
-  <div id="main-alert"></div>
-
-  <div class="card">
-    <h3>📸 사진 업로드</h3>
-    <div class="upload-zone" id="upload-zone"
-      onclick="document.getElementById('file-input').click()"
-      ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
-      <div class="icon">📸</div>
-      <h3>사진을 여기에 드래그하거나 클릭하세요</h3>
-      <p>JPG, PNG, WEBP · 자동 600×600 변환 · 최대 20장</p>
+  <!-- 상단 앱 HUD 네비게이션 -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="main.html" class="header-logo-link" title="메인 화면으로 이동">
+        <img src="images/bs-logo.png" alt="AI 자원순환 탐정단" class="header-bs-logo">
+      </a>
+      <a href="main.html" class="btn-quest-map" title="퀘스트 지도로 이동">🧭 퀘스트지도가기</a>
+      <div class="header-title-group">
+        <span class="badge-chasi">QUEST 6 • AI 윤리 & 오류 분석</span>
+        <h1 class="header-title">오류박물관</h1>
+      </div>
     </div>
-    <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
+    <div class="header-right">
+      <div class="student-badge" id="studentDisplay">탐정 학생 (1모둠)</div>
+      <div class="score-badge" id="scoreDisplay">0 EXP</div>
+      <button class="btn-sound" id="soundToggle" onclick="toggleSound()" style="font-size:13px; font-weight:bold; padding:6px 10px; border-radius:10px; cursor:pointer;">소리</button>
+    </div>
+  </header>
 
-    <div id="pending-card" style="display:none;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <span style="font-size:13px;color:var(--muted);">대기: <strong id="pending-count">0</strong>장</span>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" id="upload-btn" onclick="uploadAll()" style="padding:8px 16px;font-size:13px;">☁️ 업로드</button>
-          <button class="btn btn-ghost" onclick="clearPending()" style="padding:8px 12px;font-size:12px;">초기화</button>
+  <!-- 메인 컨테이너 -->
+  <main class="app-container">
+
+    <!-- 인트로 배너 -->
+    <div class="intro-banner">
+      <div class="intro-icon"></div>
+      <div class="intro-text">
+        <h2>교실쓰레기 AI의 오인식 사례를 전시하고 원인을 탐색해보세요!</h2>
+        <p>
+          QUEST 5에서 캡처한 AI의 오인식 순간들을 박물관에 전시하고, 모둠원들과 함께 <strong>오류 원인 태그</strong>를 달며 <strong>AI의 한계와 사람의 역할</strong>을 정립해봅시다.
+        </p>
+      </div>
+    </div>
+
+    <!-- 네비게이션 탭 -->
+    <nav class="museum-nav-tabs">
+      <button class="tab-btn active" id="tabGalleryBtn" onclick="switchTab('gallery')">
+        <span>1전시관: 교실쓰레기 AI 오류 갤러리</span>
+      </button>
+      <button class="tab-btn" id="tabEthicsBtn" onclick="switchTab('ethics')">
+        <span>2전시관: AI의 한계와 사람의 역할 토론장</span>
+      </button>
+    </nav>
+
+    <!-- ==================== [1전시관] AI 오류 사진 갤러리 & 원인 태그 ==================== -->
+    <section class="museum-section" id="gallerySection">
+      <div class="section-header-wrap">
+        <div class="section-title">
+          <span></span> <span>교실쓰레기 AI 오류 수집품 (<span id="museumCount">0</span>점)</span>
+        </div>
+        <a href="quest5.html" class="btn-back" style="background:#ede9fe; color:#6d28d9; border-color:#c4b5fd;">
+          QUEST 5 가서 오류 캡처해오기
+        </a>
+      </div>
+
+      <p style="font-size:14px; color:#64748b; margin-bottom:14px;">
+        같은 모둠 친구들이 전송한 오류 사진들을 보고, 왜 AI가 착각했는지 <strong>원인 태그</strong>를 직접 추가해보세요! (실시간 모둠 공유)
+      </p>
+
+      <!-- 오류 전시물 그리드 -->
+      <div class="museum-grid" id="museumGrid">
+        <div style="text-align:center; padding:32px; color:#94a3b8; font-size:15px; grid-column:1/-1;">
+          오류 전시물을 불러오는 중입니다...
         </div>
       </div>
-      <div class="preview-grid" id="preview-grid"></div>
-      <div class="progress-wrap" id="progress-wrap" style="display:none;">
-        <div class="progress-bar" id="progress-bar" style="width:0%;"></div>
+    </section>
+
+    <!-- ==================== [2전시관] AI 한계와 사람의 역할 한문장 게시판 ==================== -->
+    <section class="museum-section" id="ethicsSection" style="display:none;">
+      <!-- 1전시관 오류 원인 태그 분석 실시간 그래프 (전시관 2 맨 위) -->
+      <div class="tag-stats-chart-card">
+        <div class="tag-stats-header">
+          <div class="tag-stats-title">
+            <span>1전시관 오류 원인 태그 분석 그래프</span>
+          </div>
+          <span class="tag-stats-badge" id="totalTagsCountBadge">총 0개 태그 수집</span>
+        </div>
+        <p style="font-size:13.5px; color:#64748b; margin-bottom:16px;">
+          모둠원들이 1전시관에서 오류 사진들을 관찰하며 등록한 <strong>오류 원인 태그</strong>들의 선택 숫자를 집계한 실시간 분포 그래프입니다.
+        </p>
+        <div class="tag-chart-list" id="tagStatsChartContainer">
+          <div style="text-align:center; padding:24px; color:#94a3b8; font-size:14px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+            1전시관에서 오류 사진들을 확인하고 원인 태그를 추가해보세요! 태그 집계 결과가 그래프로 나타납니다.
+          </div>
+        </div>
       </div>
-      <div class="progress-text" id="upload-status"></div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <h3 style="margin:0;">☁️ 내가 올린 사진 (<span id="my-count">0</span>장)</h3>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="loadMyUploads()">🔄</button>
-        <a href="quest7.html" class="btn btn-primary" style="font-size:12px;padding:6px 12px;">라벨링하러 가기 →</a>
+      <div class="section-header-wrap">
+        <div class="section-title">
+          <span></span> <span>AI의 한계와 사람의 역할: 한 문장 발표 게시판</span>
+        </div>
+        <span style="font-size:13px; font-weight:800; background:#fef08a; color:#854d0e; padding:4px 10px; border-radius:12px;" id="thoughtCount">
+          우리 모둠 생각 0건
+        </span>
       </div>
-    </div>
-    <div id="my-uploads"><div style="text-align:center;padding:20px;color:var(--muted);">로딩 중...</div></div>
-  </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script>
-// Cloudinary 설정
-const CLOUDINARY_NAME   = 'dbthgzdfu';
-const CLOUDINARY_PRESET = 'vxhz699w';
-const TARGET_SIZE = 600;
-const QUALITY     = 0.75;
-const PARALLEL    = 5;
+      <p style="font-size:14px; color:#64748b; margin-bottom:16px;">
+        오류 분석을 통해 깨달은 <strong>인공지능의 한계</strong>와 <strong>인간의 책임과 역할</strong>을 한 문장으로 정리하여 모둠 게시판에 공유해봅시다.
+      </p>
 
-let currentUser=null, userData=null;
-let pendingFiles=[];
+      <!-- 문장 빌더 -->
+      <div class="reflection-builder-card">
+        <div class="sentence-template-row">
+          <div class="template-input-group">
+            <label class="template-input-label">① 인공지능(AI)의 한계점:</label>
+            <input 
+              type="text" 
+              id="aiLimitInput" 
+              class="template-input" 
+              value="" 
+              placeholder="인공지능(AI)이 가진 한계점을 빈칸에 직접 작성해보세요"
+              oninput="updateSentencePreview()"
+            >
+          </div>
 
-requireAuth(async (user)=>{
-  currentUser=user;
-  if(user.uid==='student'){
-    const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
-  } else if(user.uid==='admin'){
-    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
-  } else {
-    try {
-      const snap=await db.collection('users').where('id','==',user.id).get();
-      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
-      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
-    } catch(e){
-      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
-    }
-  }
-  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
-  document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-  loadMyUploads();
-});
+          <div class="template-input-group">
+            <label class="template-input-label">② 우리 사람(인간)의 책임과 역할:</label>
+            <input 
+              type="text" 
+              id="humanRoleInput" 
+              class="template-input" 
+              value="" 
+              placeholder="우리 사람(인간)이 해야 할 책임과 역할을 빈칸에 직접 작성해보세요"
+              oninput="updateSentencePreview()"
+            >
+          </div>
+        </div>
 
-// ── 600×600 리사이징 → Blob ──
-function resizeToBlob(file){
-  return new Promise(resolve=>{
-    const img=new Image();
-    const url=URL.createObjectURL(file);
-    img.onload=()=>{
-      const c=document.createElement('canvas');
-      c.width=c.height=TARGET_SIZE;
-      const ctx=c.getContext('2d');
-      ctx.fillStyle='#fff'; ctx.fillRect(0,0,TARGET_SIZE,TARGET_SIZE);
-      const s=Math.min(TARGET_SIZE/img.width,TARGET_SIZE/img.height);
-      const dw=img.width*s, dh=img.height*s;
-      ctx.drawImage(img,(TARGET_SIZE-dw)/2,(TARGET_SIZE-dh)/2,dw,dh);
-      URL.revokeObjectURL(url);
-      c.toBlob(blob=>resolve(blob),'image/jpeg',QUALITY);
+        <!-- 실시간 완성 프리뷰 -->
+        <div class="final-sentence-preview" id="sentencePreview">
+          "AI는 <span class="hl">____________________</span>하지만, 사람은 <span class="hl">____________________</span>해야 한다."
+        </div>
+
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn-submit-thought" onclick="submitReflection()">
+            우리 모둠 게시판에 게시하기 (+30 EXP)
+          </button>
+        </div>
+      </div>
+
+      <!-- 실시간 모둠 게시판 피드 -->
+      <div style="margin-top:20px;">
+        <h4 style="font-family:'Jua'; color:#1e293b; font-size:18px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <span></span> <span id="feedBoardTitle">우리 모둠('1모둠') 생각 나눔 게시판</span>
+        </h4>
+
+        <div class="reflection-feed-grid" id="reflectionFeedGrid">
+          <div style="text-align:center; padding:24px; color:#94a3b8; font-size:14px;">
+            모둠원들의 생각을 불러오는 중입니다...
+          </div>
+        </div>
+      </div>
+
+      <!-- 최종 완료 배지 -->
+      <div class="cert-box">
+        <div class="cert-icon"></div>
+        <h2 class="cert-title">QUEST 6: 오류박물관 큐레이션 완료!</h2>
+        <p style="font-size:15px; color:#4c1d95; font-weight:700; margin-bottom:18px;">
+          AI의 오류 원인을 날카롭게 분석하고 사람의 역할을 성공적으로 정립하여<br>
+          <strong>'오류 큐레이터'</strong> 배지를 획득했습니다!
+        </p>
+
+        <a href="main.html" class="btn-submit-thought" style="text-decoration:none; font-size:17px; padding:14px 32px;">
+          퀘스트지도가기
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 토스트 알림창 -->
+  <div class="toast-msg" id="toastMsg">알림 메시지</div>
+
+  <!-- Firebase 모듈 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, increment, serverTimestamp, query, where, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+      apiKey: "AIzaSyCdx4xwK3XIzgw_4hFEohnMe64dc4LDB00", 
+      authDomain: "elemeelementary-textbook.firebaseapp.com", 
+      projectId: "elemeelementary-textbook", 
+      storageBucket: "elemeelementary-textbook.firebasestorage.app", 
+      messagingSenderId: "713149004420", 
+      appId: "1:713149004420:web:8483273681e16f5a8fa0d1" 
     };
-    img.onerror=()=>{URL.revokeObjectURL(url);resolve(null);};
-    img.src=url;
-  });
-}
 
-// ── Cloudinary 업로드 ──
-async function uploadToCloudinary(blob, fileName){
-  const form=new FormData();
-  form.append('file',blob,fileName);
-  form.append('upload_preset',CLOUDINARY_PRESET);
-  form.append('folder',`ai-class/${currentUser.id||currentUser.uid||'unknown'}`);
-  const res=await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME}/image/upload`,
-    {method:'POST',body:form}
-  );
-  if(!res.ok) throw new Error('Cloudinary 오류: '+res.status);
-  return await res.json();
-}
+    let db = null;
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase offline:", e);
+    }
 
-// ── 드래그앤드롭 ──
-function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('dragover');}
-function dragLeave(e){document.getElementById('upload-zone').classList.remove('dragover');}
-function dropFiles(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('dragover');handleFiles(e.dataTransfer.files);}
+    const studentId = localStorage.getItem("elementary_studentId") || "guest";
+    const studentName = localStorage.getItem("elementary_studentName") || "탐정 학생";
+    const teamCode = localStorage.getItem("elementary_teamCode") || "1모둠";
 
-function handleFiles(files){
-  const arr=Array.from(files).filter(f=>f.type.startsWith('image/'));
-  if(!arr.length){showAlert('이미지 파일만 가능합니다.','error');return;}
-  if(pendingFiles.length+arr.length>20){showAlert('최대 20장까지 가능합니다.','error');return;}
-  arr.forEach(file=>{
-    const id='f'+Date.now()+Math.random().toString(36).slice(2);
-    pendingFiles.push({id,file,status:'pending',blob:null});
-  });
-  renderPreview();
-  document.getElementById('pending-card').style.display='block';
-  // 선택 즉시 백그라운드 리사이징
-  pendingFiles.filter(f=>!f.blob&&f.status==='pending').forEach(async pf=>{
-    pf.blob=await resizeToBlob(pf.file);
-  });
-}
+    // 학생 정보 표시
+    const studentDisplay = document.getElementById('studentDisplay');
+    if (studentDisplay) {
+      studentDisplay.textContent = `${studentName} (${teamCode})`;
+    }
+    const feedBoardTitle = document.getElementById('feedBoardTitle');
+    if (feedBoardTitle) {
+      feedBoardTitle.textContent = `우리 모둠('${teamCode}') 생각 나눔 게시판`;
+    }
 
-function renderPreview(){
-  document.getElementById('pending-count').textContent=pendingFiles.length;
-  document.getElementById('preview-grid').innerHTML=pendingFiles.map(pf=>{
-    const url=URL.createObjectURL(pf.file);
-    const sc=pf.status==='done'?'status-done':pf.status==='error'?'status-error':'status-pending';
-    const st=pf.status==='done'?'✅ 완료':pf.status==='error'?'❌ 오류':'⏳ 대기';
-    return `<div class="preview-item">
-      <img src="${url}">
-      ${pf.status==='pending'?`<button class="remove-btn" onclick="removeFile('${pf.id}')">✕</button>`:''}
-      <div class="status-badge ${sc}" id="badge-${pf.id}">${st}</div>
-    </div>`;
-  }).join('');
-}
+    // 전역 상태
+    window.state = {
+      score: parseInt(localStorage.getItem("elementary_score") || "0", 10),
+      soundEnabled: true,
+      currentTab: 'gallery'
+    };
 
-function removeFile(id){
-  pendingFiles=pendingFiles.filter(f=>f.id!==id);
-  if(!pendingFiles.length) document.getElementById('pending-card').style.display='none';
-  else renderPreview();
-}
-function clearPending(){pendingFiles=[];document.getElementById('pending-card').style.display='none';}
+    document.getElementById('scoreDisplay').textContent = `${window.state.score} EXP`;
 
-async function uploadAll(){
-  const toUpload=pendingFiles.filter(f=>f.status==='pending');
-  if(!toUpload.length) return;
-  const btn=document.getElementById('upload-btn');
-  btn.disabled=true;
-  document.getElementById('progress-wrap').style.display='block';
+    // 오디오 사운드
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    window.playSound = function(type) {
+      if (!window.state.soundEnabled) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
 
-  const userId=currentUser.uid==='student'
-    ?('temp_'+(userData.charName||'익명'))
-    :currentUser.uid;
-  const userName=userData.name||userData.charName||'익명';
-  let done=0; const total=toUpload.length;
-
-  const updateStatus=()=>{
-    document.getElementById('progress-bar').style.width=(done/total*100)+'%';
-    document.getElementById('upload-status').textContent=
-      `☁️ 업로드 중... ${done}/${total}장 (${Math.round(done/total*100)}%)`;
-  };
-  updateStatus();
-
-  for(let i=0;i<toUpload.length;i+=PARALLEL){
-    const chunk=toUpload.slice(i,i+PARALLEL);
-    await Promise.all(chunk.map(async pf=>{
-      try{
-        const badge=document.getElementById('badge-'+pf.id);
-        if(badge){badge.className='status-badge status-pending';badge.textContent='⚙️ 변환중';}
-        const blob=pf.blob||await resizeToBlob(pf.file);
-        if(!blob) throw new Error('변환 실패');
-        if(badge){badge.textContent='☁️ 업로드';}
-        const fileName=`${Date.now()}_${pf.file.name.replace(/\s/g,'_')}`;
-        const result=await uploadToCloudinary(blob,fileName);
-        // Firestore 저장
-        await db.collection('uploads').add({
-          userId, userName,
-          fileName:result.public_id,
-          originalName:pf.file.name,
-          url:result.secure_url,
-          cloudinaryId:result.public_id,
-          labeled:false,
-          width:TARGET_SIZE, height:TARGET_SIZE,
-          created_at:new Date().toISOString(),
+      if (type === 'click') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+        gain.gain.setValueAtTime(0.18, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now); osc.stop(now + 0.08);
+      } else if (type === 'tag') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(650, now);
+        osc.frequency.exponentialRampToValueAtTime(1100, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      } else if (type === 'fanfare') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g); g.connect(audioCtx.destination);
+          o.frequency.setValueAtTime(freq, now + i * 0.12);
+          g.gain.setValueAtTime(0.25, now + i * 0.12);
+          g.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.25);
+          o.start(now + i * 0.12); o.stop(now + i * 0.12 + 0.25);
         });
-        pf.status='done';
-        if(badge){badge.className='status-badge status-done';badge.textContent='✅ 완료';}
-      }catch(e){
-        pf.status='error';
-        const badge=document.getElementById('badge-'+pf.id);
-        if(badge){badge.className='status-badge status-error';badge.textContent='❌ 오류';}
-        console.error(e);
       }
-      done++; updateStatus();
-    }));
-  }
+    };
 
-  document.getElementById('upload-status').textContent=`✅ ${done}장 업로드 완료!`;
-  document.getElementById('progress-bar').style.width='100%';
-  btn.disabled=false;
-  loadMyUploads();
+    window.toggleSound = function() {
+      window.state.soundEnabled = !window.state.soundEnabled;
+      document.getElementById('soundToggle').textContent = window.state.soundEnabled ? '소리 ON' : '소리 OFF';
+    };
 
-  const q=(userData.quests||{});
-  if(!q.q6_done){
-    const xp = 20;
-    userData.quests=userData.quests||{};
-    userData.quests.q6_done=true;
-    if(currentUser.uid==='student'){
-      userData.score=(userData.score||0)+xp;
-      localStorage.setItem('tempUserData',JSON.stringify(userData));
-    } else {
-      await addScore(currentUser.uid,xp,'퀘스트6 첫 업로드');
-      await db.collection('users').doc(currentUser.uid).set({
-        quests: { q6_done: true }
-      }, { merge: true });
+    window.showToast = function(msg) {
+      const toast = document.getElementById('toastMsg');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    };
+
+    window.addScore = function(pts) {
+      window.state.score += pts;
+      document.getElementById('scoreDisplay').textContent = `${window.state.score} EXP`;
+      localStorage.setItem("elementary_score", window.state.score);
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    await unlockBadge('data_hunter', currentUser, userData);
-    showAlert('🎉 퀘스트 6 완료! +20점! (데이터 사냥꾼 📷 뱃지 획득)','success');
-  }
-}
 
-async function loadMyUploads(){
-  const userId=currentUser.uid==='student'
-    ?('temp_'+(userData.charName||'익명'))
-    :currentUser.uid;
-  try{
-    const snap=await db.collection('uploads')
-      .where('userId','==',userId)
-      .orderBy('created_at','desc').get();
-    document.getElementById('my-count').textContent=snap.size;
-    if(snap.empty){
-      document.getElementById('my-uploads').innerHTML=
-        `<div style="text-align:center;padding:20px;color:var(--muted);">아직 없어요! 사진을 올려보세요 📸</div>`;
-      return;
+    // 1전시관 수집 아이템 보관 (2전시관 태그 통계 그래프 연동)
+    let currentMuseumItems = [];
+
+    // 2전시관 상단: 1전시관 오류 원인 태그 통계 그래프 렌더링
+    function renderTagStatsChart() {
+      const chartContainer = document.getElementById("tagStatsChartContainer");
+      const totalTagsBadge = document.getElementById("totalTagsCountBadge");
+      if (!chartContainer) return;
+
+      const items = (currentMuseumItems && currentMuseumItems.length) ? currentMuseumItems : SAMPLE_ERRORS;
+
+      // 태그별 선택 횟수 집계
+      const tagCounts = {};
+      let totalCount = 0;
+
+      items.forEach(item => {
+        if (item.tags && Array.isArray(item.tags)) {
+          item.tags.forEach(tag => {
+            const cleanTag = String(tag).trim();
+            if (!cleanTag) return;
+            tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
+            totalCount++;
+          });
+        }
+      });
+
+      if (totalTagsBadge) {
+        totalTagsBadge.textContent = `총 ${totalCount}개 태그 수집`;
+      }
+
+      const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+
+      if (sortedTags.length === 0) {
+        chartContainer.innerHTML = `
+          <div style="text-align:center; padding:24px; color:#94a3b8; font-size:14px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+            아직 등록된 오류 원인 태그가 없습니다.<br>
+            1전시관에서 오류 사진들을 확인하고 원인 태그를 추가해보세요!
+          </div>
+        `;
+        return;
+      }
+
+      const maxCount = sortedTags[0][1];
+
+      chartContainer.innerHTML = sortedTags.map(([tag, count], idx) => {
+        const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+        const barWidth = maxCount > 0 ? Math.max(10, Math.round((count / maxCount) * 100)) : 10;
+        const isTop = (idx === 0);
+
+        return `
+          <div class="tag-chart-row">
+            <div class="tag-chart-label-group" title="${escapeHtml(tag)}">
+              <span class="tag-rank-badge ${isTop ? 'top-rank' : ''}">${idx + 1}위</span>
+              <span class="tag-chart-name">${escapeHtml(tag)}</span>
+            </div>
+            <div class="tag-chart-bar-area">
+              <div class="tag-chart-bar-track">
+                <div class="tag-chart-bar-fill ${isTop ? 'top-bar' : ''}" style="width: ${barWidth}%;"></div>
+              </div>
+              <div class="tag-chart-value-group">
+                <strong class="tag-count-text">${count}회</strong>
+                <span class="tag-pct-text">(${pct}%)</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
-    document.getElementById('my-uploads').innerHTML=snap.docs.map(doc=>{
-      const d=doc.data();
-      const date=d.created_at?.slice(0,16).replace('T',' ')||'';
-      return `<div class="uploaded-item">
-        <img class="uploaded-thumb" src="${d.url}" onerror="this.style.opacity='0.3'">
-        <div style="flex:1;min-width:80px;overflow:hidden;">
-          <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.originalName||'파일'}</div>
-          <div style="font-size:10px;color:var(--muted);">${d.width||600}×${d.height||600}px</div>
-        </div>
-        <div style="font-size:11px;padding:2px 8px;border-radius:5px;flex-shrink:0;
-          ${d.labeled?'background:rgba(104,211,145,0.15);color:#68d391;':'background:rgba(246,173,85,0.15);color:#f6ad55;'}">
-          ${d.labeled?'✅ 완료':'⏳ 미완료'}
-        </div>
-        <div style="font-size:11px;color:var(--muted);flex-shrink:0;">${date}</div>
-        <button class="del-btn" onclick="deleteUpload('${doc.id}','${d.cloudinaryId||''}')">🗑️</button>
-      </div>`;
-    }).join('');
-  }catch(e){
-    document.getElementById('my-uploads').innerHTML=
-      `<div style="color:#fc8181;padding:16px;">오류: ${e.message}</div>`;
-  }
-}
 
-async function deleteUpload(docId){
-  if(!confirm('이 사진을 삭제할까요?')) return;
-  try{
-    await db.collection('uploads').doc(docId).delete();
-    loadMyUploads();
-  }catch(e){alert('삭제 실패: '+e.message);}
-}
+    // 탭 전환
+    window.switchTab = function(tabName) {
+      window.playSound('click');
+      window.state.currentTab = tabName;
+      document.getElementById('tabGalleryBtn').classList.toggle('active', tabName === 'gallery');
+      document.getElementById('tabEthicsBtn').classList.toggle('active', tabName === 'ethics');
+      document.getElementById('gallerySection').style.display = tabName === 'gallery' ? 'block' : 'none';
+      document.getElementById('ethicsSection').style.display = tabName === 'ethics' ? 'block' : 'none';
 
-function showAlert(msg,type='info'){
-  const c={success:'alert-success',error:'alert-error'};
-  document.getElementById('main-alert').innerHTML=`<div class="alert ${c[type]||''}">${msg}</div>`;
-  setTimeout(()=>{const el=document.getElementById('main-alert');if(el)el.innerHTML='';},5000);
-}
-</script>
+      if (tabName === 'ethics') {
+        renderTagStatsChart();
+      }
+    };
+
+    // 기본 샘플 오류 데이터 (전송된 데이터가 없을 경우 기본 전시)
+    const SAMPLE_ERRORS = [
+      {
+        id: 'sample_1',
+        studentName: '에코탐정단 예시',
+        className: '일반 종이 (Paper)',
+        confidence: '58.4',
+        imageData: 'images/quest1-q3.png',
+        feedback: '벽 뒤에 가려져 모서리 일부만 보이자 일반 종이상자로 오인식함',
+        tags: ['#가려짐/일부노출', '#모서리삼각날개미인식', '#우유갑오분류']
+      },
+      {
+        id: 'sample_2',
+        studentName: '에코탐정단 예시',
+        className: '건전지 (Battery)',
+        confidence: '62.1',
+        imageData: 'images/quest1-q2.png',
+        feedback: '캔 뚜껑의 은색 손잡이 부분만 크게 확대되자 금속 조각/건전지로 착각함',
+        tags: ['#부분확대/전체미확인', '#금속반사광', '#캔류오인식']
+      },
+      {
+        id: 'sample_3',
+        studentName: '에코탐정단 예시',
+        className: '오이 / 나뭇잎',
+        confidence: '51.3',
+        imageData: 'images/quest1-q1.png',
+        feedback: '초록색 페트병 사진이 흐려져 경계선 픽셀이 뭉개지자 엉뚱한 식물로 오판',
+        tags: ['#초점흐림/화질저하', '#색상만단순인식', '#페트병오분류']
+      }
+    ];
+
+    // 실시간 오류박물관 갤러리 구독
+    function subscribeMuseumItems() {
+      const grid = document.getElementById("museumGrid");
+      const countEl = document.getElementById("museumCount");
+
+      if (db && teamCode) {
+        const q = query(collection(db, "quest6_museum"), where("teamCode", "==", teamCode));
+        onSnapshot(q, (snapshot) => {
+          let items = [];
+          snapshot.forEach(docSnap => items.push({ id: docSnap.id, ...docSnap.data() }));
+
+          // 로컬 백업과 샘플 결합
+          const localList = JSON.parse(localStorage.getItem("quest6_museum_local") || "[]");
+          const merged = [...items, ...localList];
+          
+          // 중복 ID 제거
+          const uniqueMap = new Map();
+          merged.forEach(item => {
+            if (item.id && !uniqueMap.has(item.id)) uniqueMap.set(item.id, item);
+          });
+          
+          let displayList = Array.from(uniqueMap.values());
+          if (displayList.length === 0) {
+            displayList = SAMPLE_ERRORS;
+          }
+
+          currentMuseumItems = displayList;
+
+          if (countEl) countEl.textContent = displayList.length;
+
+          renderMuseumGrid(displayList);
+          renderTagStatsChart();
+        }, (err) => {
+          console.warn("Museum onSnapshot error:", err);
+          currentMuseumItems = SAMPLE_ERRORS;
+          renderMuseumGrid(SAMPLE_ERRORS);
+          renderTagStatsChart();
+        });
+      } else {
+        currentMuseumItems = SAMPLE_ERRORS;
+        renderMuseumGrid(SAMPLE_ERRORS);
+        renderTagStatsChart();
+      }
+    }
+
+    function renderMuseumGrid(items) {
+      const grid = document.getElementById("museumGrid");
+      if (!grid) return;
+
+      grid.innerHTML = items.map(item => {
+        const tags = (item.tags && Array.isArray(item.tags)) ? item.tags : [];
+        const isSample = item.id && item.id.startsWith('sample_');
+
+        return `
+          <div class="museum-card" id="card-${item.id}">
+            <div class="museum-img-wrap">
+              <img src="${item.imageData || 'images/quest1-q1.png'}" alt="오류 캡처 사진" onerror="this.src='images/quest1-q1.png'">
+            </div>
+
+            <div class="museum-card-info">
+              <div class="detection-badge">
+                <span>AI 오인식:</span>
+                <strong>${item.className || '오류 품목'}</strong>
+                <span>(${parseFloat(item.confidence || 50).toFixed(1)}%)</span>
+              </div>
+              <div class="uploader-text">
+                수집 탐정: <strong>${item.studentName || '탐정'}</strong>
+              </div>
+
+              <!-- 태그 목록 -->
+              <div style="font-size:12px; font-weight:800; color:#5b21b6; margin-top:4px;">오류 원인 태그:</div>
+              <div class="tags-container" id="tags-${item.id}">
+                ${tags.length ? tags.map(t => `<span class="tag-badge">${t}</span>`).join('') : '<span style="font-size:12px; color:#94a3b8;">등록된 태그 없음</span>'}
+              </div>
+
+              <!-- 빠른 태그 추가 칩 -->
+              <div class="quick-tags-wrap">
+                <span class="quick-tag-chip" onclick="addQuickTag('${item.id}', '#가려짐/일부노출')">+ 가려짐</span>
+                <span class="quick-tag-chip" onclick="addQuickTag('${item.id}', '#구겨짐/찌그러짐')">+ 구겨짐</span>
+                <span class="quick-tag-chip" onclick="addQuickTag('${item.id}', '#조명/반사광')">+ 조명반사</span>
+                <span class="quick-tag-chip" onclick="addQuickTag('${item.id}', '#배경혼동')">+ 배경혼동</span>
+              </div>
+
+              <!-- 직접 태그 입력 -->
+              <div class="tag-add-form">
+                <input type="text" id="tagInput-${item.id}" class="tag-input" placeholder="오류 원인 태그 직접 입력">
+                <button class="btn-add-tag" onclick="submitCustomTag('${item.id}')">태그 추가</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 태그 추가 함수 (모둠 실시간 동기화)
+    window.addQuickTag = async function(docId, tagText) {
+      window.playSound('tag');
+      window.addScore(10);
+
+      // DOM 즉시 반영
+      const container = document.getElementById(`tags-${docId}`);
+      if (container) {
+        const newTag = document.createElement('span');
+        newTag.className = 'tag-badge';
+        newTag.textContent = tagText;
+        container.appendChild(newTag);
+      }
+
+      // 로컬 currentMuseumItems에도 추가하여 2전시관 그래프 실시간 갱신
+      const targetItem = currentMuseumItems.find(it => it.id === docId);
+      if (targetItem) {
+        if (!targetItem.tags) targetItem.tags = [];
+        targetItem.tags.push(tagText);
+      }
+      renderTagStatsChart();
+
+      if (db && !docId.startsWith('sample_') && !docId.startsWith('local_')) {
+        try {
+          await updateDoc(doc(db, "quest6_museum", docId), {
+            tags: arrayUnion(tagText)
+          });
+        } catch(e) {
+          console.warn("Tag update failed:", e);
+        }
+      }
+
+      showToast(`'${tagText}' 원인 태그가 모둠에 추가되었습니다! (+10 EXP)`);
+    };
+
+    window.submitCustomTag = function(docId) {
+      const input = document.getElementById(`tagInput-${docId}`);
+      if (!input || !input.value.trim()) return;
+
+      let tagVal = input.value.trim();
+      if (!tagVal.startsWith('#')) tagVal = '#' + tagVal;
+
+      window.addQuickTag(docId, tagVal);
+      input.value = '';
+    };
+
+    // 문장 실시간 프리뷰 갱신 (빈칸 유지)
+    window.updateSentencePreview = function() {
+      const limitInput = document.getElementById('aiLimitInput');
+      const roleInput = document.getElementById('humanRoleInput');
+      const preview = document.getElementById('sentencePreview');
+      if (!preview) return;
+
+      const limit = limitInput ? limitInput.value.trim() : "";
+      const role = roleInput ? roleInput.value.trim() : "";
+
+      const limitDisplay = limit ? escapeHtml(limit) : "____________________";
+      const roleDisplay = role ? escapeHtml(role) : "____________________";
+
+      preview.innerHTML = `"AI는 <span class="hl">${limitDisplay}</span>하지만, 사람은 <span class="hl">${roleDisplay}</span>해야 한다."`;
+    };
+
+    // 한 문장 게시글 제출
+    window.submitReflection = async function() {
+      const limit = document.getElementById('aiLimitInput').value.trim();
+      const role = document.getElementById('humanRoleInput').value.trim();
+
+      if (!limit || !role) {
+        alert("AI의 한계와 사람의 역할을 모두 입력해주세요!");
+        return;
+      }
+
+      window.playSound('fanfare');
+      window.addScore(30);
+
+      const sentence = `"AI는 ${limit}하지만, 사람은 ${role}해야 한다."`;
+
+      if (db && studentId && studentId !== "guest") {
+        try {
+          await addDoc(collection(db, "quest6_reflections"), {
+            studentId,
+            studentName,
+            teamCode,
+            limit,
+            role,
+            sentence,
+            reactions: { like: 1, think: 0, cheer: 0 },
+            createdAt: serverTimestamp()
+          });
+
+          await updateDoc(doc(db, "students", studentId), {
+            score: increment(30),
+            badge: "오류 큐레이터",
+            q6Done: true,
+            q6_done: true
+          });
+        } catch(e) {
+          console.warn("Reflection save err:", e);
+        }
+      }
+
+      localStorage.setItem("quest6_completed", "true");
+      localStorage.setItem("elementary_q6_done", "true");
+      localStorage.setItem("elementary_badge", "오류 큐레이터");
+      showToast("우리 모둠 생각 게시판에 나의 한 문장이 공유되었습니다! (+30 EXP)");
+    };
+
+    // 실시간 모둠 생각 피드 구독
+    function subscribeReflections() {
+      if (!db || !teamCode) return;
+
+      const q = query(collection(db, "quest6_reflections"), where("teamCode", "==", teamCode));
+      onSnapshot(q, (snapshot) => {
+        const feedGrid = document.getElementById("reflectionFeedGrid");
+        const countEl = document.getElementById("thoughtCount");
+        if (!feedGrid) return;
+
+        if (snapshot.empty) {
+          feedGrid.innerHTML = `<div style="text-align:center; padding:24px; color:#94a3b8; font-size:14px;">아직 등록된 모둠원들의 생각이 없습니다. 상단에서 첫 번째 한 문장을 게시해보세요!</div>`;
+          if (countEl) countEl.textContent = `우리 모둠 생각 0건`;
+          return;
+        }
+
+        if (countEl) countEl.textContent = `우리 모둠 생각 ${snapshot.size}건`;
+
+        const items = [];
+        snapshot.forEach(docSnap => items.push({ id: docSnap.id, ...docSnap.data() }));
+        items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        feedGrid.innerHTML = items.map(item => {
+          const isMe = item.studentId === studentId;
+          const rx = item.reactions || { like: 0, think: 0, cheer: 0 };
+          return `
+            <div class="reflection-card ${isMe ? 'is-me' : ''}">
+              <div class="reflection-header">
+                <div class="author-name">
+                  <span>${isMe ? '나 (' + item.studentName + ')' : '' + item.studentName}</span>
+                </div>
+                ${isMe ? `<button class="del-btn" onclick="deleteReflection('${item.id}')">삭제</button>` : ''}
+              </div>
+
+              <div class="reflection-body">
+                ${item.sentence}
+              </div>
+
+              <div class="reflection-footer">
+                <div class="reaction-btns">
+                  <button class="btn-react" onclick="reactReflection('${item.id}', 'like')">공감 ${rx.like || 0}</button>
+                  <button class="btn-react" onclick="reactReflection('${item.id}', 'think')">깊은 생각 ${rx.think || 0}</button>
+                  <button class="btn-react" onclick="reactReflection('${item.id}', 'cheer')">멋져요 ${rx.cheer || 0}</button>
+                </div>
+                <div>${item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '방금 전'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      });
+    }
+
+    window.reactReflection = async function(docId, reactKey) {
+      window.playSound('click');
+      if (!db) return;
+      try {
+        const ref = doc(db, "quest6_reflections", docId);
+        await updateDoc(ref, {
+          [`reactions.${reactKey}`]: increment(1)
+        });
+      } catch(e) {
+        console.warn(e);
+      }
+    };
+
+    window.deleteReflection = async function(docId) {
+      if (!confirm("작성한 한 문장 게시글을 삭제할까요?")) return;
+      if (!db) return;
+      try {
+        await updateDoc(doc(db, "quest6_reflections", docId), {
+          teamCode: "_deleted_"
+        });
+        showToast("삭제되었습니다.");
+      } catch(e) {
+        alert("삭제 실패: " + e.message);
+      }
+    };
+
+    // 초기화 실행
+    document.addEventListener('DOMContentLoaded', () => {
+      subscribeMuseumItems();
+      subscribeReflections();
+      updateSentencePreview();
+      renderTagStatsChart();
+    });
+  </script>
 </body>
 </html>

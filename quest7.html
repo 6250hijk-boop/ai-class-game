@@ -2,869 +2,1504 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <title>퀘스트 7: 라벨링하기</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QUEST 7: 우리 모둠 실천 규약 초안 입력하기</title>
+  <!-- 저작권 무료 폰트: Pretendard 및 Google Fonts Jua -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;font-family:'Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;}
+    :root {
+      --bg-blue: rgb(14, 70, 191);
+      --card-navy: rgb(6, 27, 80);
+      --btn-yellow: rgb(254, 218, 53);
+      --btn-yellow-hover: #fde047;
+      --text-white: #FFFFFF;
+      --text-white-dim: rgba(255, 255, 255, 0.85);
+      --answer-bg: #FFFFFF;
+      --answer-text: #0F172A;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      --radius: 22px;
+    }
 
-    /* ── 선택 화면 ── */
-    .select-wrap{max-width:600px;margin:0 auto;padding:clamp(20px,4vw,40px) clamp(16px,3vw,24px);}
-    .select-title{font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);color:#a78bfa;margin-bottom:6px;}
-    .select-desc{font-size:clamp(13px,2.3vw,14px);color:var(--muted);margin-bottom:28px;line-height:1.6;}
-    .menu-card{display:flex;align-items:center;gap:clamp(14px,3vw,20px);
-      background:var(--card);border:1px solid var(--border);border-radius:16px;
-      padding:clamp(16px,3vw,22px);margin-bottom:14px;cursor:pointer;
-      transition:all .3s;text-decoration:none;}
-    .menu-card:hover{border-color:#a78bfa;background:rgba(167,139,250,0.08);transform:translateY(-2px);}
-    .menu-icon{font-size:clamp(32px,7vw,44px);flex-shrink:0;}
-    .menu-num{font-family:'Jua',sans-serif;font-size:clamp(11px,2vw,13px);color:#a78bfa;margin-bottom:4px;}
-    .menu-name{font-family:'Jua',sans-serif;font-size:clamp(16px,3.5vw,20px);color:var(--text);margin-bottom:4px;}
-    .menu-desc{font-size:clamp(12px,2.2vw,13px);color:var(--muted);line-height:1.5;}
-    .menu-arrow{margin-left:auto;font-size:20px;color:rgba(167,139,250,0.5);flex-shrink:0;}
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-    /* ── 라벨링 도구 ── */
-    .labeler-layout{display:flex;height:100vh;flex-direction:column;}
-    .top-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
-    .top-bar .title{font-family:'Jua',sans-serif;font-size:clamp(13px,2.5vw,16px);color:#a78bfa;}
-    .content-area{display:flex;flex:1;overflow:hidden;}
-    .img-sidebar{width:clamp(70px,15vw,140px);background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
-    .img-thumb{cursor:pointer;border-bottom:1px solid var(--border);position:relative;}
-    .img-thumb img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
-    .img-thumb.active{outline:3px solid #a78bfa;}
-    .img-thumb .labeled-dot{position:absolute;top:4px;right:4px;width:10px;height:10px;border-radius:50%;background:#68d391;}
-    .img-thumb .num{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:white;font-size:10px;padding:2px 4px;text-align:center;}
-    .canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
-    .canvas-wrap{flex:1;position:relative;overflow:hidden;background:#000;cursor:crosshair;}
-    #img-canvas{position:absolute;top:0;left:0;}
-    #draw-canvas{position:absolute;top:0;left:0;cursor:crosshair;}
-    .right-panel{width:clamp(140px,20vw,200px);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-    .panel-section{padding:10px;border-bottom:1px solid var(--border);}
-    .panel-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
-    .class-btn{width:100%;padding:7px 10px;margin-bottom:5px;border:2px solid transparent;border-radius:8px;color:white;font-size:clamp(11px,1.8vw,12px);cursor:pointer;font-family:inherit;text-align:left;transition:all .2s;display:flex;align-items:center;gap:6px;}
-    .class-btn.active{border-color:white;font-weight:700;}
-    .class-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
-    .boxes-list{flex:1;overflow-y:auto;padding:8px;}
-    .box-item{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;margin-bottom:4px;cursor:pointer;font-size:11px;border:1px solid transparent;}
-    .box-item:hover{background:rgba(255,255,255,0.05);}
-    .box-item.selected{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);}
-    .box-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
-    .box-del{margin-left:auto;background:rgba(252,129,129,0.15);border:none;border-radius:4px;padding:2px 6px;color:var(--red);font-size:10px;cursor:pointer;}
-    .bottom-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
-    .tool-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,0.07);color:var(--text);font-size:clamp(11px,2vw,13px);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;}
-    .tool-btn:hover{background:rgba(255,255,255,0.12);}
-    .tool-btn.active{background:rgba(167,139,250,0.2);border-color:#a78bfa;color:#a78bfa;}
-    .save-status{font-size:11px;color:var(--muted);margin-left:auto;}
-    .empty-canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted);}
+    body {
+      background-color: var(--bg-blue);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(6, 27, 80, 0.5), transparent 40%),
+        linear-gradient(to bottom, rgb(14, 70, 191), rgb(10, 52, 148));
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    /* ── 튜토리얼 ── */
-    .tutorial-wrap{max-width:680px;margin:0 auto;padding:clamp(16px,3vw,28px);}
-    .tutorial-step{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:clamp(16px,3vw,22px);margin-bottom:14px;}
-    .tutorial-step h3{font-size:clamp(15px,2.8vw,17px);margin:0 0 10px;color:#a78bfa;display:flex;align-items:center;gap:8px;}
-    .tutorial-step p{font-size:clamp(13px,2.3vw,14px);color:var(--muted);line-height:1.7;margin:0 0 10px;}
-    .tutorial-img{width:100%;border-radius:10px;border:1px solid var(--border);margin-top:10px;}
-    .tip-box{background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:8px;padding:10px 14px;font-size:13px;color:rgba(99,179,237,0.9);margin-top:8px;}
+    header {
+      background: rgba(6, 27, 80, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-    /* ── 연습하기 ── */
-    .practice-wrap{max-width:700px;margin:0 auto;padding:clamp(16px,3vw,28px);}
-    .practice-canvas-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#1a2235;margin-bottom:14px;border:1px solid var(--border);}
-    .practice-canvas-wrap canvas{width:100%;display:block;}
-    .practice-guide{background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:10px;padding:12px 16px;font-size:13px;color:#a78bfa;margin-bottom:12px;line-height:1.6;}
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-    @media(max-width:480px){.select-wrap,.tutorial-wrap,.practice-wrap{padding:12px;}}
+    .header-logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      transition: transform 0.2s;
+    }
+
+    .header-logo-link:hover {
+      transform: scale(1.04);
+    }
+
+    .header-bs-logo {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .btn-quest-map {
+      background: var(--btn-yellow);
+      border: 2px solid #eab308;
+      color: #0F172A;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: 'Jua', sans-serif;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-weight: bold;
+    }
+
+    .btn-quest-map:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-1px);
+    }
+
+    .header-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+      color: var(--text-white);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .team-badge {
+      background: rgba(14, 70, 191, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .score-badge {
+      background: rgba(6, 27, 80, 0.8);
+      border: 2px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .step-nav {
+      background: rgba(6, 27, 80, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      overflow-x: auto;
+    }
+
+    .step-btn {
+      padding: 10px 24px;
+      border-radius: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: #FFFFFF;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: 'Jua', sans-serif;
+    }
+
+    .step-btn:hover {
+      background: #fef08a;
+    }
+
+    .step-btn.active {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border-color: #eab308;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      font-weight: bold;
+    }
+
+    .step-btn.done {
+      background: #fffbeb;
+      border-color: var(--btn-yellow);
+    }
+
+    .main-container {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+      flex: 1;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--card-navy);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      animation: fadeIn 0.4s ease-out;
+      color: var(--text-white);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 24px;
+      color: var(--text-white);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-desc {
+      color: var(--text-white-dim);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* 1단계 2개 입력칸 전용 스타일 */
+    .form-group-item {
+      background: rgba(14, 70, 191, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .form-label-num {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Jua', sans-serif;
+      font-size: 19px;
+      color: var(--btn-yellow);
+      margin-bottom: 10px;
+    }
+
+    .badge-num-circle {
+      width: 28px;
+      height: 28px;
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .rule-textarea {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #0F172A;
+      outline: none;
+      background: #FFFFFF;
+      transition: all 0.2s;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .rule-textarea:focus {
+      border-color: var(--btn-yellow);
+      background: #fffbeb;
+      box-shadow: 0 0 0 4px rgba(254, 218, 53, 0.25);
+    }
+
+    /* 내가 작성한 글 미리보기 카드 */
+    .my-post-preview-card {
+      background: rgba(14, 70, 191, 0.35);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 18px;
+      padding: 22px;
+      margin-top: 24px;
+      position: relative;
+      animation: fadeIn 0.3s ease-out;
+      color: var(--text-white);
+    }
+
+    .my-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .my-preview-tag {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    .btn-delete-my-post {
+      background: #FFEBEE;
+      color: #C62828;
+      border: 1.5px solid #FFCDD2;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-delete-my-post:hover {
+      background: #FFCDD2;
+    }
+
+    .my-rule-display-box {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #cbd5e1;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #0F172A;
+    }
+
+    .my-reason-display-box {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: #0F172A;
+      border: 1px solid #cbd5e1;
+      line-height: 1.5;
+    }
+
+    /* 2단계 실시간 게시판 카드 */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .board-feed-card {
+      background: rgba(14, 70, 191, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      color: var(--text-white);
+    }
+
+    .board-feed-card:hover {
+      border-color: var(--btn-yellow);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .board-feed-card.my-card {
+      border-color: var(--btn-yellow);
+      background: rgba(6, 27, 80, 0.6);
+    }
+
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .author-badge-pill {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-time-text {
+      font-size: 12px;
+      color: var(--text-white-dim);
+    }
+
+    .card-rule-content {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #0F172A;
+    }
+
+    .card-reason-content {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #0F172A;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    /* 좋아요 액션 바 및 버튼 */
+    .card-action-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .btn-like-post {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #FFFFFF;
+      color: #0F172A;
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-like-post:hover {
+      background: var(--btn-yellow);
+      border-color: #eab308;
+      color: #0F172A;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-like-post.liked {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border-color: #eab308;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .like-count-badge {
+      background: rgba(0, 0, 0, 0.1);
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .btn-like-post:not(.liked) .like-count-badge {
+      background: #e2e8f0;
+      color: #0F172A;
+    }
+
+    .rank-badge {
+      font-family: 'Jua', sans-serif;
+      font-size: 12px;
+      padding: 3px 9px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      font-weight: 800;
+    }
+
+    .rank-badge.rank-1 {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: 1.5px solid #eab308;
+    }
+
+    .rank-badge.rank-2 {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1.5px solid #CBD5E1;
+    }
+
+    .rank-badge.rank-3 {
+      background: #FFEDD5;
+      color: #C2410C;
+      border: 1.5px solid #FDBA74;
+    }
+
+    /* 댓글 영역 */
+    .comments-section {
+      background: rgba(6, 27, 80, 0.6);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-white);
+    }
+
+    .comments-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      color: var(--btn-yellow);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .comment-item-pill {
+      background: #FFFFFF;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #0F172A;
+      border: 1px solid #cbd5e1;
+      line-height: 1.4;
+    }
+
+    .comment-item-pill strong {
+      color: #1d4ed8;
+      margin-right: 6px;
+    }
+
+    .comment-input-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .comment-input-field {
+      flex: 1;
+      padding: 8px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      background: #FFFFFF;
+      color: #0F172A;
+    }
+
+    .comment-input-field:focus {
+      border-color: var(--btn-yellow);
+      background: #fffbeb;
+    }
+
+    .btn-submit-comment {
+      padding: 8px 16px;
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-submit-comment:hover {
+      background: var(--btn-yellow-hover);
+    }
+
+    /* 3단계: 우리 반 모둠별 대표 규약 전당 */
+    .best-class-rule-box {
+      background: var(--card-navy);
+      border: 3px solid var(--btn-yellow);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      color: var(--text-white);
+    }
+
+    .best-class-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(254, 218, 53, 0.4);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .best-class-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--btn-yellow);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .best-class-votes-badge {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: 800;
+    }
+
+    .rep-rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .rep-rule-card {
+      background: rgba(14, 70, 191, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+      color: var(--text-white);
+    }
+
+    .rep-rule-card:hover {
+      border-color: var(--btn-yellow);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .rep-rule-card.is-first {
+      border-color: var(--btn-yellow);
+      background: rgba(6, 27, 80, 0.8);
+    }
+
+    .rep-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .rep-team-badge {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 10px;
+    }
+
+    .rep-source-likes {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0F172A;
+      background: #fef08a;
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    .btn-vote-class {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      background: #FFFFFF;
+      color: #0F172A;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-top: 14px;
+    }
+
+    .btn-vote-class:hover {
+      background: var(--btn-yellow);
+      border-color: #eab308;
+      color: #0F172A;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-vote-class.voted {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border-color: #eab308;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .vote-count-badge {
+      background: rgba(0, 0, 0, 0.1);
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .btn-vote-class:not(.voted) .vote-count-badge {
+      background: #e2e8f0;
+      color: #0F172A;
+    }
+
+    /* 하단 버튼 */
+    .action-btn-area {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      transition: all 0.2s;
+      font-family: 'Jua', sans-serif;
+    }
+
+    .btn-prev {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+
+    .btn-prev:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-next {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-next:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-post {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      font-size: 18px;
+      padding: 16px 32px;
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      margin-top: 10px;
+    }
+
+    .btn-post:hover {
+      background: var(--btn-yellow-hover);
+    }
+
+    .btn-post:active {
+      transform: translateY(2px);
+    }
+
+    .step-content {
+      display: none;
+    }
+
+    .step-content.active {
+      display: block;
+    }
   </style>
+  <script src="quest-intro.js"></script>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════ -->
-<!--  화면 1: 메뉴 선택                         -->
-<!-- ════════════════════════════════════════ -->
-<div id="screen-select">
-  <div class="select-wrap">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-      <a href="quest6.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;text-decoration:none;">← 업로드</a>
-      <a href="main.html" onclick="sessionStorage.setItem('from_quest','1')" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;text-decoration:none;">🏠 메인</a>
+  <header>
+    <div class="header-left">
+      <a href="main.html" class="header-logo-link" title="메인 화면으로 이동">
+        <img src="images/bs-logo.png" alt="AI 자원순환 탐정단" class="header-bs-logo">
+      </a>
+      <a href="main.html" class="btn-quest-map" title="퀘스트 지도로 이동">🧭 퀘스트지도가기</a>
+      <span class="header-title">QUEST 7: 우리 모둠 실천 규약 초안 입력하기</span>
     </div>
-    <div class="select-title">🏷️ 퀘스트 7: 라벨링</div>
-    <div class="select-desc">무엇을 할까요? 아래에서 선택하세요!</div>
+    <div class="header-right">
+      <div class="team-badge" id="headerTeamBadge">모둠 로딩 중...</div>
+      <div class="score-badge" id="scoreDisplay">0 EXP</div>
+    </div>
+  </header>
 
-    <div class="menu-card" onclick="showScreen('tutorial')">
-      <div class="menu-icon">📖</div>
-      <div>
-        <div class="menu-num">1단계</div>
-        <div class="menu-name">라벨링 튜토리얼</div>
-        <div class="menu-desc">바운딩박스 라벨링이 뭔지 배워봐요</div>
+  <nav class="step-nav">
+    <button class="step-btn active" id="sbtn1" onclick="goToStep(1)"><span>1단계</span> 실천 규약 내용 작성하기</button>
+    <button class="step-btn" id="sbtn2" onclick="goToStep(2)"><span>2단계</span> 모둠 실시간 공유 게시판</button>
+    <button class="step-btn" id="sbtn3" onclick="goToStep(3)"><span>3단계</span> 우리 반 대표 규약 전당</button>
+  </nav>
+
+  <div class="main-container">
+
+    <!-- 1단계: 실천 규약 내용 작성하기 (2개 입력칸) -->
+    <div class="card step-content active" id="step1">
+      <h2 class="card-title">1단계: 실천 규약 내용 작성하기</h2>
+      <p class="card-desc">우리 학교와 교실에서 꼭 지켜야 할 자원순환 실천 규약과 그 이유를 작성하고 게시해보세요!</p>
+
+      <!-- 1. 규약 입력칸 -->
+      <div class="form-group-item">
+        <label class="form-label-num" for="inputRuleContent">
+          <span class="badge-num-circle">1</span>
+          <span>규약:</span>
+        </label>
+        <textarea id="inputRuleContent" class="rule-textarea" rows="3" placeholder="예: 음료수 투명 페트병은 비닐 라벨을 100% 떼어내고 물로 깨끗이 헹군 뒤 납작하게 압축하여 버린다."></textarea>
       </div>
-      <div class="menu-arrow">›</div>
-    </div>
 
-    <div class="menu-card" onclick="showScreen('practice')">
-      <div class="menu-icon">✏️</div>
-      <div>
-        <div class="menu-num">2단계</div>
-        <div class="menu-name">라벨링 연습하기</div>
-        <div class="menu-desc">예시 사진으로 먼저 연습해봐요</div>
+      <!-- 2. 제시한 이유 입력칸 -->
+      <div class="form-group-item">
+        <label class="form-label-num" for="inputRuleReason">
+          <span class="badge-num-circle">2</span>
+          <span>제시한 이유:</span>
+        </label>
+        <textarea id="inputRuleReason" class="rule-textarea" rows="3" placeholder="예: 라벨이 붙어있거나 이물질이 남아있으면 고품질 재활용이 불가능해지고, 교실 AI 탐정도 정확히 구분할 수 없기 때문입니다."></textarea>
       </div>
-      <div class="menu-arrow">›</div>
-    </div>
 
-    <div class="menu-card" onclick="showScreen('labeler')">
-      <div class="menu-icon">🎯</div>
-      <div>
-        <div class="menu-num">3단계</div>
-        <div class="menu-name">라벨링하기</div>
-        <div class="menu-desc">내가 올린 사진에 직접 라벨링해요</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#E8F5E9;padding:12px 16px;border-radius:12px;margin-bottom:14px;">
+        <span style="font-size:14px;color:#2E7D32;font-weight:bold;">작성 탐정: <span id="dispWriterName" style="color:#1B5E20;">-</span></span>
+        <span style="font-size:14px;color:#558B2F;">소속 모둠: <span id="dispWriterTeam" style="font-weight:bold;">-</span></span>
       </div>
-      <div class="menu-arrow">›</div>
-    </div>
-  </div>
-</div>
 
-<!-- ════════════════════════════════════════ -->
-<!--  화면 2: 튜토리얼                          -->
-<!-- ════════════════════════════════════════ -->
-<div id="screen-tutorial" style="display:none;">
-  <div class="tutorial-wrap">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-      <button onclick="showScreen('select')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;">← 뒤로</button>
-      <span style="font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;">📖 라벨링 튜토리얼</span>
-    </div>
+      <button class="btn btn-post" id="btnPublishDraft" onclick="publishRuleDraft()">게시하기 (+50 EXP)</button>
 
-    <div class="tutorial-step">
-      <h3>🎯 1. 라벨링이란?</h3>
-      <p>라벨링(Labeling)이란 AI가 학습할 수 있도록 <strong>사진 속 물체에 표시</strong>를 해주는 작업이에요.<br>
-      예를 들어 고양이 사진에서 고양이가 있는 위치를 네모 박스로 표시하면, AI가 "아! 이게 고양이구나!"라고 배울 수 있어요.</p>
-      <div class="tip-box">💡 AI는 스스로 물체를 찾을 수 없어요. 사람이 먼저 "이게 뭐야"라고 알려줘야 해요!</div>
-    </div>
-
-    <div class="tutorial-step">
-      <h3>📦 2. 바운딩박스(Bounding Box)</h3>
-      <p>물체를 감싸는 <strong>직사각형 박스</strong>를 바운딩박스라고 해요.<br>
-      마우스로 드래그해서 물체를 감싸도록 박스를 그리면 돼요.</p>
-
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
-        <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.3);border-radius:10px;padding:12px 14px;">
-          <div style="font-weight:700;color:#63b3ed;margin-bottom:6px;">⛑️ helmet (안전모)</div>
-          <div style="font-size:13px;color:var(--text);line-height:1.7;">
-            안전모 <strong>착용한 경우에만</strong> 안전모 부분만 박스로 그려요.<br>
-            <span style="color:#fc8181;">❌ 안전모를 착용하지 않은 사람은 helmet 박스를 그리지 않아요.</span>
+      <!-- 내가 작성하여 저장된 글 실시간 표시 영역 (삭제 가능) -->
+      <div id="mySavedPostArea" style="display:none;">
+        <div class="my-post-preview-card">
+          <div class="my-preview-header">
+            <span class="my-preview-tag">내가 방금 게시한 실천 규약</span>
+            <button class="btn-delete-my-post" onclick="deleteMyPost()">내 글 삭제하기</button>
           </div>
+
+          <div style="font-size:14px;font-weight:bold;color:#0277BD;margin-bottom:6px;">1. 규약 내용:</div>
+          <div class="my-rule-display-box" id="myRuleDisplay">-</div>
+
+          <div style="font-size:14px;font-weight:bold;color:#2E7D32;margin-bottom:6px;">2. 제시한 이유:</div>
+          <div class="my-reason-display-box" id="myReasonDisplay">-</div>
         </div>
-        <div style="background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:12px 14px;">
-          <div style="font-weight:700;color:#fc8181;margin-bottom:6px;">🛴 PM-hpp (전동킥보드)</div>
-          <div style="font-size:13px;color:var(--text);line-height:1.7;">
-            전동킥보드 전체를 박스로 그려요.<br>
-            <strong>뒷바퀴부터 핸들 부분까지 전부</strong> 포함되도록 해야 해요.
+      </div>
+
+      <div class="action-btn-area">
+        <div></div>
+        <button class="btn btn-next" onclick="goToStep(2)">2단계: 친구들 규약 보러가기</button>
+      </div>
+    </div>
+
+    <!-- 2단계: 모둠 실시간 공유 게시판 & 댓글 달기 -->
+    <div class="card step-content" id="step2">
+      <div class="board-header">
+        <h2 class="card-title" style="margin-bottom:0;">2단계: 우리 모둠 실시간 규약 공유 게시판</h2>
+        <div class="live-status-pill">
+          <div class="pulse-green"></div>
+          <span id="liveTeamCount">우리 모둠 실시간 동기화 중</span>
+        </div>
+      </div>
+      <p class="card-desc">친구들의 실천 규약을 확인하고 마음에 드는 규약에 <strong>좋아요</strong>를 눌러보세요! 모둠원들의 많은 지지를 받은 규약이 <strong>좋아요 순</strong>으로 상단에 정렬됩니다.</p>
+
+      <!-- 모둠원들의 규약 목록 피드 -->
+      <div class="rules-grid" id="sharedRulesGrid">
+        <div style="text-align:center;padding:40px 20px;color:#78909C;">
+          <div style="font-size:36px;margin-bottom:10px;"></div>
+          <p>모둠원들의 실천 규약을 불러오는 중입니다...</p>
+        </div>
+      </div>
+
+      <!-- 3단계 이동 안내 배너 -->
+      <div style="background:linear-gradient(135deg, #E0F2FE, #BAE6FD);border:2.5px solid #38BDF8;border-radius:18px;padding:22px;text-align:center;margin-top:20px;">
+        <h3 style="font-family:'Jua';color:#0369A1;font-size:21px;margin-bottom:8px;">우리 모둠 대표 규약 선정 완료!</h3>
+        <p style="color:#0C4A6E;font-size:14.5px;margin-bottom:16px;">모둠원들에게 가장 많은 '좋아요'를 받은 규약이 <strong>모둠 대표 규약</strong>으로 3단계 전당에 자동 등록됩니다.</p>
+        <button class="btn" style="background:linear-gradient(135deg,#0284C7,#0369A1);color:white;font-size:17px;padding:14px 30px;" onclick="goToStep(3)">
+          3단계: 우리 반 모둠별 대표 규약 전당 가기
+        </button>
+      </div>
+
+      <div class="action-btn-area">
+        <button class="btn btn-prev" onclick="goToStep(1)">내 규약 수정하러 가기</button>
+        <button class="btn btn-next" onclick="goToStep(3)">3단계 가기</button>
+      </div>
+    </div>
+
+    <!-- 3단계: 우리 반 모둠별 대표 규약 전당 & 학급 대표 최종 규약 선정 -->
+    <div class="card step-content" id="step3">
+      <div class="board-header">
+        <h2 class="card-title" style="margin-bottom:0;">3단계: 우리 반 모둠별 대표 규약 전당</h2>
+        <div class="live-status-pill" style="border-color:#FDE047;background:#FEFCE8;color:#854D0E;">
+          <div class="pulse-green" style="background:#EAB308;"></div>
+          <span id="classSyncStatus">전체 학급 실시간 집계 중</span>
+        </div>
+      </div>
+      <p class="card-desc">
+        각 모둠에서 모둠원들의 <strong>좋아요 1위</strong>를 차지한 대표 규약들이 출품되었습니다.<br>
+        가장 훌륭한 규약에 <strong>[반 대표 좋아요]</strong>를 눌러주세요! 가장 많은 지지를 받은 규약이 <strong>우리 반 대표 규약</strong>으로 최종 선정됩니다.
+      </p>
+
+      <!-- 우리 반 최종 1위 대표 규약 명예의 전당 박스 -->
+      <div class="best-class-rule-box" id="bestClassRuleBox">
+        <div class="best-class-header">
+          <div class="best-class-title">
+            <span>우리 반 대표 최종 규약 (현재 1위)</span>
           </div>
+          <span class="best-class-votes-badge" id="bestClassVotesBadge">0표 획득</span>
         </div>
-        <div style="background:rgba(104,211,145,0.08);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:12px 14px;">
-          <div style="font-weight:700;color:#68d391;margin-bottom:6px;">🧍 person (사람)</div>
-          <div style="font-size:13px;color:var(--text);line-height:1.7;">
-            킥보드를 타고 있는 <strong>사람 전체</strong>를 박스로 그려요.
-          </div>
+        <div id="bestClassRuleContent" style="font-size:17px;font-weight:700;color:#713F12;line-height:1.7;margin-bottom:8px;">
+          각 모둠의 대표 규약에 좋아요를 눌러 투표해보세요!
+        </div>
+        <div id="bestClassRuleReason" style="font-size:14px;color:#854D0E;font-style:italic;">
+          -
         </div>
       </div>
-      <div style="background:rgba(0,0,0,0.4);border-radius:10px;padding:16px;text-align:center;margin-top:10px;">
-        <img src="images/pm0.jpg" style="max-width:100%;border-radius:8px;border:1px solid var(--border);"
-          onerror="this.style.display='none';document.getElementById('pm0-fallback').style.display='block';">
-        <div id="pm0-fallback" style="display:none;">
-          <svg width="100%" viewBox="0 0 300 200" style="max-width:300px;">
-            <rect width="300" height="200" fill="#1a2235" rx="8"/>
-            <text x="150" y="100" text-anchor="middle" font-size="60" dy=".3em">🛴</text>
-            <rect x="60" y="50" width="180" height="110" fill="none" stroke="#fc8181" stroke-width="3" stroke-dasharray="6,3"/>
-            <rect x="60" y="38" width="80" height="18" fill="#fc8181" rx="3"/>
-            <text x="68" y="51" fill="white" font-size="11" font-family="sans-serif">🛴 킥보드 92%</text>
-          </svg>
+
+      <!-- 모둠별 대표 규약 목록 그리드 -->
+      <h3 style="font-family:'Jua';color:#1E293B;font-size:20px;margin-bottom:14px;">각 모둠의 1위 대표 규약 후보 목록</h3>
+      <div class="rep-rules-grid" id="teamRepRulesGrid">
+        <div style="text-align:center;padding:40px 20px;color:#78909C;grid-column:1/-1;">
+          모둠별 대표 규약을 불러오는 중입니다...
         </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:8px;">바운딩박스 예시 사진</div>
+      </div>
+
+      <!-- 최종 완료 & 메인 이동 배너 -->
+      <div style="background:linear-gradient(135deg, #FFF9C4, #FFF59D);border:3px solid #FBC02D;border-radius:18px;padding:24px;text-align:center;margin-top:24px;">
+        <h3 style="font-family:'Jua';color:#E65100;font-size:22px;margin-bottom:8px;">QUEST 7 모든 과정 완수!</h3>
+        <p style="color:#5D4037;font-size:15px;margin-bottom:16px;">우리 반 대표 규약 투표를 완료했습니다. <strong>메인 대지도</strong>로 이동하여 다음 단계에 도전하세요!</p>
+        <button class="btn" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);color:white;font-size:18px;padding:16px 36px;" onclick="finishQuest7()">
+          QUEST 7 완료 & 퀘스트지도가기 (+100 EXP)
+        </button>
+      </div>
+
+      <div class="action-btn-area">
+        <button class="btn btn-prev" onclick="goToStep(2)">2단계 모둠 게시판 가기</button>
+        <div></div>
       </div>
     </div>
 
-    <div class="tutorial-step">
-      <h3>🖱️ 3. 라벨링 방법</h3>
-      <p>아래 순서로 라벨링해요:</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">1</div>
-          <div style="font-size:14px;color:var(--text);line-height:1.6;">오른쪽 패널에서 <strong style="color:#a78bfa;">클래스(종류)</strong>를 선택해요<br><span style="font-size:12px;color:var(--muted);">예: 킥보드, 헬멧, 사람</span></div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">2</div>
-          <div style="font-size:14px;color:var(--text);line-height:1.6;">사진 위에서 <strong style="color:#a78bfa;">마우스를 드래그</strong>해서 박스를 그려요</div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">3</div>
-          <div style="font-size:14px;color:var(--text);line-height:1.6;">박스를 그리면 <strong style="color:#68d391;">자동으로 저장</strong>돼요!</div>
-        </div>
-        <div style="display:flex;gap:12px;align-items:flex-start;">
-          <div style="background:#a78bfa;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">4</div>
-          <div style="font-size:14px;color:var(--text);line-height:1.6;">한 사진에 여러 개의 박스를 그릴 수 있어요</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="tutorial-step">
-      <h3>⚠️ 4. 좋은 라벨링 vs 나쁜 라벨링</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">
-        <div style="background:rgba(104,211,145,0.08);border:1px solid rgba(104,211,145,0.3);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:13px;font-weight:700;color:#68d391;margin-bottom:8px;">✅ 좋은 라벨링</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">물체를 딱 맞게 감싸요<br>너무 크거나 작지 않게<br>물체 전체가 포함되게</div>
-        </div>
-        <div style="background:rgba(252,129,129,0.08);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:12px;text-align:center;">
-          <div style="font-size:13px;font-weight:700;color:#fc8181;margin-bottom:8px;">❌ 나쁜 라벨링</div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6;">너무 크게 그리기<br>물체가 잘리게 그리기<br>엉뚱한 곳에 그리기</div>
-        </div>
-      </div>
-      <div class="tip-box" style="margin-top:12px;">💡 라벨링 품질이 좋을수록 AI 인식률이 높아져요!</div>
-    </div>
-
-    <button onclick="showScreen('practice')"
-      style="width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;cursor:pointer;font-family:'Jua',sans-serif;margin-top:4px;">
-      연습하러 가기 →
-    </button>
   </div>
-</div>
 
-<!-- ════════════════════════════════════════ -->
-<!--  화면 3: 연습하기                          -->
-<!-- ════════════════════════════════════════ -->
-<div id="screen-practice" style="display:none;">
-  <div class="practice-wrap">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-      <button onclick="showScreen('select')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 12px;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;">← 뒤로</button>
-      <span style="font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#a78bfa;">✏️ 라벨링 연습하기</span>
-    </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, increment, onSnapshot, query, where, serverTimestamp, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    <div class="practice-guide" id="practice-guide">
-      📌 아래 사진에서 <strong>킥보드, 헬멧, 사람</strong>을 찾아 클래스를 선택하고 드래그해서 박스를 그려보세요!
-    </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdx4xwK3XIzgw_4hFEohnMe64dc4LDB00",
+      authDomain: "elemeelementary-textbook.firebaseapp.com",
+      projectId: "elemeelementary-textbook",
+      storageBucket: "elemeelementary-textbook.firebasestorage.app",
+      messagingSenderId: "713149004420",
+      appId: "1:713149004420:web:8483273681e16f5a8fa0d1",
+      measurementId: "G-TZT282J9E8"
+    };
 
-    <!-- 클래스 선택 -->
-    <div style="margin-bottom:10px;">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">① 클래스 선택</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="practice-class-btns"></div>
-    </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    <!-- 캔버스 -->
-    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">② 드래그해서 박스 그리기</div>
-    <div class="practice-canvas-wrap">
-      <canvas id="practice-img-canvas"></canvas>
-      <canvas id="practice-draw-canvas" style="position:absolute;top:0;left:0;"
-        onmousedown="practiceStartDraw(event)" onmousemove="practiceMoveDraw(event)" onmouseup="practiceEndDraw(event)"
-        ontouchstart="practiceTouchStart(event)" ontouchmove="practiceTouchMove(event)" ontouchend="practiceTouchEnd(event)">
-      </canvas>
-    </div>
+    const studentId = localStorage.getItem("elementary_studentId") || "guest";
+    const studentName = localStorage.getItem("elementary_studentName") || "탐정 학생";
+    const teamCode = localStorage.getItem("elementary_teamCode") || "1모둠";
 
-    <!-- 도구 버튼 -->
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
-      <button onclick="practiceUndo()" class="tool-btn">↩️ 되돌리기</button>
-      <button onclick="practiceClear()" class="tool-btn" style="color:var(--red);">🗑️ 전체삭제</button>
-      <div id="practice-box-count" style="font-size:13px;color:var(--muted);padding:6px 0;margin-left:auto;">박스: 0개</div>
-    </div>
+    window.state = {
+      score: parseInt(localStorage.getItem("elementary_score") || "0", 10),
+      currentStep: 1,
+      myPostDocId: localStorage.getItem("quest7_my_post_doc_id") || null,
+      drafts: []
+    };
 
-    <!-- 박스 목록 -->
-    <div id="practice-box-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
-
-    <!-- 완료 체크 -->
-    <div id="practice-complete-msg" style="display:none;background:rgba(104,211,145,0.1);border:1px solid #68d391;border-radius:10px;padding:12px 16px;font-size:14px;color:#68d391;margin-bottom:14px;text-align:center;">
-      🎉 연습 완료! 이제 실전 라벨링을 해봐요!
-    </div>
-
-    <button onclick="showScreen('labeler')"
-      style="width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:12px;color:white;font-size:16px;font-weight:700;cursor:pointer;font-family:'Jua',sans-serif;">
-      실전 라벨링하러 가기 🎯
-    </button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════ -->
-<!--  화면 4: 실전 라벨링                       -->
-<!-- ════════════════════════════════════════ -->
-<div id="screen-labeler" style="display:none;" class="labeler-layout">
-  <div class="top-bar">
-    <button onclick="showScreen('select')" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">← 뒤로</button>
-    <button onclick="sessionStorage.setItem('from_quest','1');window.location.href='main.html'" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;">🏠 메인</button>
-    <div class="title">🎯 라벨링하기</div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span id="progress-label" style="font-size:12px;color:var(--muted);"></span>
-      <button onclick="downloadAllLabels()" style="background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ txt만</button>
-      <button onclick="downloadZip()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📦 ZIP</button>
-    </div>
-  </div>
-  <div class="content-area">
-    <div class="img-sidebar" id="img-sidebar">
-      <div style="padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);">내 사진</div>
-      <div id="thumb-list"></div>
-    </div>
-    <div class="canvas-area">
-      <div class="canvas-wrap" id="canvas-wrap">
-        <canvas id="img-canvas"></canvas>
-        <canvas id="draw-canvas"
-          onmousedown="startDraw(event)" onmousemove="moveDraw(event)" onmouseup="endDraw(event)"
-          onmouseleave="crosshairX=-1;crosshairY=-1;redrawCanvas(currentImg?._imageEl);"
-          ontouchstart="touchStartDraw(event)" ontouchmove="touchMoveDraw(event)" ontouchend="touchEndDraw(event)">
-        </canvas>
-        <div class="empty-canvas" id="empty-msg">
-          <div style="font-size:40px;">👈</div>
-          <div>왼쪽에서 사진을 선택하세요</div>
-        </div>
-      </div>
-      <div class="bottom-bar">
-        <button class="tool-btn active" id="tool-draw" onclick="setTool('draw')">✏️ 그리기</button>
-        <button class="tool-btn" id="tool-select" onclick="setTool('select')">↖️ 선택</button>
-        <button class="tool-btn" onclick="undoLast()">↩️ 되돌리기</button>
-        <button class="tool-btn" onclick="clearBoxes()" style="color:var(--red);">🗑️ 전체삭제</button>
-        <div class="save-status" id="save-status"></div>
-      </div>
-    </div>
-    <div class="right-panel">
-      <div class="panel-section">
-        <div class="panel-title">클래스 선택</div>
-        <div id="class-buttons"><div style="font-size:12px;color:var(--muted);">로딩 중...</div></div>
-      </div>
-      <div class="panel-title" style="padding:10px 10px 0;">박스 목록</div>
-      <div class="boxes-list" id="boxes-list"></div>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script>
-// ── 화면 전환 ──
-function showScreen(name){
-  ['select','tutorial','practice','labeler'].forEach(s=>{
-    const el=document.getElementById('screen-'+s);
-    if(el) el.style.display='none';
-  });
-  const target=document.getElementById('screen-'+name);
-  if(target){
-    target.style.display= name==='labeler'?'flex':'block';
-  }
-  if(name==='practice') initPractice();
-  if(name==='labeler') initLabeler();
-}
-
-// ════════════════════════════════════════
-//  연습하기 캔버스
-// ════════════════════════════════════════
-let practiceClasses=[], practiceSelectedClass=0;
-let practiceBoxes=[], practiceIsDrawing=false;
-let practiceStartX=0, practiceStartY=0, practiceCurrentBox=null;
-let practiceScale=1, practiceOffsetX=0, practiceOffsetY=0;
-let practiceImage=null;
-
-const PRACTICE_IMG='images/pm3.png'; // 연습용 사진
-
-async function initPractice(){
-  // 클래스 로드
-  const snap=await db.collection('label_classes').orderBy('order').get();
-  practiceClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
-  if(!practiceClasses.length) practiceClasses=[{name:'object',color:'#63b3ed',order:0}];
-  renderPracticeClassBtns();
-  loadPracticeImage();
-}
-
-function renderPracticeClassBtns(){
-  document.getElementById('practice-class-btns').innerHTML=practiceClasses.map((c,i)=>`
-    <button onclick="practiceSelectClass(${i})"
-      style="padding:7px 14px;border:2px solid ${i===practiceSelectedClass?c.color:'rgba(255,255,255,0.15)'};
-             border-radius:20px;background:${i===practiceSelectedClass?c.color+'33':'transparent'};
-             color:${i===practiceSelectedClass?c.color:'var(--muted)'};
-             font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
-      <span style="width:10px;height:10px;border-radius:3px;background:${c.color};display:inline-block;"></span>
-      [${i}] ${c.name}
-    </button>`).join('');
-}
-
-function practiceSelectClass(i){
-  practiceSelectedClass=i;
-  renderPracticeClassBtns();
-}
-
-function loadPracticeImage(){
-  const img=new Image();
-  img.onload=()=>{
-    practiceImage=img;
-    const wrap=document.querySelector('.practice-canvas-wrap');
-    const cw=wrap.clientWidth;
-    practiceScale=Math.min(cw/img.width,400/img.height,1);
-    const dw=img.width*practiceScale, dh=img.height*practiceScale;
-    practiceOffsetX=0; practiceOffsetY=0;
-    ['practice-img-canvas','practice-draw-canvas'].forEach(id=>{
-      const c=document.getElementById(id);
-      c.width=dw; c.height=dh;
-    });
-    redrawPractice();
-  };
-  img.onerror=()=>{
-    if(!img.dataset.tried){
-      img.dataset.tried='1';
-      img.src='images/pm3.jpg';
-      return;
-    }
-    // 예시 사진 없으면 빈 캔버스
-    const c=document.getElementById('practice-img-canvas');
-    c.width=400; c.height=300;
-    const ctx=c.getContext('2d');
-    ctx.fillStyle='#1a2235'; ctx.fillRect(0,0,400,300);
-    ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='16px sans-serif';
-    ctx.textAlign='center'; ctx.fillText('예시 사진이 없어요. 직접 그려보세요!',200,150);
-    document.getElementById('practice-draw-canvas').width=400;
-    document.getElementById('practice-draw-canvas').height=300;
-  };
-  img.src=PRACTICE_IMG;
-}
-
-function redrawPractice(){
-  const ic=document.getElementById('practice-img-canvas');
-  const dc=document.getElementById('practice-draw-canvas');
-  const ictx=ic.getContext('2d');
-  const dctx=dc.getContext('2d');
-  ictx.clearRect(0,0,ic.width,ic.height);
-  dctx.clearRect(0,0,dc.width,dc.height);
-  if(practiceImage) ictx.drawImage(practiceImage,0,0,ic.width,ic.height);
-  practiceBoxes.forEach((box,i)=>{
-    const cls=practiceClasses[box.classIdx]||{color:'#fff',name:'?'};
-    dctx.strokeStyle=cls.color; dctx.lineWidth=2;
-    dctx.strokeRect(box.x,box.y,box.w,box.h);
-    dctx.fillStyle=cls.color+'33'; dctx.fillRect(box.x,box.y,box.w,box.h);
-    dctx.fillStyle=cls.color; dctx.font='bold 12px sans-serif';
-    dctx.fillRect(box.x,box.y-16,Math.max(60,cls.name.length*8),16);
-    dctx.fillStyle='#000'; dctx.fillText('['+box.classIdx+'] '+cls.name,box.x+2,box.y-3);
-  });
-  if(practiceCurrentBox){
-    const cls=practiceClasses[practiceSelectedClass]||{color:'#fff'};
-    dctx.strokeStyle=cls.color; dctx.lineWidth=2; dctx.setLineDash([5,3]);
-    dctx.strokeRect(practiceCurrentBox.x,practiceCurrentBox.y,practiceCurrentBox.w,practiceCurrentBox.h);
-    dctx.setLineDash([]);
-  }
-  renderPracticeBoxList();
-}
-
-function getPracticePos(e){
-  const c=document.getElementById('practice-draw-canvas');
-  const rect=c.getBoundingClientRect();
-  const scaleX=c.width/rect.width, scaleY=c.height/rect.height;
-  const clientX=e.touches?e.touches[0].clientX:e.clientX;
-  const clientY=e.touches?e.touches[0].clientY:e.clientY;
-  return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
-}
-
-function practiceStartDraw(e){
-  const pos=getPracticePos(e);
-  practiceIsDrawing=true; practiceStartX=pos.x; practiceStartY=pos.y;
-  practiceCurrentBox={x:pos.x,y:pos.y,w:0,h:0};
-}
-function practiceMoveDraw(e){
-  if(!practiceIsDrawing) return;
-  const pos=getPracticePos(e);
-  practiceCurrentBox={x:Math.min(practiceStartX,pos.x),y:Math.min(practiceStartY,pos.y),
-    w:Math.abs(pos.x-practiceStartX),h:Math.abs(pos.y-practiceStartY)};
-  redrawPractice();
-}
-function practiceEndDraw(e){
-  if(!practiceIsDrawing) return;
-  practiceIsDrawing=false;
-  if(practiceCurrentBox&&practiceCurrentBox.w>10&&practiceCurrentBox.h>10){
-    practiceBoxes.push({...practiceCurrentBox,classIdx:practiceSelectedClass});
-    const cls=practiceClasses[practiceSelectedClass];
-    document.getElementById('practice-guide').innerHTML=
-      `✅ <strong style="color:${cls?.color||'#a78bfa'}">[${practiceSelectedClass}] ${cls?.name||'객체'}</strong> 박스 완성! 총 ${practiceBoxes.length}개 · 다른 물체도 찾아보세요!`;
-    // 3개 이상 그리면 완료 메시지
-    if(practiceBoxes.length>=3){
-      document.getElementById('practice-complete-msg').style.display='block';
-    }
-  }
-  practiceCurrentBox=null;
-  redrawPractice();
-}
-function practiceTouchStart(e){e.preventDefault();practiceStartDraw(e);}
-function practiceTouchMove(e){e.preventDefault();practiceMoveDraw(e);}
-function practiceTouchEnd(e){e.preventDefault();practiceEndDraw(e);}
-
-function practiceUndo(){
-  practiceBoxes.pop();
-  redrawPractice();
-}
-function practiceClear(){
-  practiceBoxes=[];
-  document.getElementById('practice-guide').innerHTML=
-    '📌 아래 사진에서 <strong>킥보드, 헬멧, 사람</strong>을 찾아 클래스를 선택하고 드래그해서 박스를 그려보세요!';
-  document.getElementById('practice-complete-msg').style.display='none';
-  redrawPractice();
-}
-
-function renderPracticeBoxList(){
-  document.getElementById('practice-box-count').textContent=`박스: ${practiceBoxes.length}개`;
-  document.getElementById('practice-box-list').innerHTML=practiceBoxes.map((b,i)=>{
-    const cls=practiceClasses[b.classIdx]||{color:'#fff',name:'?'};
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid ${cls.color}33;">
-      <span style="width:10px;height:10px;border-radius:3px;background:${cls.color};flex-shrink:0;"></span>
-      <span style="font-size:13px;flex:1;">[${b.classIdx}] ${cls.name}</span>
-      <button onclick="practiceDeleteBox(${i})" style="background:rgba(252,129,129,0.15);border:none;border-radius:4px;padding:2px 8px;color:#fc8181;font-size:11px;cursor:pointer;">✕</button>
-    </div>`;
-  }).join('');
-}
-
-function practiceDeleteBox(i){
-  practiceBoxes.splice(i,1);
-  redrawPractice();
-}
-
-// ════════════════════════════════════════
-//  실전 라벨링 (기존 코드)
-// ════════════════════════════════════════
-let currentUser=null, userData=null;
-let classes=[], myImages=[], currentImgIdx=-1;
-let allBoxes={}, currentImg=null;
-let isDrawing=false, startX=0, startY=0, currentBox=null;
-let selectedClassIdx=0, selectedBoxIdx=-1, currentTool='draw';
-let scale=1, offsetX=0, offsetY=0;
-let labelerInited=false;
-let crosshairX=-1, crosshairY=-1; // 십자선 위치
-
-requireAuth(async (user)=>{
-  currentUser=user;
-  if(user.uid==='student'){
-    const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
-  } else if(user.uid==='admin'){
-    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
-  } else {
-    try {
-      const snap=await db.collection('users').where('id','==',user.id).get();
-      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
-      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
-    } catch(e){
-      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
-    }
-  }
-  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
-  await loadClasses();
-});
-
-async function loadClasses(){
-  const snap=await db.collection('label_classes').orderBy('order').get();
-  classes=snap.docs.map(d=>({id:d.id,...d.data()}));
-  if(!classes.length) classes=[{name:'object',color:'#63b3ed',order:0}];
-}
-
-async function initLabeler(){
-  if(labelerInited) return;
-  labelerInited=true;
-  renderClassButtons();
-  await loadMyImages();
-  setupResize();
-}
-
-function renderClassButtons(){
-  document.getElementById('class-buttons').innerHTML=classes.map((c,i)=>`
-    <button class="class-btn ${i===selectedClassIdx?'active':''}"
-      style="background:${c.color}22;border-color:${i===selectedClassIdx?c.color:'transparent'};"
-      onclick="selectClass(${i})">
-      <span class="class-dot" style="background:${c.color};"></span>
-      [${i}] ${c.name}
-    </button>`).join('');
-}
-
-function selectClass(i){selectedClassIdx=i;renderClassButtons();}
-
-async function loadMyImages(){
-  const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-  try{
-    const snap=await db.collection('uploads').where('userId','==',userId).orderBy('created_at','desc').get();
-    myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
-  }catch(e){
-    const snap=await db.collection('uploads').where('userId','==',userId).get();
-    myImages=snap.docs.map(d=>({id:d.id,...d.data()}));
-    myImages.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
-  }
-  try{
-    const labelSnap=await db.collection('labels').where('userId','==',userId).get();
-    labelSnap.docs.forEach(d=>{const data=d.data();allBoxes[data.imageId]=data.boxes||[];});
-  }catch(e){}
-  updateProgress();
-  document.getElementById('thumb-list').innerHTML=myImages.map((img,i)=>`
-    <div class="img-thumb ${i===currentImgIdx?'active':''}" id="thumb-${i}" onclick="selectImage(${i})">
-      <img src="${img.url}" onerror="this.style.display='none'">
-      ${allBoxes[img.id]?.length?'<div class="labeled-dot"></div>':''}
-      <div class="num">${i+1}</div>
-    </div>`).join('');
-  if(myImages.length>0) selectImage(0);
-  else document.getElementById('empty-msg').style.display='flex';
-}
-
-function updateProgress(){
-  const labeled=myImages.filter(img=>allBoxes[img.id]?.length>0).length;
-  document.getElementById('progress-label').textContent=`${labeled}/${myImages.length} 완료`;
-}
-
-function selectImage(idx){
-  currentImgIdx=idx;
-  const img=myImages[idx];
-  currentImg=img;
-  document.getElementById('empty-msg').style.display='none';
-  document.querySelectorAll('.img-thumb').forEach((el,i)=>el.classList.toggle('active',i===idx));
-  renderBoxList();
-  let imgUrl=img.url||'';
-  const image=new Image();
-  image.crossOrigin='anonymous';
-  image.onload=()=>{fitImageToCanvas(image);redrawCanvas(image);};
-  image.onerror=()=>{
-    const img2=new Image();
-    img2.onload=()=>{fitImageToCanvas(img2);redrawCanvas(img2);};
-    img2.src=imgUrl+'?t='+Date.now();
-    currentImg._imageEl=img2;
-  };
-  image.src=imgUrl;
-  currentImg._imageEl=image;
-}
-
-function fitImageToCanvas(image){
-  const wrap=document.getElementById('canvas-wrap');
-  const cw=wrap.clientWidth, ch=wrap.clientHeight;
-  scale=Math.min(cw/image.width,ch/image.height,1);
-  const dw=image.width*scale,dh=image.height*scale;
-  offsetX=(cw-dw)/2;offsetY=(ch-dh)/2;
-  ['img-canvas','draw-canvas'].forEach(id=>{
-    const c=document.getElementById(id);
-    c.width=cw;c.height=ch;
-  });
-}
-
-function redrawCanvas(imageEl){
-  if(!imageEl) return;
-  const imgC=document.getElementById('img-canvas');
-  const drawC=document.getElementById('draw-canvas');
-  const ic=imgC.getContext('2d');
-  const dc=drawC.getContext('2d');
-  ic.clearRect(0,0,imgC.width,imgC.height);
-  dc.clearRect(0,0,drawC.width,drawC.height);
-  ic.fillStyle='#111';ic.fillRect(0,0,imgC.width,imgC.height);
-  ic.drawImage(imageEl,offsetX,offsetY,imageEl.width*scale,imageEl.height*scale);
-  const boxes=allBoxes[currentImg.id]||[];
-  boxes.forEach((box,i)=>{
-    const cls=classes[box.classIdx]||{color:'#fff',name:'?'};
-    const x=offsetX+box.x*scale,y=offsetY+box.y*scale;
-    const w=box.w*scale,h=box.h*scale;
-    dc.strokeStyle=cls.color;dc.lineWidth=i===selectedBoxIdx?3:2;
-    dc.strokeRect(x,y,w,h);
-    dc.fillStyle=cls.color+'44';dc.fillRect(x,y,w,h);
-    dc.fillStyle=cls.color;dc.font='bold 12px sans-serif';
-    dc.fillRect(x,y-16,Math.max(60,cls.name.length*8),16);
-    dc.fillStyle='#000';dc.fillText('['+box.classIdx+'] '+cls.name,x+2,y-3);
-  });
-  if(currentBox){
-    const cls=classes[selectedClassIdx]||{color:'#fff'};
-    dc.strokeStyle=cls.color;dc.lineWidth=2;dc.setLineDash([5,3]);
-    dc.strokeRect(currentBox.x,currentBox.y,currentBox.w,currentBox.h);
-    dc.setLineDash([]);
-  }
-  // 십자선 가이드
-  if(crosshairX>=0 && crosshairY>=0 && !isDrawing){
-    dc.save();
-
-    // 검은색 그림자 선 (먼저 그려서 뒤에 깔림)
-    dc.globalAlpha=0.8;
-    dc.strokeStyle='#000000';
-    dc.lineWidth=3;
-    dc.setLineDash([4,4]);
-    dc.beginPath();dc.moveTo(crosshairX,0);dc.lineTo(crosshairX,drawC.height);dc.stroke();
-    dc.beginPath();dc.moveTo(0,crosshairY);dc.lineTo(drawC.width,crosshairY);dc.stroke();
-
-    // 노란색 선 (위에 그려짐)
-    dc.globalAlpha=1.0;
-    dc.strokeStyle='#FFE500';
-    dc.lineWidth=1;
-    dc.setLineDash([4,4]);
-    dc.beginPath();dc.moveTo(crosshairX,0);dc.lineTo(crosshairX,drawC.height);dc.stroke();
-    dc.beginPath();dc.moveTo(0,crosshairY);dc.lineTo(drawC.width,crosshairY);dc.stroke();
-    dc.setLineDash([]);
-
-    // 교차점 원
-    dc.beginPath();
-    dc.arc(crosshairX,crosshairY,4,0,Math.PI*2);
-    dc.strokeStyle='#000';dc.lineWidth=3;dc.stroke();
-    dc.beginPath();
-    dc.arc(crosshairX,crosshairY,4,0,Math.PI*2);
-    dc.strokeStyle='#FFE500';dc.lineWidth=1.5;dc.stroke();
-
-    dc.restore();
-
-    // 좌표 표시
-    const imgX=Math.round((crosshairX-offsetX)/scale);
-    const imgY=Math.round((crosshairY-offsetY)/scale);
-    if(imgX>=0&&imgY>=0){
-      dc.save();
-      dc.font='bold 11px monospace';
-      const label=`${imgX}, ${imgY}`;
-      const tw=dc.measureText(label).width+10;
-      // 말풍선 배경
-      dc.fillStyle='rgba(0,0,0,0.75)';
-      dc.fillRect(crosshairX+8,crosshairY-20,tw,16);
-      // 노란 테두리
-      dc.strokeStyle='#FFE500';dc.lineWidth=1;
-      dc.strokeRect(crosshairX+8,crosshairY-20,tw,16);
-      // 텍스트
-      dc.fillStyle='#FFE500';
-      dc.fillText(label,crosshairX+13,crosshairY-7);
-      dc.restore();
-    }
-  }
-}
-
-function getCanvasPos(e){
-  const c=document.getElementById('draw-canvas');
-  const rect=c.getBoundingClientRect();
-  const clientX=e.touches?e.touches[0].clientX:e.clientX;
-  const clientY=e.touches?e.touches[0].clientY:e.clientY;
-  return{x:clientX-rect.left,y:clientY-rect.top};
-}
-
-function startDraw(e){if(currentTool!=='draw'||!currentImg)return;const pos=getCanvasPos(e);isDrawing=true;startX=pos.x;startY=pos.y;currentBox={x:pos.x,y:pos.y,w:0,h:0};}
-function moveDraw(e){
-  const pos=getCanvasPos(e);
-  crosshairX=pos.x; crosshairY=pos.y;
-  if(!isDrawing||!currentImg){redrawCanvas(currentImg?._imageEl);return;}
-  currentBox={x:Math.min(startX,pos.x),y:Math.min(startY,pos.y),w:Math.abs(pos.x-startX),h:Math.abs(pos.y-startY)};
-  redrawCanvas(currentImg._imageEl);
-}
-function endDraw(e){
-  if(!isDrawing)return;isDrawing=false;
-  if(currentBox&&currentBox.w>10&&currentBox.h>10){
-    const img=currentImg._imageEl;
-    const imgBox={classIdx:selectedClassIdx,x:(currentBox.x-offsetX)/scale,y:(currentBox.y-offsetY)/scale,w:currentBox.w/scale,h:currentBox.h/scale};
-    imgBox.x=Math.max(0,imgBox.x);imgBox.y=Math.max(0,imgBox.y);
-    if(img){imgBox.w=Math.min(img.width-imgBox.x,imgBox.w);imgBox.h=Math.min(img.height-imgBox.y,imgBox.h);}
-    if(!allBoxes[currentImg.id])allBoxes[currentImg.id]=[];
-    allBoxes[currentImg.id].push(imgBox);
-    renderBoxList();saveLabels();updateThumb();updateProgress();
-  }
-  currentBox=null;redrawCanvas(currentImg._imageEl);
-}
-function touchStartDraw(e){e.preventDefault();startDraw(e);}
-function touchMoveDraw(e){e.preventDefault();moveDraw(e);}
-function touchEndDraw(e){e.preventDefault();endDraw(e);}
-
-function setTool(t){currentTool=t;document.getElementById('tool-draw').classList.toggle('active',t==='draw');document.getElementById('tool-select').classList.toggle('active',t==='select');document.getElementById('draw-canvas').style.cursor=t==='draw'?'crosshair':'default';}
-function undoLast(){if(!currentImg||!allBoxes[currentImg.id]?.length)return;allBoxes[currentImg.id].pop();renderBoxList();saveLabels();updateThumb();updateProgress();redrawCanvas(currentImg._imageEl);}
-function clearBoxes(){if(!currentImg)return;if(!confirm('이 사진의 모든 박스를 삭제할까요?'))return;allBoxes[currentImg.id]=[];renderBoxList();saveLabels();updateThumb();updateProgress();redrawCanvas(currentImg._imageEl);}
-function deleteBox(i){allBoxes[currentImg.id].splice(i,1);renderBoxList();saveLabels();updateThumb();updateProgress();redrawCanvas(currentImg._imageEl);}
-
-function renderBoxList(){
-  const boxes=allBoxes[currentImg?.id]||[];
-  document.getElementById('boxes-list').innerHTML=boxes.length
-    ?boxes.map((b,i)=>{const cls=classes[b.classIdx]||{color:'#fff',name:'?'};return`<div class="box-item ${i===selectedBoxIdx?'selected':''}" onclick="selectBox(${i})"><span class="box-dot" style="background:${cls.color};"></span><span>[${b.classIdx}] ${cls.name}</span><button class="box-del" onclick="event.stopPropagation();deleteBox(${i})">✕</button></div>`;}).join('')
-    :`<div style="font-size:12px;color:var(--muted);padding:8px;">박스를 그려주세요</div>`;
-}
-function selectBox(i){selectedBoxIdx=i===selectedBoxIdx?-1:i;renderBoxList();redrawCanvas(currentImg._imageEl);}
-
-async function saveLabels(){
-  if(!currentImg)return;
-  const userId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-  document.getElementById('save-status').textContent='저장 중...';
-  try{
-    const boxes=allBoxes[currentImg.id]||[];
-    const snap=await db.collection('labels').where('userId','==',userId).where('imageId','==',currentImg.id).get();
-    if(snap.empty){await db.collection('labels').add({userId,imageId:currentImg.id,imageUrl:currentImg.url,boxes,subfolder:currentImg.subfolder||'train',updated_at:new Date().toISOString()});}
-    else{await snap.docs[0].ref.update({boxes,updated_at:new Date().toISOString()});}
-    await db.collection('uploads').doc(currentImg.id).update({labeled:boxes.length>0});
-    if(GDRIVE_CONFIG.APPS_SCRIPT_URL&&!GDRIVE_CONFIG.APPS_SCRIPT_URL.includes('여기에')){
-      const iw=currentImg.width||600,ih=currentImg.height||600;
-      const txtContent=boxes.map(b=>{const cx=(b.x+b.w/2)/iw,cy=(b.y+b.h/2)/ih,bw=b.w/iw,bh=b.h/ih;return`${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;}).join('\n');
-      const baseName=(currentImg.originalName||currentImg.fileName||currentImg.id).replace(/\.[^.]+$/,'');
-      await fetch(GDRIVE_CONFIG.APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveLabel',fileName:baseName+'.txt',content:txtContent,subfolder:currentImg.subfolder||'train'})}).catch(()=>{});
-    }
-    document.getElementById('save-status').textContent='✅ 저장됨';
-    setTimeout(()=>document.getElementById('save-status').textContent='',2500);
-
-    // 퀘스트 7 완료 처리
-    if(boxes.length > 0) {
-      const q=(userData.quests||{});
-      if(!q.q7_done){
-        const xp = 20;
-        userData.quests=userData.quests||{};
-        userData.quests.q7_done=true;
-        if(currentUser.uid==='student'){
-          userData.score=(userData.score||0)+xp;
-          localStorage.setItem('tempUserData',JSON.stringify(userData));
-        } else {
-          await addScore(currentUser.uid,xp,'퀘스트7 라벨링 완료');
-          await db.collection('users').doc(currentUser.uid).set({
-            quests: { q7_done: true }
-          }, { merge: true });
+    // 단계 이동 (1, 2, 3단계 지원)
+    window.goToStep = function(stepNum) {
+      window.state.currentStep = stepNum;
+      for (let i = 1; i <= 3; i++) {
+        const stepEl = document.getElementById(`step${i}`);
+        const btnEl = document.getElementById(`sbtn${i}`);
+        if (stepEl) stepEl.classList.toggle('active', i === stepNum);
+        if (btnEl) {
+          btnEl.classList.toggle('active', i === stepNum);
+          if (i < stepNum) btnEl.classList.add('done');
+          else btnEl.classList.remove('done');
         }
-        await unlockBadge('labeling_expert', currentUser, userData);
-        alert('🎉 퀘스트 7 완료! +20점! (라벨링 전문가 🏷️ 뱃지 획득)');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 점수 증가
+    window.addScore = function(exp) {
+      window.state.score += exp;
+      localStorage.setItem("elementary_score", window.state.score);
+      const scoreDisp = document.getElementById('scoreDisplay');
+      if (scoreDisp) scoreDisp.textContent = `${window.state.score} EXP`;
+    };
+
+    // 1단계: 실천 규약 게시 (Firestore 저장 & 즉시 표시)
+    window.publishRuleDraft = async function() {
+      const ruleContent = document.getElementById("inputRuleContent").value.trim();
+      const reason = document.getElementById("inputRuleReason").value.trim();
+
+      if (!ruleContent) {
+        return alert("1. 규약 내용을 입력해주세요!");
+      }
+      if (!reason) {
+        return alert("2. 제시한 이유를 입력해주세요!");
+      }
+
+      const btn = document.getElementById("btnPublishDraft");
+      btn.disabled = true;
+      btn.textContent = "게시판에 저장 중...";
+
+      try {
+        const docRef = await addDoc(collection(db, "quest7_rules"), {
+          teamCode: teamCode,
+          studentId: studentId,
+          authorName: studentName,
+          ruleContent: ruleContent,
+          reason: reason,
+          likes: 0,
+          likedBy: [],
+          comments: [],
+          createdAt: serverTimestamp()
+        });
+
+        window.state.myPostDocId = docRef.id;
+        localStorage.setItem("quest7_my_post_doc_id", docRef.id);
+        localStorage.setItem("quest7_my_rule_content", ruleContent);
+        localStorage.setItem("quest7_my_rule_reason", reason);
+
+        window.addScore(50);
+        showMyPostPreview(ruleContent, reason);
+
+        alert("나의 실천 규약이 성공적으로 게시되었습니다! (+50 EXP)");
+        btn.disabled = false;
+        btn.textContent = "다시 게시하기";
+
+      } catch (e) {
+        console.error(e);
+        alert("게시 중 오류가 발생했습니다: " + e.message);
+        btn.disabled = false;
+        btn.textContent = "게시하기 (+50 EXP)";
+      }
+    };
+
+    // 내가 작성한 글 미리보기 렌더링
+    function showMyPostPreview(rule, reason) {
+      const previewArea = document.getElementById("mySavedPostArea");
+      const ruleDisp = document.getElementById("myRuleDisplay");
+      const reasonDisp = document.getElementById("myReasonDisplay");
+
+      if (previewArea && rule && reason) {
+        ruleDisp.textContent = rule;
+        reasonDisp.textContent = reason;
+        previewArea.style.display = "block";
       }
     }
-  }catch(e){document.getElementById('save-status').textContent='❌ 저장 실패';}
-}
 
-function updateThumb(){
-  const thumb=document.getElementById('thumb-'+currentImgIdx);
-  if(!thumb)return;
-  const dot=thumb.querySelector('.labeled-dot');
-  if(allBoxes[currentImg.id]?.length){if(!dot){const d=document.createElement('div');d.className='labeled-dot';thumb.appendChild(d);}}
-  else{dot?.remove();}
-}
+    // 내 글 삭제 기능
+    window.deleteMyPost = async function() {
+      if (!confirm("정말 내가 작성한 실천 규약을 삭제할까요?")) return;
 
-function downloadAllLabels(){
-  const labeled=Object.entries(allBoxes).filter(([id,boxes])=>boxes.length>0);
-  if(!labeled.length){alert('라벨링된 사진이 없습니다!');return;}
-  const classesContent=classes.map(c=>c.name).join('\n');
-  downloadText('classes.txt',classesContent);
-  labeled.forEach(([imgId,boxes])=>{
-    const img=myImages.find(i=>i.id===imgId);
-    if(!img)return;
-    const iw=img.width||img._imageEl?.width||600,ih=img.height||img._imageEl?.height||600;
-    const content=boxes.map(b=>{const cx=(b.x+b.w/2)/iw,cy=(b.y+b.h/2)/ih,bw=b.w/iw,bh=b.h/ih;return`${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;}).join('\n');
-    const rawName=img.originalName||img.fileName||imgId;
-    const fname=rawName.replace(/\.[^.]+$/,'')+'.txt';
-    downloadText(fname,content);
-  });
-  alert(`✅ ${labeled.length}개 파일 + classes.txt 다운로드 완료!`);
-}
+      try {
+        if (window.state.myPostDocId) {
+          await deleteDoc(doc(db, "quest7_rules", window.state.myPostDocId));
+        }
 
-async function downloadZip(){
-  const labeled=Object.entries(allBoxes).filter(([id,boxes])=>boxes.length>0);
-  if(!labeled.length){alert('라벨링된 사진이 없습니다!');return;}
-  const btn=document.querySelector('[onclick="downloadZip()"]');
-  if(btn){btn.textContent='⏳ 준비 중...';btn.disabled=true;}
-  try{
-    const zip=new JSZip();
-    const imgFolder=zip.folder('images');
-    const lblFolder=zip.folder('labels');
-    zip.file('classes.txt',classes.map(c=>c.name).join('\n'));
-    let done=0;const total=labeled.length;
-    for(const [imgId,boxes] of labeled){
-      const img=myImages.find(i=>i.id===imgId);
-      if(!img)continue;
-      const iw=img.width||600,ih=img.height||600;
-      const rawName=img.originalName||img.fileName||imgId;
-      const baseName=rawName.replace(/\.[^.]+$/,'');
-      const imgExt=rawName.split('.').pop()||'jpg';
-      const txtContent=boxes.map(b=>{const cx=(b.x+b.w/2)/iw,cy=(b.y+b.h/2)/ih,bw=b.w/iw,bh=b.h/ih;return`${b.classIdx} ${cx.toFixed(6)} ${cy.toFixed(6)} ${bw.toFixed(6)} ${bh.toFixed(6)}`;}).join('\n');
-      lblFolder.file(`${baseName}.txt`,txtContent);
-      try{const r=await fetch(img.url);const blob=await r.blob();imgFolder.file(`${baseName}.${imgExt}`,blob);}catch(e){}
-      done++;if(btn)btn.textContent=`⏳ ${done}/${total}장...`;
+        window.state.myPostDocId = null;
+        localStorage.removeItem("quest7_my_post_doc_id");
+        localStorage.removeItem("quest7_my_rule_content");
+        localStorage.removeItem("quest7_my_rule_reason");
+
+        document.getElementById("mySavedPostArea").style.display = "none";
+        document.getElementById("inputRuleContent").value = "";
+        document.getElementById("inputRuleReason").value = "";
+
+        alert("작성한 실천 규약이 삭제되었습니다. 새로운 규약을 다시 작성할 수 있습니다.");
+
+      } catch(e) {
+        console.error(e);
+        alert("삭제 중 오류가 발생했습니다: " + e.message);
+      }
+    };
+
+    // 현재 모둠 실천 규약 목록 캐시
+    let currentRulesList = [];
+
+    // 간단한 오디오 톤 피드백 함수
+    function playLikeTone(isLiked) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        osc.frequency.setValueAtTime(isLiked ? 720 : 480, now);
+        osc.frequency.exponentialRampToValueAtTime(isLiked ? 1080 : 360, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } catch (e) {}
     }
-    if(btn)btn.textContent='📦 ZIP 생성 중...';
-    const zipBlob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(zipBlob);a.download=`ai-class-labels-${Date.now()}.zip`;a.click();
-    alert(`✅ ZIP 완료!\nimages/ ${done}장\nlabels/ ${done}개\nclasses.txt`);
-  }catch(e){alert('ZIP 생성 실패: '+e.message);}
-  finally{if(btn){btn.textContent='📦 ZIP';btn.disabled=false;}}
-}
 
-function downloadText(filename,content){const blob=new Blob([content],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
-function clamp(min,val,max){return Math.min(max,Math.max(min,val));}
-function setupResize(){window.addEventListener('resize',()=>{if(currentImg?._imageEl)fitImageToCanvas(currentImg._imageEl);redrawCanvas(currentImg?._imageEl);});}
-</script>
+    // 2단계: 실시간 모둠 규약 피드 구독
+    function subscribeTeamRules() {
+      const q = query(
+        collection(db, "quest7_rules"),
+        where("teamCode", "==", teamCode)
+      );
+
+      onSnapshot(q, (snapshot) => {
+        const list = [];
+        snapshot.forEach(docSnap => {
+          list.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // 1순위: 좋아요 수 내림차순(많은 순), 2순위: 최신 작성순 내림차순 정렬
+        list.sort((a, b) => {
+          const likesA = (typeof a.likes === 'number') ? a.likes : (Array.isArray(a.likedBy) ? a.likedBy.length : 0);
+          const likesB = (typeof b.likes === 'number') ? b.likes : (Array.isArray(b.likedBy) ? b.likedBy.length : 0);
+          if (likesB !== likesA) {
+            return likesB - likesA;
+          }
+          const tA = a.createdAt ? a.createdAt.seconds : 0;
+          const tB = b.createdAt ? b.createdAt.seconds : 0;
+          return tB - tA;
+        });
+
+        currentRulesList = list;
+        renderSharedRules(list);
+
+        // 내가 쓴 글이 목록에 있으면 1단계 미리보기도 갱신
+        const myDoc = list.find(it => it.studentId === studentId);
+        if (myDoc) {
+          window.state.myPostDocId = myDoc.id;
+          localStorage.setItem("quest7_my_post_doc_id", myDoc.id);
+          showMyPostPreview(myDoc.ruleContent || (myDoc.articles ? myDoc.articles.join(', ') : ''), myDoc.reason || '');
+        }
+      }, (error) => {
+        console.warn("Realtime listener error:", error);
+      });
+    }
+
+    // 2단계 공유 게시판 렌더링
+    function renderSharedRules(list) {
+      const grid = document.getElementById("sharedRulesGrid");
+      if (!grid) return;
+
+      if (list.length === 0) {
+        grid.innerHTML = `
+          <div style="text-align:center;padding:40px 20px;background:#F9FBE7;border-radius:16px;border:2px dashed #C8E6C9;">
+            <div style="font-size:36px;margin-bottom:8px;"></div>
+            <h4 style="font-family:'Jua';color:#2E7D32;font-size:18px;margin-bottom:6px;">아직 등록된 실천 규약이 없습니다.</h4>
+            <p style="font-size:14px;color:#558B2F;">1단계에서 우리 모둠의 첫 번째 실천 규약을 작성해보세요!</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = list.map((item, idx) => {
+        const isMyPost = item.studentId === studentId;
+        const timeStr = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '방금 전';
+
+        const ruleText = item.ruleContent || (item.articles ? item.articles.join(', ') : item.title || '실천 규약');
+        const reasonText = item.reason || '자원순환 실천을 위해 작성되었습니다.';
+
+        // 좋아요 상태 및 수량 계산
+        const likedBy = Array.isArray(item.likedBy) ? item.likedBy : [];
+        const isLiked = likedBy.includes(studentId);
+        const likesCount = (typeof item.likes === 'number') ? Math.max(0, item.likes) : likedBy.length;
+
+        // 순위 배지 (좋아요가 1개 이상일 때 1~3위 강조)
+        let rankBadgeHtml = '';
+        if (likesCount > 0) {
+          if (idx === 0) rankBadgeHtml = '<span class="rank-badge rank-1">1위 인기 규약</span>';
+          else if (idx === 1) rankBadgeHtml = '<span class="rank-badge rank-2">2위</span>';
+          else if (idx === 2) rankBadgeHtml = '<span class="rank-badge rank-3">3위</span>';
+        }
+
+        const commentsHtml = (item.comments && item.comments.length) ? item.comments.map(c => `
+          <div class="comment-item-pill">
+            <strong>${c.author}:</strong> ${c.text}
+          </div>
+        `).join('') : '<div style="font-size:12px;color:#90A4AE;padding:4px;">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</div>';
+
+        return `
+          <div class="board-feed-card ${isMyPost ? 'my-card' : ''}">
+            <div class="card-top-row">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="author-badge-pill">
+                  <span>${item.authorName || '모둠원'}</span>
+                  ${isMyPost ? '<span style="font-size:12px;color:#0288D1;font-weight:900;">(내가 작성)</span>' : ''}
+                </div>
+                ${rankBadgeHtml}
+              </div>
+              <span class="card-time-text">${timeStr}</span>
+            </div>
+
+            <div style="font-family:'Jua';font-size:16px;color:#1B5E20;margin-bottom:6px;">1. 규약:</div>
+            <div class="card-rule-content">${ruleText}</div>
+
+            <div style="font-family:'Jua';font-size:15px;color:#5D4037;margin-bottom:6px;">2. 제시한 이유:</div>
+            <div class="card-reason-content">${reasonText}</div>
+
+            <!-- 좋아요 버튼 액션 바 -->
+            <div class="card-action-bar">
+              <button class="btn-like-post ${isLiked ? 'liked' : ''}" onclick="toggleLikePost('${item.id}')" title="이 실천 규약에 공감하고 좋아요를 누릅니다">
+                <span>${isLiked ? '좋아요 완료' : '좋아요'}</span>
+                <span class="like-count-badge">${likesCount}</span>
+              </button>
+            </div>
+
+            <!-- 댓글 영역 -->
+            <div class="comments-section">
+              <div class="comments-title">친구들의 댓글 & 의견:</div>
+              <div class="comments-list" id="commentsList_${item.id}">
+                ${commentsHtml}
+              </div>
+              <div class="comment-input-row">
+                <input type="text" id="commentInput_${item.id}" class="comment-input-field" placeholder="칭찬이나 보완 의견을 댓글로 달아보세요..." onkeypress="if(event.key==='Enter') addCommentToPost('${item.id}')">
+                <button class="btn-submit-comment" onclick="addCommentToPost('${item.id}')">등록</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 좋아요 토글 (누를 때마다 좋아요 등록 / 취소)
+    window.toggleLikePost = async function(postId) {
+      if (!postId) return;
+      const cachedItem = currentRulesList.find(it => it.id === postId);
+      const isAlreadyLiked = cachedItem && Array.isArray(cachedItem.likedBy) && cachedItem.likedBy.includes(studentId);
+
+      playLikeTone(!isAlreadyLiked);
+
+      try {
+        if (isAlreadyLiked) {
+          await updateDoc(doc(db, "quest7_rules", postId), {
+            likes: increment(-1),
+            likedBy: arrayRemove(studentId)
+          });
+        } else {
+          await updateDoc(doc(db, "quest7_rules", postId), {
+            likes: increment(1),
+            likedBy: arrayUnion(studentId)
+          });
+          window.addScore(5);
+        }
+      } catch (e) {
+        console.warn("Like update error:", e);
+      }
+    };
+
+    // 댓글 등록
+    window.addCommentToPost = async function(postId) {
+      const input = document.getElementById(`commentInput_${postId}`);
+      if (!input) return;
+      const text = input.value.trim();
+      if (!text) return;
+
+      try {
+        await updateDoc(doc(db, "quest7_rules", postId), {
+          comments: arrayUnion({
+            author: studentName,
+            text: text
+          })
+        });
+        input.value = "";
+      } catch (e) {
+        console.warn("Comment error:", e);
+      }
+    };
+
+    // ── 3단계: 우리 반 모둠별 대표 규약 전당 로직 ──
+    let currentRepRulesList = [];
+
+    // 3단계: 전체 모둠 규약 실시간 구독 (각 모둠 내 좋아요 1위 대표 규약 집계)
+    function subscribeAllTeamRepRules() {
+      const q = collection(db, "quest7_rules");
+
+      onSnapshot(q, (snapshot) => {
+        const allRules = [];
+        snapshot.forEach(docSnap => {
+          allRules.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // 1. 모둠별(teamCode)로 그룹화
+        const teamGroups = {};
+        allRules.forEach(rule => {
+          const tCode = rule.teamCode || '미지정';
+          if (!teamGroups[tCode]) teamGroups[tCode] = [];
+          teamGroups[tCode].push(rule);
+        });
+
+        // 2. 각 모둠별로 모둠 내 좋아요(likes) 1위 추출
+        const repRules = [];
+        Object.entries(teamGroups).forEach(([tCode, rules]) => {
+          rules.sort((a, b) => {
+            const likesA = (typeof a.likes === 'number') ? a.likes : (Array.isArray(a.likedBy) ? a.likedBy.length : 0);
+            const likesB = (typeof b.likes === 'number') ? b.likes : (Array.isArray(b.likedBy) ? b.likedBy.length : 0);
+            if (likesB !== likesA) return likesB - likesA;
+            return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+          });
+          const bestRule = rules[0];
+          if (bestRule) {
+            repRules.push(bestRule);
+          }
+        });
+
+        // 3. 3단계 반 대표 좋아요(classLikes) 순으로 정렬
+        repRules.sort((a, b) => {
+          const vA = (typeof a.classLikes === 'number') ? a.classLikes : (Array.isArray(a.classLikedBy) ? a.classLikedBy.length : 0);
+          const vB = (typeof b.classLikes === 'number') ? b.classLikes : (Array.isArray(b.classLikedBy) ? b.classLikedBy.length : 0);
+          if (vB !== vA) return vB - vA;
+          const mA = (typeof a.likes === 'number') ? a.likes : (Array.isArray(a.likedBy) ? a.likedBy.length : 0);
+          const mB = (typeof b.likes === 'number') ? b.likes : (Array.isArray(b.likedBy) ? b.likedBy.length : 0);
+          return mB - mA;
+        });
+
+        currentRepRulesList = repRules;
+        renderRepRulesUI(repRules);
+      }, (error) => {
+        console.warn("Class rules listener error:", error);
+      });
+    }
+
+    // 3단계 UI 렌더링
+    function renderRepRulesUI(repRules) {
+      const grid = document.getElementById("teamRepRulesGrid");
+      const bestVotesBadge = document.getElementById("bestClassVotesBadge");
+      const bestContent = document.getElementById("bestClassRuleContent");
+      const bestReason = document.getElementById("bestClassRuleReason");
+      const syncStatus = document.getElementById("classSyncStatus");
+
+      if (syncStatus) {
+        syncStatus.textContent = `총 ${repRules.length}개 모둠 대표 규약 집계 중`;
+      }
+
+      if (!grid) return;
+
+      if (repRules.length === 0) {
+        grid.innerHTML = `
+          <div style="text-align:center;padding:40px 20px;background:#F8FAFC;border-radius:16px;border:2px dashed #CBD5E1;grid-column:1/-1;">
+            <h4 style="font-family:'Jua';color:#475569;font-size:18px;margin-bottom:6px;">아직 등록된 모둠 실천 규약이 없습니다.</h4>
+            <p style="font-size:14px;color:#64748B;">각 모둠원들이 1단계에서 규약을 게시하면 이곳에 모둠별 1위 대표 규약이 전시됩니다.</p>
+          </div>
+        `;
+        if (bestContent) bestContent.textContent = '아직 등록된 모둠 대표 규약이 없습니다.';
+        if (bestReason) bestReason.textContent = '-';
+        if (bestVotesBadge) bestVotesBadge.textContent = '0표';
+        return;
+      }
+
+      // 현재 1위 대표 규약 하이라이트 박스 갱신
+      const topRule = repRules[0];
+      const topVotes = (typeof topRule.classLikes === 'number') ? topRule.classLikes : (Array.isArray(topRule.classLikedBy) ? topRule.classLikedBy.length : 0);
+      
+      if (bestVotesBadge) bestVotesBadge.textContent = `${topVotes}표 획득`;
+      if (bestContent) bestContent.innerHTML = `<span style="background:#FEF08A;color:#854D0E;padding:2px 8px;border-radius:8px;font-size:13px;font-weight:bold;margin-right:6px;">[${topRule.teamCode || '모둠'}]</span> ${topRule.ruleContent || (topRule.articles ? topRule.articles.join(', ') : '실천 규약')}`;
+      if (bestReason) bestReason.textContent = `이유: ${topRule.reason || '자원순환 실천을 위해 작성되었습니다.'} (작성: ${topRule.authorName || '모둠원'})`;
+
+      // 그리드 렌더링
+      grid.innerHTML = repRules.map((item, idx) => {
+        const isFirst = (idx === 0);
+        const classLikedBy = Array.isArray(item.classLikedBy) ? item.classLikedBy : [];
+        const isVoted = classLikedBy.includes(studentId);
+        const votesCount = (typeof item.classLikes === 'number') ? Math.max(0, item.classLikes) : classLikedBy.length;
+        const sourceLikes = (typeof item.likes === 'number') ? item.likes : (Array.isArray(item.likedBy) ? item.likedBy.length : 0);
+
+        const ruleText = item.ruleContent || (item.articles ? item.articles.join(', ') : item.title || '실천 규약');
+        const reasonText = item.reason || '자원순환 실천을 위해 작성되었습니다.';
+
+        return `
+          <div class="rep-rule-card ${isFirst ? 'is-first' : ''}">
+            <div>
+              <div class="rep-card-top">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="rep-team-badge">${item.teamCode || '모둠'} 대표</span>
+                  ${isFirst ? '<span class="rank-badge rank-1">학급 1위</span>' : ''}
+                </div>
+                <span class="rep-source-likes">모둠 내 공감: ${sourceLikes}표</span>
+              </div>
+
+              <div style="font-size:12px;color:#64748B;margin-bottom:8px;">
+                작성 탐정: <strong>${item.authorName || '모둠원'}</strong>
+              </div>
+
+              <div style="font-family:'Jua';font-size:15px;color:#1B5E20;margin-bottom:4px;">대표 규약:</div>
+              <div style="background:#F1F8E9;border:1px solid #DCEDC8;border-radius:12px;padding:12px 14px;font-size:15px;color:#1B5E20;line-height:1.6;margin-bottom:10px;">
+                ${ruleText}
+              </div>
+
+              <div style="font-family:'Jua';font-size:14px;color:#5D4037;margin-bottom:4px;">제시한 이유:</div>
+              <div style="background:#FFFDE7;border:1px solid #FFF59D;border-radius:12px;padding:10px 12px;font-size:13.5px;color:#5D4037;line-height:1.5;">
+                ${reasonText}
+              </div>
+            </div>
+
+            <!-- 반 대표 투표(좋아요) 버튼 -->
+            <button class="btn-vote-class ${isVoted ? 'voted' : ''}" onclick="toggleVoteClassRepRule('${item.id}')" title="우리 반 최종 대표 규약으로 투표합니다">
+              <span>${isVoted ? '우리 반 대표 투표완료' : '우리 반 대표로 투표(좋아요)'}</span>
+              <span class="vote-count-badge">${votesCount}표</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 3단계: 반 대표 투표(좋아요) 토글
+    window.toggleVoteClassRepRule = async function(postId) {
+      if (!postId) return;
+      const target = currentRepRulesList.find(it => it.id === postId);
+      const isAlreadyVoted = target && Array.isArray(target.classLikedBy) && target.classLikedBy.includes(studentId);
+
+      playLikeTone(!isAlreadyVoted);
+
+      try {
+        if (isAlreadyVoted) {
+          await updateDoc(doc(db, "quest7_rules", postId), {
+            classLikes: increment(-1),
+            classLikedBy: arrayRemove(studentId)
+          });
+        } else {
+          await updateDoc(doc(db, "quest7_rules", postId), {
+            classLikes: increment(1),
+            classLikedBy: arrayUnion(studentId)
+          });
+          window.addScore(10);
+        }
+      } catch (e) {
+        console.warn("Class vote error:", e);
+      }
+    };
+
+    // QUEST 7 최종 완료
+    window.finishQuest7 = async function() {
+      window.addScore(100);
+      localStorage.setItem("quest7_completed", "true");
+      localStorage.setItem("elementary_q7_done", "true");
+
+      if (db && studentId && studentId !== "guest") {
+        try {
+          await updateDoc(doc(db, "students", studentId), {
+            score: increment(100),
+            questsDone: increment(1),
+            q7Done: true,
+            q7_done: true
+          });
+        } catch(e) {
+          console.warn("Firestore update error:", e);
+        }
+      }
+
+      alert(`축하합니다! QUEST 7 [우리 모둠 실천 규약 초안 입력하기]를 완수했습니다!\n\n총 획득 점수: ${window.state.score} EXP\n메인 화면으로 이동합니다!`);
+      window.location.href = 'main.html';
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('headerTeamBadge').textContent = `${teamCode}`;
+      document.getElementById('dispWriterName').textContent = studentName;
+      document.getElementById('dispWriterTeam').textContent = teamCode;
+      document.getElementById('scoreDisplay').textContent = `${window.state.score} EXP`;
+
+      // 저장된 내 글이 있으면 표시
+      const savedRule = localStorage.getItem("quest7_my_rule_content");
+      const savedReason = localStorage.getItem("quest7_my_rule_reason");
+      if (savedRule && savedReason) {
+        document.getElementById("inputRuleContent").value = savedRule;
+        document.getElementById("inputRuleReason").value = savedReason;
+        showMyPostPreview(savedRule, savedReason);
+      }
+
+      // 실시간 모둠 피드 구독 시작 (2단계)
+      subscribeTeamRules();
+      // 실시간 전체 모둠 대표 피드 구독 시작 (3단계)
+      subscribeAllTeamRepRules();
+    });
+  </script>
 </body>
 </html>

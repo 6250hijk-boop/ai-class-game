@@ -2,2890 +2,1207 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-  <title>AI 가디언 - 메인</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI 자원순환 탐정단 - 메인 본부</title>
+  <script>
+    // localhost 상의 다른 PWA 서비스 워커 및 캐시 충돌 자동 해제
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        for (const reg of regs) reg.unregister();
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        for (const k of keys) caches.delete(k);
+      });
+    }
+  </script>
+  <!-- 저작권 무료 폰트: Pretendard 및 Google Fonts Jua 사용 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  
   <style>
-    *{box-sizing:border-box;}
-    /* 배경 */
-    body{background:url('images/bgmain2.png') center/cover no-repeat fixed;background-color:var(--bg);}
-    body::before{content:'';position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:0;pointer-events:none;}
-    .page{position:relative;z-index:1;}
-    /* 스토리 오프닝 */
-    .story-overlay{position:fixed;inset:0;z-index:300;
-      background:url('images/bgmain.png') center/cover no-repeat;
-      display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;}
-    .story-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.65);z-index:0;}
-    .story-robot{font-size:clamp(48px,10vw,80px);margin-bottom:24px;animation:float 3s ease-in-out infinite;position:relative;z-index:1;}
-    .story-text{max-width:600px;font-size:clamp(15px,3vw,18px);line-height:1.9;color:var(--text);opacity:0;animation:fadeIn 1s ease .5s forwards;white-space:pre-line;text-align:center;position:relative;z-index:1;}
-    @keyframes fadeIn{to{opacity:1;}}
-    .story-btn{margin-top:28px;padding:12px 32px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;opacity:0;transition:opacity .5s;position:relative;z-index:1;}
-    /* 비회원 선택 화면 */
-    .temp-choice-overlay{position:fixed;inset:0;z-index:310;
-      background:url('images/bgmain.png') center/cover no-repeat;
-      display:flex;align-items:center;justify-content:center;padding:20px;}
-    .temp-choice-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.75);z-index:0;}
-    .temp-choice-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:380px;width:100%;text-align:center;position:relative;z-index:1;}
-    .temp-choice-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;}
-    .temp-choice-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
-    /* 이름 짓기 */
-    .name-overlay{position:fixed;inset:0;z-index:310;
-      background:url('images/bgmain.png') center/cover no-repeat;
-      display:flex;align-items:center;justify-content:center;padding:20px;}
-    .name-overlay::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.75);z-index:0;}
-    .name-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:clamp(24px,5vw,36px);max-width:400px;width:100%;text-align:center;position:relative;z-index:1;}
-    .name-box h2{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,22px);margin-bottom:8px;position:relative;z-index:1;}
-    .name-box p{font-size:13px;color:var(--muted);margin-bottom:20px;position:relative;z-index:1;}
-    .name-input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;transition:border .2s;}
-    .name-input:focus{border-color:var(--primary);}
-    .btn{width:100%;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;font-family:inherit;margin-bottom:8px;}
-    .btn-primary{background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;}
-    .btn-primary:hover{transform:translateY(-2px);}
-    .btn-ghost{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);}
-    .btn-ghost:hover{background:rgba(255,255,255,0.1);}
-    .btn-danger{background:linear-gradient(135deg,#fc8181,#f56565);color:white;}
-    .alert{padding:9px 12px;border-radius:9px;font-size:13px;margin-bottom:10px;}
-    .alert-error{background:rgba(252,129,129,0.15);border:1px solid var(--red);color:var(--red);}
-    .alert-success{background:rgba(104,211,145,0.15);border:1px solid var(--green);color:var(--green);}
-    /* 앱 레이아웃 */
-    .app-layout{display:flex;min-height:100vh;}
-    .sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 14px;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:50;transition:transform .3s;}
-    .sidebar-logo{font-family:'Jua',sans-serif;font-size:17px;color:var(--primary);margin-bottom:16px;padding:0 6px;letter-spacing:1px;}
-    .char-widget{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;margin-bottom:14px;}
-    .char-widget img{width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,179,237,0.7));animation:float 3s ease-in-out infinite;}
-    .char-widget .char-emoji{font-size:50px;animation:float 3s ease-in-out infinite;}
-    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
-    .char-name{font-weight:700;font-size:14px;margin:7px 0 2px;}
-    .char-level{font-size:12px;color:var(--accent);}
-    .char-score{font-family:'Jua',sans-serif;font-size:20px;color:var(--primary);margin:5px 0;}
-    .xp-bar-wrap{background:rgba(255,255,255,0.08);border-radius:20px;height:7px;overflow:hidden;}
-    .xp-bar{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:20px;transition:width 1s ease;}
-    .xp-label{font-size:11px;color:var(--muted);text-align:right;margin-top:3px;}
-    .quest-section{margin-bottom:14px;}
-    .quest-section h4{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;}
-    .quest-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:all .2s;margin-bottom:2px;font-size:13px;border:1px solid transparent;text-decoration:none;color:var(--text);}
-    .quest-item:hover{background:rgba(99,179,237,0.08);border-color:var(--border);}
-    .quest-item.active{background:rgba(99,179,237,0.12);border-color:var(--primary);color:var(--primary);}
-    .quest-check{width:15px;height:15px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;}
-    .quest-check.done{background:var(--green);border-color:var(--green);color:#0a0e1a;}
-    .ref-link{display:block;padding:7px 10px;font-size:12px;color:var(--muted);text-decoration:none;border-radius:7px;transition:color .2s;}
-    .ref-link:hover{color:var(--primary);}
-    .main-content{margin-left:260px;flex:1;padding:clamp(20px,4vw,32px);}
-    .ai-notice-main{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:16px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:8px;display:inline-block;}
-    /* 퀘스트 카드 */
-    .quest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
-    .quest-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .2s;text-decoration:none;display:block;}
-    .quest-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(99,179,237,0.12);}
-    .quest-card.done{border-color:var(--green);opacity:.75;}
-    .quest-card .q-icon{font-size:32px;margin-bottom:8px;}
-    .quest-card .q-num{font-weight:700;font-size:13px;margin-bottom:3px;}
-    .quest-card .q-title{font-size:13px;color:var(--muted);}
-    .quest-card .q-status{margin-top:10px;font-size:12px;}
-    /* 비회원 초기화 버튼 */
-    .temp-reset{background:rgba(252,129,129,0.1);border:1px solid rgba(252,129,129,0.3);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--red);cursor:pointer;font-family:inherit;width:100%;margin-top:8px;transition:all .2s;}
-    .temp-reset:hover{background:rgba(252,129,129,0.2);}
-    /* 모바일 */
-    .hamburger{display:none;position:fixed;top:14px;left:14px;z-index:100;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;font-size:17px;}
-    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
-    @media(max-width:768px){
-      .sidebar{transform:translateX(-100%);}
-      .sidebar.open{transform:translateX(0);}
-      .sidebar-overlay.open{display:block;}
-      .hamburger{display:block;}
-      .main-content{margin-left:0;padding:20px;padding-top:56px;}
-      .quest-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+    :root {
+      --color-primary-blue: rgb(15, 71, 192); /* 로그인 화면 기본 배경색 */
+      --color-primary-blue-hover: rgb(24, 85, 219);
+      --color-primary-blue-dark: rgb(10, 50, 140);
+      --color-completed-yellow: rgb(252, 220, 48); /* 로그인 화면 다음 버튼 색 */
+      --color-completed-yellow-hover: rgb(255, 230, 80);
+      --color-completed-text: #0F172A;
+      --color-white: #FFFFFF;
+      --color-dark: #0F172A;
     }
 
-    /* ── RPG 스타일 로드맵 (Path Map) ── */
-    .roadmap-container {
-      position: relative;
-      background: #060a15;
-      /* 다층 우주 배경: 네뷸라 + 별빛 + 그리드 */
-      background-image:
-        radial-gradient(ellipse 120% 80% at 25% 20%, rgba(127,90,240,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 100% 70% at 75% 80%, rgba(99,179,237,0.10) 0%, transparent 55%),
-        radial-gradient(ellipse 60% 50% at 60% 30%, rgba(246,173,85,0.06) 0%, transparent 50%),
-        linear-gradient(rgba(99, 179, 237, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 179, 237, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px;
-      border: 1.5px solid rgba(127, 90, 240, 0.3);
-      border-radius: clamp(16px, 3vw, 24px);
-      padding: clamp(24px, 5vw, 48px) clamp(16px, 3vw, 24px);
-      margin-top: 20px;
-      min-height: 520px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow: hidden;
-      box-shadow:
-        0 10px 50px rgba(0,0,0,0.6),
-        0 0 60px rgba(127,90,240,0.08),
-        inset 0 0 80px rgba(99,179,237,0.03);
-    }
-    /* 네뷸라 오버레이 (움직이는 빛) */
-    .roadmap-container::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(circle 200px at 20% 40%, rgba(127,90,240,0.08) 0%, transparent 80%),
-        radial-gradient(circle 150px at 80% 60%, rgba(99,179,237,0.06) 0%, transparent 70%);
-      animation: nebulaShift 15s ease-in-out infinite alternate;
-      z-index: 0;
-      pointer-events: none;
-    }
-    /* 스캐닝 레이저 바 */
-    .roadmap-container::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(127, 90, 240, 0.5), rgba(99, 179, 237, 0.4), transparent);
-      animation: scan 10s linear infinite;
-      z-index: 5;
-      pointer-events: none;
-    }
-    @keyframes nebulaShift {
-      0%   { background-position: 0% 0%; transform: scale(1); }
-      100% { background-position: 30% 20%; transform: scale(1.05); }
-    }
-    @keyframes scan {
-      0% { top: 0%; opacity: 0; }
-      5% { opacity: 0.9; }
-      95% { opacity: 0.9; }
-      100% { top: 100%; opacity: 0; }
-    }
-    /* 전술 그리드 코너 장식 (이중 라인) */
-    .roadmap-corner {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-color: rgba(127, 90, 240, 0.5);
-      border-style: solid;
-      pointer-events: none;
-      z-index: 4;
-      box-shadow: 0 0 6px rgba(127,90,240,0.2);
-    }
-    .corner-tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
-    .corner-tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
-    .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
-    .corner-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
-
-    .roadmap-title-bar {
-      width: 100%;
-      text-align: center;
-      margin-bottom: 30px;
-      position: relative;
-      z-index: 5;
-    }
-    .roadmap-title-bar h3 {
-      font-family: 'Jua', sans-serif;
-      font-size: clamp(18px, 4vw, 24px);
-      margin: 0 0 8px 0;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, #63b3ed 0%, #b794f4 40%, #f6ad55 70%, #63b3ed 100%);
-      background-size: 200% 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: holoTitle 6s ease-in-out infinite;
-      filter: drop-shadow(0 0 8px rgba(127,90,240,0.3));
-    }
-    @keyframes holoTitle {
-      0%, 100% { background-position: 0% 50%; }
-      50%      { background-position: 100% 50%; }
-    }
-    .roadmap-title-bar p {
-      font-size: clamp(11px, 2.2vw, 13px);
-      color: rgba(183, 148, 244, 0.6);
+    * {
+      box-sizing: border-box;
       margin: 0;
-      letter-spacing: 0.5px;
+      padding: 0;
+      font-family: 'Pretendard', sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
-    .roadmap-svg-layer {
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      margin: 0;
+      padding: 0;
+      background: #0B1120;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 전체 화면 배경: images/bs-bg.png */
+    .main-page-wrapper {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: row;
+      background: url('images/bs-bg.png') center center / cover no-repeat;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 배경 은은한 오버레이 */
+    .main-page-wrapper::before {
+      content: '';
       position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(11, 17, 32, 0.25) 0%, rgba(15, 23, 42, 0.45) 40%, rgba(15, 23, 42, 0.7) 100%);
       pointer-events: none;
       z-index: 1;
     }
-    .roadmap-nodes {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      height: 520px;
-      max-width: 600px;
-    }
-    .roadmap-node-wrapper {
-      position: absolute;
+
+    /* ============================================================
+       [왼쪽 30% 영역]: 사진 이미지 공간 (상단: bs-logo, 하단: bs-char)
+       ============================================================ */
+    .left-showcase-panel {
+      width: 30%;
+      min-width: 280px;
+      max-width: 440px;
+      height: 100%;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      width: clamp(80px, 18vw, 110px);
-      transform: translate(-50%, -50%);
-    }
-    .roadmap-node {
-      width: clamp(56px, 12vw, 68px);
-      height: clamp(56px, 12vw, 68px);
-      border-radius: 50%;
-      background: rgba(10, 14, 28, 0.9);
-      border: 2.5px solid rgba(127, 90, 240, 0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: clamp(22px, 5vw, 28px);
-      cursor: pointer;
+      padding: 24px 20px 16px 24px;
       position: relative;
-      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow:
-        0 6px 24px rgba(0,0,0,0.7),
-        0 0 15px rgba(127,90,240,0.1),
-        inset 0 2px 6px rgba(255,255,255,0.04);
-      text-decoration: none;
-      -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(6px);
-    }
-    .roadmap-node:hover {
-      transform: scale(1.15);
-      box-shadow:
-        0 0 30px rgba(127,90,240,0.5),
-        0 0 60px rgba(99,179,237,0.15),
-        inset 0 0 10px rgba(127,90,240,0.2);
-      border-color: #b794f4;
-    }
-    /* 현재 진행해야하는 활성 노드 효과 */
-    .roadmap-node.active {
-      border-color: var(--accent);
-      background: rgba(246,173,85,0.06);
-      box-shadow:
-        0 0 30px rgba(246, 173, 85, 0.6),
-        0 0 60px rgba(246, 173, 85, 0.15),
-        inset 0 0 12px rgba(246, 173, 85, 0.25);
-      animation: nodePulse 2s infinite ease-in-out;
-    }
-    .roadmap-node.active::before {
-      content: '';
-      position: absolute;
-      inset: -8px;
-      border: 2px dashed rgba(246,173,85,0.5);
-      border-radius: 50%;
-      animation: nodeSpin 10s linear infinite;
-    }
-    @keyframes nodeSpin {
-      100% { transform: rotate(360deg); }
-    }
-    /* 완료한 노드 체크 뱃지 및 스타일 */
-    .roadmap-node.done {
-      border-color: var(--green);
-      background: rgba(104, 211, 145, 0.08);
-      box-shadow:
-        0 0 20px rgba(104, 211, 145, 0.4),
-        0 0 40px rgba(104, 211, 145, 0.08),
-        inset 0 0 10px rgba(104, 211, 145, 0.15);
-    }
-    .roadmap-node.done::after {
-      content: '✓';
-      position: absolute;
-      bottom: -3px;
-      right: -3px;
-      width: 20px;
-      height: 20px;
-      background: linear-gradient(135deg, #68d391, #38a169);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 900;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(104,211,145,0.5);
-      border: 2px solid #060a15;
-    }
-    .roadmap-node.locked {
-      opacity: 0.28;
-      background: rgba(15, 20, 32, 0.95);
-      border-color: rgba(255,255,255,0.04);
-      cursor: not-allowed;
-      pointer-events: none;
-    }
-    @keyframes nodePulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.10); box-shadow: 0 0 40px rgba(246, 173, 85, 0.8), 0 0 80px rgba(246,173,85,0.2), inset 0 0 15px rgba(246, 173, 85, 0.35); }
-    }
-    .roadmap-node-title {
-      font-size: clamp(10px, 2.2vw, 12px);
-      font-weight: 700;
-      text-align: center;
-      margin-top: 8px;
-      color: var(--text);
-      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-      max-width: 100px;
-      line-height: 1.3;
-    }
-    .roadmap-node-step {
-      font-size: clamp(8px, 1.8vw, 10px);
-      color: rgba(183,148,244,0.7);
-      margin-bottom: 2px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .character-indicator {
-      position: absolute;
-      top: -36px;
-      font-size: clamp(26px, 6vw, 34px);
-      animation: floatIndicator 1.5s ease-in-out infinite;
       z-index: 10;
-      pointer-events: none;
-      filter: drop-shadow(0 4px 10px rgba(246,173,85,0.5));
-    }
-    @keyframes floatIndicator {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-8px) scale(1.1); }
+      box-sizing: border-box;
     }
 
-    /* 지도 장식 요소 (Start, Goal) */
-    .roadmap-decor {
-      position: absolute;
+    /* 상단 bs-logo 박스 */
+    .logo-box {
+      width: 100%;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 2;
+      max-height: 28vh;
+      padding-top: 6px;
     }
-    .decor-emoji {
-      font-size: clamp(30px, 6.5vw, 40px);
-      filter: drop-shadow(0 4px 12px rgba(127,90,240,0.5));
-      animation: floatDecor 3s ease-in-out infinite;
+
+    .logo-image {
+      max-width: 95%;
+      max-height: 24vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+      animation: gentleFloat 4s ease-in-out infinite;
+      transition: transform 0.3s ease;
     }
-    .decor-label {
-      font-family: 'Jua', sans-serif;
-      font-size: clamp(9px, 1.8vw, 11px);
-      background: linear-gradient(135deg, #b794f4, #63b3ed);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-top: 4px;
-      letter-spacing: 2px;
-      font-weight: 700;
+
+    .logo-image:hover {
+      transform: scale(1.03);
     }
-    @keyframes floatDecor {
+
+    @keyframes gentleFloat {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-6px); }
     }
-    /* 별 파티클 (JS에서 생성) */
-    .roadmap-star {
-      position: absolute;
-      width: 2px; height: 2px;
-      background: #fff;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      animation: twinkle var(--dur, 3s) ease-in-out infinite;
-      opacity: 0;
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: 0; transform: scale(0.5); }
-      50% { opacity: var(--brightness, 0.6); transform: scale(1.2); }
-    }
 
-    /* ── 뱃지 보관함 ── */
-    .badge-section {
-      margin-top: 16px;
-      padding: 0 6px;
-    }
-    .badge-section h4 {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 0 6px;
-      margin-bottom: 7px;
-    }
-    .badge-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: clamp(8px, 2vw, 12px);
-    }
-    .badge-item {
-      text-align: center;
-      font-size: 18px;
-      padding: 6px 0;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.05);
-      position: relative;
-      cursor: help;
-      transition: all 0.2s;
-    }
-    .badge-item.unlocked {
-      background: rgba(99,179,237,0.08);
-      border-color: rgba(99,179,237,0.3);
-      box-shadow: 0 2px 8px rgba(99,179,237,0.15);
-    }
-    .badge-item.locked {
-      filter: grayscale(100%) opacity(0.25);
-    }
-    .badge-item:hover .badge-tooltip {
-      visibility: visible;
-      opacity: 1;
-    }
-    .badge-tooltip {
-      visibility: hidden;
-      opacity: 0;
-      width: 140px;
-      background-color: #0f1420;
-      border: 1px solid var(--border);
-      color: var(--text);
-      text-align: center;
-      border-radius: 8px;
-      padding: 6px 8px;
-      position: absolute;
-      z-index: 100;
-      bottom: 125%;
-      left: 50%;
-      margin-left: -70px;
-      font-size: 11px;
-      line-height: 1.4;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      transition: opacity 0.2s;
-      pointer-events: none;
-    }
-    .badge-tooltip::after {
-      content: "";
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      margin-left: -5px;
-      border-width: 5px;
-      border-style: solid;
-      border-color: var(--border) transparent transparent transparent;
-    }
-    .badge-tooltip strong {
-      color: var(--primary);
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    /* ── SVG 로드맵 연결선 스타일 ── */
-    .roadmap-path {
-      stroke: rgba(99, 179, 237, 0.15);
-      stroke-width: 4;
-      stroke-linecap: round;
-      fill: none;
-    }
-    .roadmap-path.completed {
-      stroke: var(--green);
-      stroke-width: 5;
-      filter: url(#glow-green);
-    }
-    @keyframes dash {
-      to {
-        stroke-dashoffset: -20;
-      }
-    }
-    .roadmap-path.active-path {
-      stroke: var(--accent);
-      stroke-width: 5;
-      stroke-dasharray: 6 4;
-      animation: dash 1s linear infinite;
-      filter: url(#glow-orange);
-    }
-
-    /* ── 안내 가이드 팝업 스타일 ── */
-    .policy-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 600;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(6px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .policy-box {
-      background: #0f1420;
-      border: 2px solid rgba(99, 179, 237, 0.4);
-      border-radius: 20px;
-      max-width: 440px;
+    /* 하단 bs-char 박스 */
+    .char-box {
       width: 100%;
       display: flex;
-      flex-direction: column;
-      animation: slideUp .4s ease;
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+      justify-content: center;
+      align-items: flex-end;
+      flex: 1;
+      max-height: 70vh;
     }
 
-    /* ── 학습 분석 대시보드 ── */
-    .analytics-container {
-      margin-top: 24px;
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: clamp(16px, 3vw, 24px);
-      padding: clamp(20px, 4vw, 32px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    .char-image {
+      max-width: 100%;
+      max-height: 66vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .char-image:hover {
+      transform: scale(1.04) translateY(-4px);
+    }
+
+    /* ============================================================
+       [오른쪽 70% 영역]: 상단 아지트 버튼 + 실시간 동접 바 + 하단 퀘스트 사각 버튼들
+       ============================================================ */
+    .right-content-panel {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 32px 20px 16px;
       position: relative;
+      z-index: 10;
+      box-sizing: border-box;
+      backdrop-filter: blur(4px);
+    }
+
+    /* 상단 헤더 컨테이너 */
+    .top-header-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    /* 🟢 실시간 동접 (동시 접속) 상태 바 */
+    .presence-bar {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.82);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(10px);
+    }
+
+    .presence-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
       overflow: hidden;
     }
-    .analytics-title {
-      margin-bottom: 20px;
+
+    .live-pulse-dot {
+      width: 11px;
+      height: 11px;
+      background: #22C55E;
+      border-radius: 50%;
+      box-shadow: 0 0 0 rgba(34, 197, 94, 0.6);
+      animation: pulseGreen 1.8s infinite;
+      flex-shrink: 0;
     }
-    .analytics-title h3 {
+
+    @keyframes pulseGreen {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .presence-label {
+      color: #F8FAFC;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+    }
+
+    .presence-label span {
+      color: #4ADE80;
+    }
+
+    .presence-names {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .member-chip {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      padding: 3px 8px;
+      color: #E2E8F0;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .member-chip.my-chip {
+      background: rgba(34, 197, 94, 0.25);
+      border-color: #22C55E;
+      color: #DCFCE7;
+      font-weight: 700;
+    }
+
+    .me-tag {
+      background: #22C55E;
+      color: #0F172A;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 4px;
+      line-height: 1.2;
+    }
+
+    .presence-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .team-badge {
+      background: var(--color-primary-blue);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .score-badge {
+      background: rgba(252, 220, 48, 0.2);
+      border: 1px solid var(--color-completed-yellow);
+      color: var(--color-completed-yellow);
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
       font-family: 'Jua', sans-serif;
-      color: var(--primary);
-      font-size: clamp(16px, 3.5vw, 20px);
-      margin: 0 0 6px 0;
     }
-    .analytics-title p {
-      font-size: clamp(11px, 2.2vw, 13px);
-      color: var(--muted);
-      margin: 0;
-    }
-    .analytics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
+
+    /* ============================================================
+       상단: "'팀코드'의 아지트" 사각형 버튼
+       ============================================================ */
+    .btn-azit-main {
       width: 100%;
+      background: var(--color-primary-blue);
+      color: var(--color-white);
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-radius: 18px;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(15, 71, 192, 0.45), 0 2px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    @media (max-width: 480px) {
-      .analytics-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .analytics-card {
-        padding: 12px !important;
-      }
+
+    .btn-azit-main:hover {
+      background: var(--color-primary-blue-hover);
+      border-color: #FFFFFF;
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 12px 30px rgba(15, 71, 192, 0.65), 0 0 20px rgba(56, 189, 248, 0.5);
     }
-    .analytics-card {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+
+    .btn-azit-main:active {
+      transform: scale(0.98);
+    }
+
+    .azit-btn-left {
       display: flex;
       align-items: center;
       gap: 14px;
-      transition: all 0.3s ease;
     }
-    .analytics-card:hover {
-      transform: translateY(-3px);
-      background: rgba(99, 179, 237, 0.05);
-      border-color: rgba(99, 179, 237, 0.3);
-      box-shadow: 0 6px 15px rgba(99,179,237,0.1);
+
+    .azit-btn-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
     }
-    .analytics-card-icon {
-      font-size: clamp(24px, 5vw, 32px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: clamp(44px, 8vw, 54px);
-      height: clamp(44px, 8vw, 54px);
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-    .analytics-card-info {
+
+    .azit-btn-text {
       display: flex;
       flex-direction: column;
-      min-width: 0;
-    }
-    .analytics-card-label {
-      font-size: clamp(10px, 2vw, 12px);
-      color: var(--muted);
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .analytics-card-value {
-      font-family: 'Jua', sans-serif;
-      font-size: clamp(16px, 3.5vw, 22px);
-      color: var(--text);
-      margin-top: 2px;
-      white-space: nowrap;
+      text-align: left;
     }
 
-    /* ── 뱃지 상세 정보 모달 스타일 ── */
-    .badge-detail-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      animation: fadeIn .25s ease;
-    }
-    .badge-detail-card {
-      background: #0f1420;
-      border: 2px solid rgba(99, 179, 237, 0.4);
-      box-shadow: 0 0 40px rgba(99, 179, 237, 0.2);
-      border-radius: 24px;
-      padding: 30px 24px;
-      text-align: center;
-      max-width: 340px;
-      width: 100%;
-      position: relative;
-      animation: badgePop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .badge-detail-close {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      color: white;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-    .badge-detail-close:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    .badge-detail-icon-wrap {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle, rgba(99, 179, 237, 0.15) 0%, transparent 70%);
-    }
-    .badge-detail-icon {
-      font-size: 52px;
-    }
-    .badge-detail-icon.locked-gray {
-      filter: grayscale(100%);
-      opacity: 0.3;
-    }
-    .badge-detail-title {
-      font-family: 'Jua', sans-serif;
-      font-size: 22px;
-      color: var(--primary);
-      margin-bottom: 6px;
-    }
-    .badge-detail-desc {
-      font-size: 13.5px;
-      color: rgba(255, 255, 255, 0.8);
-      line-height: 1.6;
-      margin-bottom: 18px;
-    }
-    .badge-detail-status {
+    .azit-sub {
       font-size: 13px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      display: inline-block;
-      font-weight: 700;
-    }
-    .badge-detail-status.unlocked {
-      background: rgba(104, 211, 145, 0.15);
-      color: #68d391;
-      border: 1px solid rgba(104, 211, 145, 0.3);
-    }
-    .badge-detail-status.locked {
-      background: rgba(252, 129, 129, 0.15);
-      color: #fc8181;
-      border: 1px solid rgba(252, 129, 129, 0.3);
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: -0.2px;
     }
 
-    /* ── 학급 커뮤니티 광장 (Unified Tabs Container) ── */
-    .collab-container {
-      margin-top: 28px;
-      margin-bottom: 24px;
-      width: 100%;
-      background: var(--card); /* #1a2235 - 완전 불투명 솔리드 배경 */
-      border: 1px solid var(--border);
-      border-radius: clamp(16px, 3vw, 24px); /* 실시간학습분석과 동일 */
-      padding: clamp(20px, 4vw, 32px); /* 실시간학습분석과 동일 */
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3); /* 실시간학습분석과 동일 */
-      position: relative;
+    .azit-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #FFFFFF;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    .azit-arrow {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Jua', sans-serif;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-azit-main:hover .azit-arrow {
+      background: #FFFFFF;
+      color: var(--color-primary-blue);
+      border-color: #FFFFFF;
+      transform: translateX(4px);
+    }
+
+    /* ============================================================
+       하단: 퀘스트 진행 영역 및 8대 퀘스트 사각 버튼 그리드
+       ============================================================ */
+    .quests-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .quests-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    .quests-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 20px;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-text {
+      color: #F8FAFC;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'Jua', sans-serif;
+      background: rgba(15, 23, 42, 0.65);
+      padding: 3px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .progress-bar-bg {
+      width: 140px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FACC15, #F59E0B);
+      border-radius: 5px;
+      transition: width 0.4s ease;
+    }
+
+    /* 8대 퀘스트 2열 x 4행 사각 버튼 그리드 */
+    .quests-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 11px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* 퀘스트 사각형 버튼 공통 */
+    .quest-card-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-radius: 14px;
+      text-decoration: none;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    /* 1. 기본 상태 (미완료 / 진행 가능): 로그인 화면의 배경색 rgb(15, 71, 192) */
+    .quest-card-btn {
+      background: var(--color-primary-blue);
+      color: var(--color-white);
+      border: 2px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .quest-card-btn:hover {
+      background: var(--color-primary-blue-hover);
+      border-color: #FFFFFF;
+      transform: translateY(-2px) scale(1.015);
+      box-shadow: 0 8px 22px rgba(15, 71, 192, 0.55), 0 0 16px rgba(255, 255, 255, 0.35);
       z-index: 5;
     }
-    .collab-container::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(99,179,237,0.03), rgba(127,90,240,0.03));
-      pointer-events: none;
+
+    .quest-card-btn:active {
+      transform: scale(0.97);
     }
-    .collab-header {
-      margin-bottom: 20px;
-      position: relative;
-      z-index: 2;
-    }
-    .collab-header h3 {
-      font-family: 'Jua', sans-serif;
-      font-size: clamp(16px, 3.5vw, 20px);
-      color: var(--primary);
-      text-shadow: 0 0 10px rgba(99,179,237,0.3);
+
+    .card-left {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin: 0 0 6px 0;
-    }
-    .collab-header p {
-      font-size: clamp(11px, 2.2vw, 13px);
-      color: var(--muted);
-      margin: 0;
-    }
-    .collab-tabs {
-      display: flex;
-      gap: 6px;
-      background: rgba(10, 14, 26, 0.5);
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 20px;
-      overflow-x: auto;
-      position: relative;
-      z-index: 2;
-    }
-    .collab-tabs::-webkit-scrollbar {
-      height: 4px;
-    }
-    .collab-tabs::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-    }
-    .collab-tab-btn {
-      flex: 1;
-      min-width: 105px;
-      padding: 10px 8px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 9px;
-      cursor: pointer;
-      transition: all .2s;
-      font-family: inherit;
-      white-space: nowrap;
-    }
-    .collab-tab-btn.active {
-      background: linear-gradient(135deg, var(--primary), #5a9fd4);
-      color: #0a0e1a;
-      font-weight: 700;
-      box-shadow: 0 4px 12px rgba(99, 179, 237, 0.25);
-    }
-    .collab-tab-btn:hover:not(.active) {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .collab-tab-content {
-      display: none;
-      animation: fadeIn 0.35s ease;
-      position: relative;
-      z-index: 2;
-    }
-    .collab-tab-content.active {
-      display: block;
+      gap: 12px;
+      overflow: hidden;
     }
 
-    /* ── 리더보드 가시성 강화 ── */
-    .leaderboard-list {
+    .quest-num-pill {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
+      font-family: 'Jua', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      line-height: 1.1;
+    }
+
+    .quest-name-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 450px;
-      overflow-y: auto;
-      padding-right: 4px;
+      text-align: left;
+      overflow: hidden;
     }
-    .leaderboard-list::-webkit-scrollbar { width:4px; }
-    .leaderboard-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:99px; }
 
-    .lb-row {
-      display: flex; align-items: center; gap: 12px;
-      background: #111827; /* 완전 불투명 솔리드 배경 */
-      border: 1px solid rgba(99, 179, 237, 0.15);
-      border-radius: 12px;
-      padding: 12px 16px;
-      transition: all .25s;
+    .quest-name {
+      font-family: 'Jua', sans-serif;
+      font-size: 19px;
+      font-weight: 800;
+      color: #FFFFFF;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      letter-spacing: 0.3px;
     }
-    .lb-row:hover {
-      background: #0d1321;
-      border-color: rgba(99, 179, 237, 0.3);
-      box-shadow: 0 2px 12px rgba(99,179,237,0.12);
-      transform: translateY(-1px);
+
+    .quest-desc {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      letter-spacing: -0.2px;
     }
-    .lb-row.me {
-      background: rgba(99, 179, 237, 0.15);
-      border-color: rgba(99, 179, 237, 0.45);
-      box-shadow: 0 0 15px rgba(99, 179, 237, 0.15);
-    }
-    .lb-rank {
-      width: 30px; height: 30px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50%;
-      font-size: 13px; font-weight: 700;
+
+    .card-right {
+      display: flex;
+      align-items: center;
       flex-shrink: 0;
+      margin-left: 8px;
     }
-    .lb-rank.gold   { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#1a0800; box-shadow:0 0 12px rgba(255,215,0,.5); }
-    .lb-rank.silver { background:linear-gradient(135deg,#c0c0c0,#8a8a8a); color:#1a1a1a; box-shadow:0 0 10px rgba(192,192,192,.3); }
-    .lb-rank.bronze { background:linear-gradient(135deg,#cd7f32,#8b4513); color:#fff; box-shadow:0 0 10px rgba(205,127,50,.3); }
-    .lb-rank.normal { background:rgba(255,255,255,0.08); color:var(--muted); }
-    .lb-name { flex: 1; font-size: 14px; font-weight: 600; color: #e2e8f0; }
-    .lb-score {
-      font-size: 15px; font-weight: 800;
-      color: #ffd700;
-      text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-      letter-spacing: 0.5px;
+
+    .status-tag {
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Jua', sans-serif;
+      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
+      transition: all 0.2s ease;
+    }
+
+    /* 2. 학습 완료 상태: 로그인 화면의 다음 버튼 색 rgb(252, 220, 48) */
+    .quest-card-btn.is-completed {
+      background: var(--color-completed-yellow) !important;
+      color: var(--color-completed-text) !important;
+      border: 2.5px solid #F59E0B !important;
+      box-shadow: 0 6px 20px rgba(252, 220, 48, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .quest-card-btn.is-completed:hover {
+      background: var(--color-completed-yellow-hover) !important;
+      border-color: #FFFFFF !important;
+      transform: translateY(-2px) scale(1.015);
+      box-shadow: 0 10px 28px rgba(252, 220, 48, 0.65), 0 0 20px rgba(252, 220, 48, 0.8) !important;
+    }
+
+    .quest-card-btn.is-completed .quest-num-pill {
+      background: rgba(15, 23, 42, 0.15) !important;
+      border-color: rgba(15, 23, 42, 0.3) !important;
+      color: var(--color-completed-text) !important;
+    }
+
+    .quest-card-btn.is-completed .quest-name {
+      color: var(--color-completed-text) !important;
+    }
+
+    .quest-card-btn.is-completed .quest-desc {
+      color: rgba(15, 23, 42, 0.8) !important;
+      font-weight: 600 !important;
+    }
+
+    .quest-card-btn.is-completed .status-tag {
+      background: #0F172A !important;
+      border-color: #0F172A !important;
+      color: #FDE047 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    /* 3. 잠김 상태: 이전 단계 미완료 */
+    .quest-card-btn.is-locked {
+      background: rgba(15, 71, 192, 0.5) !important;
+      color: rgba(255, 255, 255, 0.65) !important;
+      border: 1.5px dashed rgba(255, 255, 255, 0.35) !important;
+      opacity: 0.72;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+    }
+
+    .quest-card-btn.is-locked:hover {
+      transform: none !important;
+      background: rgba(15, 71, 192, 0.55) !important;
+      box-shadow: none !important;
+    }
+
+    .quest-card-btn.is-locked .quest-num-pill {
+      background: rgba(0, 0, 0, 0.2) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .quest-card-btn.is-locked .quest-name {
+      color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    .quest-card-btn.is-locked .quest-desc {
+      color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .quest-card-btn.is-locked .status-tag {
+      background: rgba(0, 0, 0, 0.35) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    /* 현재 도전 중인 퀘스트 펄스 효과 */
+    .quest-card-btn.is-current {
+      animation: currentPulse 2s infinite ease-in-out;
+      border-color: #60A5FA !important;
+    }
+
+    @keyframes currentPulse {
+      0%, 100% { box-shadow: 0 4px 14px rgba(15, 71, 192, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(96, 165, 250, 0.7); }
+    }
+
+    /* ============================================================
+       반응형 스타일 (태블릿 & 모바일 대응)
+       ============================================================ */
+    @media (max-width: 900px) {
+      .main-page-wrapper {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .left-showcase-panel {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        flex-direction: row;
+        padding: 14px 20px;
+        justify-content: space-around;
+      }
+
+      .logo-box {
+        max-height: 90px;
+      }
+
+      .logo-image {
+        max-height: 80px;
+      }
+
+      .char-box {
+        max-height: 110px;
+      }
+
+      .char-image {
+        max-height: 100px;
+      }
+
+      .right-content-panel {
+        padding: 14px 20px 24px;
+        overflow: visible;
+      }
+
+      .quests-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
     }
   </style>
 </head>
-<body class="page">
+<body>
 
-<!-- 캔버스 (꽃가루 폭죽 이펙트) -->
-<canvas id="confetti-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:999;display:none;"></canvas>
+  <div class="main-page-wrapper">
+    <!-- ============================================================
+         [왼쪽 30% 영역]: 사진 이미지 공간 (상단: bs-logo, 하단: bs-char)
+         ============================================================ -->
+    <aside class="left-showcase-panel">
+      <!-- 상단 bs-logo -->
+      <div class="logo-box">
+        <img src="images/bs-logo.png" alt="AI 자원순환 탐정단 로고" class="logo-image" id="logoImg">
+      </div>
 
+      <!-- 하단 bs-char -->
+      <div class="char-box">
+        <img src="images/bs-char.png" alt="탐정 캐릭터" class="char-image" id="charImg">
+      </div>
+    </aside>
 
+    <!-- ============================================================
+         [오른쪽 70% 영역]: 상단 아지트 버튼 + 실시간 동접 바 + 하단 퀘스트 사각 버튼들
+         ============================================================ -->
+    <main class="right-content-panel">
+      <!-- 상단 헤더 섹션 -->
+      <header class="top-header-section">
+        <!-- 🟢 실시간 동시 접속 (동접 웹페이지) 상태 바 -->
+        <div class="presence-bar" id="presenceBar">
+          <div class="presence-left">
+            <span class="live-pulse-dot"></span>
+            <span class="presence-label">실시간 동시 접속 (<span id="onlineCount">1</span>명):</span>
+            <div class="presence-names" id="onlineNamesList">
+              <span class="member-chip my-chip"><span id="myNickDisplay">학생 탐정</span> <small class="me-tag">나</small></span>
+            </div>
+          </div>
+          <div class="presence-right">
+            <span class="team-badge" id="teamBadgeDisplay">모둠 로딩 중</span>
+            <span class="score-badge">🏆 <span id="teamScoreDisplay">0</span>P</span>
+          </div>
+        </div>
 
-<!-- 비회원 이어하기/새로 시작 선택 -->
-<div id="temp-choice-screen" class="temp-choice-overlay" style="display:none;">
-  <div class="temp-choice-box">
-    <div style="font-size:clamp(36px,8vw,52px);margin-bottom:12px;">🤖</div>
-    <h2>임시 학생으로 입장</h2>
-    <p>이전에 진행한 기록이 있어요!<br>이어서 하시겠어요?</p>
-    <div style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;color:rgba(255,255,255,0.6);text-align:left;">
-      <div id="saved-info"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <button class="btn btn-primary" onclick="tempContinue()">
-        ▶ 이어하기
-      </button>
-      <button class="btn btn-ghost" onclick="tempNewStart()">
-        🔄 새로 시작하기
-      </button>
-    </div>
+        <!-- 상단: "'팀코드'의 아지트" 사각형 버튼 -->
+        <a href="myhome.html" class="btn-azit-main" id="btnAzit" title="우리 모둠 아지트 바로가기">
+          <div class="azit-btn-left">
+            <div class="azit-btn-icon">🏠</div>
+            <div class="azit-btn-text">
+              <span class="azit-sub">우리 모둠 전용 협동 공간</span>
+              <span class="azit-title" id="azitButtonTitle">'팀코드'의 아지트</span>
+            </div>
+          </div>
+          <div class="azit-arrow">아지트 입장 ➔</div>
+        </a>
+      </header>
+
+      <!-- 하단: 8대 퀘스트 사각 버튼 그리드 -->
+      <section class="quests-section">
+        <div class="quests-header">
+          <h2 class="quests-title">
+            <span>🧭</span> 8대 퀘스트 미션 보드
+          </h2>
+          <div class="progress-wrap">
+            <span class="progress-text" id="progressStatusText">0 / 8 완료</span>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8대 퀘스트 사각 버튼들 -->
+        <div class="quests-grid" id="questsGrid">
+          <!-- Q1. AI의 눈 -->
+          <a href="quest1.html" class="quest-card-btn" id="questBtn-1" data-quest="1">
+            <div class="card-left">
+              <span class="quest-num-pill">Q1</span>
+              <div class="quest-name-group">
+                <span class="quest-name">AI의 눈</span>
+                <span class="quest-desc">사물인식 AI 체험하기</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-1">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q2. 분류기준 만들기 -->
+          <a href="quest2.html" class="quest-card-btn" id="questBtn-2" data-quest="2">
+            <div class="card-left">
+              <span class="quest-num-pill">Q2</span>
+              <div class="quest-name-group">
+                <span class="quest-name">분류기준 만들기</span>
+                <span class="quest-desc">재활용 쓰레기 기준 정하기</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-2">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q3. 사진 데이터 수집 -->
+          <a href="quest3.html" class="quest-card-btn" id="questBtn-3" data-quest="3">
+            <div class="card-left">
+              <span class="quest-num-pill">Q3</span>
+              <div class="quest-name-group">
+                <span class="quest-name">사진 데이터 수집</span>
+                <span class="quest-desc">AI가 잘 배우는 사진 촬영</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-3">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q4. 이름표 붙이기 -->
+          <a href="quest4.html" class="quest-card-btn" id="questBtn-4" data-quest="4">
+            <div class="card-left">
+              <span class="quest-num-pill">Q4</span>
+              <div class="quest-name-group">
+                <span class="quest-name">이름표 붙이기</span>
+                <span class="quest-desc">학습 데이터 라벨링하기</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-4">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q5. 교실쓰레기 AI탐정단 -->
+          <a href="quest5.html" class="quest-card-btn" id="questBtn-5" data-quest="5">
+            <div class="card-left">
+              <span class="quest-num-pill">Q5</span>
+              <div class="quest-name-group">
+                <span class="quest-name">교실쓰레기 AI탐정단</span>
+                <span class="quest-desc">실시간 카메라 AI 분류 테스트</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-5">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q6. 오류박물관 -->
+          <a href="quest6.html" class="quest-card-btn" id="questBtn-6" data-quest="6">
+            <div class="card-left">
+              <span class="quest-num-pill">Q6</span>
+              <div class="quest-name-group">
+                <span class="quest-name">오류박물관</span>
+                <span class="quest-desc">AI 오류 원인 분석 및 성찰</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-6">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q7. 실천 규약 초안 -->
+          <a href="quest7.html" class="quest-card-btn" id="questBtn-7" data-quest="7">
+            <div class="card-left">
+              <span class="quest-num-pill">Q7</span>
+              <div class="quest-name-group">
+                <span class="quest-name">실천 규약 초안</span>
+                <span class="quest-desc">AI와 함께하는 분리배출 규칙</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-7">도전하기</span>
+            </div>
+          </a>
+
+          <!-- Q8. 실천하기 -->
+          <a href="quest8.html" class="quest-card-btn" id="questBtn-8" data-quest="8">
+            <div class="card-left">
+              <span class="quest-num-pill">Q8</span>
+              <div class="quest-name-group">
+                <span class="quest-name">실천하기</span>
+                <span class="quest-desc">최종 분리수거 탐정 실천 챌린지</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="status-tag" id="statusTag-8">도전하기</span>
+            </div>
+          </a>
+        </div>
+      </section>
+    </main>
   </div>
-</div>
 
-<!-- 스토리 오프닝 -->
-<div id="story-screen" class="story-overlay" style="display:none;">
-  <!-- 사운드 토글 버튼 -->
-  <button id="story-sound-btn" onclick="toggleStoryBGM()"
-    style="position:absolute;top:16px;right:16px;z-index:10;
-           background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
-           border-radius:20px;padding:6px 14px;color:white;font-size:13px;
-           cursor:pointer;font-family:inherit;backdrop-filter:blur(4px);">
-    🔊 배경음
-  </button>
-  <div class="story-robot">🤖</div>
-  <div class="story-text" id="story-text"></div>
-  <button class="story-btn" id="story-btn" onclick="nextStory()">계속하기 →</button>
-</div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, updateDoc, setDoc, onSnapshot, collection, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<!-- 캐릭터 이름 짓기 -->
-<div id="name-screen" class="name-overlay" style="display:none;">
-  <div class="name-box">
-    <!-- 캐릭터 선택 -->
-    <div id="char-pick-section">
-      <div style="font-size:clamp(16px,3vw,20px);font-weight:700;margin-bottom:14px;color:var(--text);">🤖 캐릭터를 선택하세요!</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-        <div class="char-pick-card" id="pick-robot" onclick="pickCharTrack('robot')"
-          style="border:2px solid rgba(99,179,237,0.3);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(99,179,237,0.06);">
-          <img src="images/robot_1.png" style="width:clamp(60px,12vw,80px);height:clamp(60px,12vw,80px);object-fit:contain;margin-bottom:8px;"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <div style="display:none;font-size:40px;margin-bottom:8px;">🤖</div>
-          <div style="font-weight:700;font-size:15px;color:#63b3ed;">로봇</div>
-        </div>
-        <div class="char-pick-card" id="pick-wizard" onclick="pickCharTrack('wizard')"
-          style="border:2px solid rgba(167,139,250,0.3);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(167,139,250,0.06);">
-          <img src="images/wizard_1.png" style="width:clamp(60px,12vw,80px);height:clamp(60px,12vw,80px);object-fit:contain;margin-bottom:8px;"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <div style="display:none;font-size:40px;margin-bottom:8px;">🧙</div>
-          <div style="font-weight:700;font-size:15px;color:#a78bfa;">마법사</div>
-        </div>
-      </div>
-      <div id="pick-alert" style="font-size:13px;color:#fc8181;min-height:18px;margin-bottom:10px;"></div>
-    </div>
-
-    <!-- 이름 입력 -->
-    <div id="name-input-section" style="display:none;">
-      <div id="selected-char-preview" style="font-size:clamp(40px,10vw,60px);margin-bottom:12px;">🤖</div>
-      <h2>AI에게 이름을 지어주세요!</h2>
-      <p>당신의 AI 이름을 입력하세요<br>(2~10자, 욕설/비하 불가)</p>
-      <div id="name-alert"></div>
-      <input class="name-input" id="char-name-input" placeholder="예: 스타봇, 루나AI ...">
-    </div>
-
-    <!-- 버튼 -->
-    <button class="btn btn-primary" id="name-confirm-btn" onclick="handleNameConfirm()">다음 →</button>
-  </div>
-</div>
-
-<!-- 설정 모달 -->
-<div id="settings-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#111827;border:1px solid rgba(99,179,237,0.3);border-radius:20px;width:100%;max-width:380px;padding:clamp(20px,4vw,28px);animation:slideUp .4s ease;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="font-family:'Jua',sans-serif;font-size:20px;color:#63b3ed;margin:0;">⚙️ 설정</h2>
-      <button onclick="closeSettings()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 10px;color:white;cursor:pointer;font-family:inherit;">✕</button>
-    </div>
-
-    <!-- 사운드 설정 -->
-    <div style="margin-bottom:20px;">
-      <h4 style="font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🔊 사운드</h4>
-
-      <!-- 배경음 -->
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px;">
-        <div>
-          <div style="font-size:14px;font-weight:700;">🎵 배경음</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">퀘스트 배경 음악</div>
-        </div>
-        <button id="bgm-toggle" onclick="onToggleBGM()"
-          style="padding:7px 18px;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;">
-        </button>
-      </div>
-
-      <!-- 효과음 -->
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;">
-        <div>
-          <div style="font-size:14px;font-weight:700;">🔔 효과음</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">클릭, 정답, 오답 등</div>
-        </div>
-        <button id="sfx-toggle" onclick="onToggleSFX()"
-          style="padding:7px 18px;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;">
-        </button>
-      </div>
-    </div>
-
-    <!-- 비밀번호 변경 (학생 계정만) -->
-    <div id="pw-change-section" style="display:none;margin-bottom:20px;">
-      <h4 style="font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">🔑 비밀번호 변경</h4>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <input id="pw-current" type="password" placeholder="현재 비밀번호"
-          style="padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
-        <input id="pw-new" type="password" placeholder="새 비밀번호 (4자 이상)"
-          style="padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
-        <input id="pw-new2" type="password" placeholder="새 비밀번호 확인"
-          style="padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;">
-        <div id="pw-alert" style="font-size:12px;min-height:16px;color:#fc8181;"></div>
-        <button onclick="changePassword()"
-          style="padding:10px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:10px;color:#0a0e1a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
-          비밀번호 변경
-        </button>
-      </div>
-    </div>
-
-    <button onclick="closeSettings()" style="width:100%;padding:12px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">확인</button>
-  </div>
-</div>
-
-<button class="hamburger" onclick="toggleSidebar()">☰</button>
-<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<div class="app-layout">
-  <!-- 사이드바 -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">🤖 AI 가디언</div>
-    <div class="char-widget">
-      <img id="sb-char-img" src="images/robot_1.png"
-        style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(99,179,237,0.7));animation:float 3s ease-in-out infinite;"
-        onerror="this.style.display='none';document.getElementById('sb-char-emoji').style.display='block'">
-      <div id="sb-char-emoji" class="char-emoji" style="display:none;">🤖</div>
-      <div class="char-name" id="sb-char-name">-</div>
-      <div class="char-level" id="sb-char-level">Lv.1 아기 로봇</div>
-      <div class="char-score" id="sb-score">0 점</div>
-      <div class="xp-bar-wrap"><div class="xp-bar" id="sb-xp-bar" style="width:0%"></div></div>
-      <div class="xp-label" id="sb-xp-label">다음 레벨까지 50점</div>
-    </div>
-
-    <div class="quest-section">
-      <h4>📋 퀘스트</h4>
-      <div id="quest-list"></div>
-    </div>
-
-    <!-- 설문조사 섹션 -->
-    <div class="quest-section">
-      <h4>📋 사전/사후 설문조사</h4>
-      <div class="quest-item" id="sb-pre-survey-item" onclick="openPreSurveyModal()">
-        <div class="quest-check" id="sb-pre-check"></div>
-        <span>🟢 사전 설문조사</span>
-        <span id="sb-pre-status-tag" style="margin-left:auto;font-size:11px;"></span>
-      </div>
-      <div class="quest-item" id="sb-post-survey-item" onclick="openPostSurveyModal()">
-        <div class="quest-check" id="sb-post-check"></div>
-        <span>🔵 사후 설문조사</span>
-        <span id="sb-post-status-tag" style="margin-left:auto;font-size:11px;"></span>
-      </div>
-    </div>
-
-    <!-- 뱃지 보관함 -->
-    <div class="badge-section">
-      <h4>🏆 뱃지 보관함</h4>
-      <div class="badge-grid" id="sb-badge-grid">
-        <!-- 뱃지들이 동적으로 여기에 생성됩니다 -->
-      </div>
-    </div>
-
-    <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--border);">
-      <h4 style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 6px;margin-bottom:7px;">참고 사이트</h4>
-      <a href="https://www.msit.go.kr" target="_blank" class="ref-link">🏛️ 과학기술정보통신부</a>
-      <a href="https://www.kisa.or.kr" target="_blank" class="ref-link">🔒 한국인터넷진흥원</a>
-      <a href="https://ai-hub.kr" target="_blank" class="ref-link">🤖 AI 허브</a>
-    </div>
-
-    <div id="temp-reset-wrap" style="display:none;">
-      <button class="temp-reset" onclick="confirmReset()">🗑️ 비회원 진행상황 초기화</button>
-    </div>
-    <button onclick="openSettings()" style="width:100%;margin-top:10px;padding:9px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;justify-content:center;">⚙️ 설정</button>
-    <button class="btn btn-ghost" onclick="logout()" style="margin-top:8px;padding:9px;font-size:13px;">🚪 로그아웃</button>
-  </aside>
-
-  <!-- 메인 -->
-  <main class="main-content">
-    <div class="ai-notice-main">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
-    <h2 style="font-family:'Jua',sans-serif;font-size:clamp(20px,4vw,26px);margin-bottom:6px;">
-      안녕하세요, <span id="greeting-name"></span> 👋
-    </h2>
-    <p style="color:var(--muted);margin-bottom:24px;font-size:14px;">오늘도 AI를 학습시켜볼까요?</p>
-    <!-- RPG 스타일 로드맵 (Path Map) -->
-    <div class="roadmap-container">
-      <!-- 전술 그리드 코너 장식 -->
-      <div class="roadmap-corner corner-tl"></div>
-      <div class="roadmap-corner corner-tr"></div>
-      <div class="roadmap-corner corner-bl"></div>
-      <div class="roadmap-corner corner-br"></div>
-
-      <div class="roadmap-title-bar">
-        <h3>🎯 AI 가디언 모험 경로</h3>
-        <p>퀘스트를 완료하여 나만의 인공지능 캐릭터를 성장시키세요!</p>
-      </div>
-      
-      <!-- 연결선 레이어 (네온 발광 필터 포함) -->
-      <svg class="roadmap-svg-layer" id="roadmap-svg" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="glow-orange" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-      </svg>
-      
-      <div class="roadmap-nodes" id="roadmap-nodes-container">
-        <!-- 노드들이 JS를 통해 동적으로 생성됩니다 -->
-      </div>
-    </div>
-
-    <!-- 실시간 학습 분석 대시보드 -->
-    <div class="analytics-container" id="analytics-wrap">
-      <div class="analytics-title">
-        <h3>📈 실시간 학습 분석 (Learning Analytics)</h3>
-        <p>나의 인공지능 학습 기여도와 훈련 상태를 분석합니다.</p>
-      </div>
-      <div class="analytics-grid">
-        <div class="analytics-card">
-          <div class="analytics-card-icon">🎯</div>
-          <div class="analytics-card-info">
-            <div class="analytics-card-label">완료 퀘스트</div>
-            <div class="analytics-card-value" id="analytic-quests">0 / 8</div>
-          </div>
-        </div>
-        <div class="analytics-card">
-          <div class="analytics-card-icon">📸</div>
-          <div class="analytics-card-info">
-            <div class="analytics-card-label">수집한 데이터</div>
-            <div class="analytics-card-value" id="analytic-uploads">0 장</div>
-          </div>
-        </div>
-        <div class="analytics-card">
-          <div class="analytics-card-icon">🏷️</div>
-          <div class="analytics-card-info">
-            <div class="analytics-card-label">라벨링한 데이터</div>
-            <div class="analytics-card-value" id="analytic-labels">0 장</div>
-          </div>
-        </div>
-        <div class="analytics-card">
-          <div class="analytics-card-icon">🏆</div>
-          <div class="analytics-card-info">
-            <div class="analytics-card-label">획득 뱃지</div>
-            <div class="analytics-card-value" id="analytic-badges">0 / 8</div>
-          </div>
-        </div>
-        <div class="analytics-card">
-          <div class="analytics-card-icon">💯</div>
-          <div class="analytics-card-info">
-            <div class="analytics-card-label">퀴즈 최고 점수</div>
-            <div class="analytics-card-value" id="analytic-quiz-score">0 점</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ 학급 커뮤니티 광장 (Class Community Plaza) ═══ -->
-    <div class="collab-container">
-      <div class="collab-header">
-        <h3>✨ 학급 커뮤니티 광장</h3>
-        <p>우리 반 친구들과 실시간 점수를 비교하고, AI 훈련에 기여하며 자유롭게 소통하세요!</p>
-      </div>
-
-      <!-- 탭 바 -->
-      <div class="collab-tabs">
-        <button class="collab-tab-btn active" onclick="switchCollabTab('leaderboard')">🏆 학급 리더보드</button>
-        <button class="collab-tab-btn" onclick="switchCollabTab('gauge')">🤖 공동 AI 훈련</button>
-        <button class="collab-tab-btn" onclick="switchCollabTab('discuss')">💬 AI 오답 토론방</button>
-        <button class="collab-tab-btn" onclick="switchCollabTab('freeboard')">📋 자유 소통 게시판</button>
-      </div>
-
-      <!-- 1. 리더보드 탭 -->
-      <div class="collab-tab-content active" id="tab-collab-leaderboard">
-        <div class="leaderboard-list" id="leaderboard-list">
-          <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">
-            로딩 중...
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. 공동 AI 훈련 게이지 탭 -->
-      <div class="collab-tab-content" id="tab-collab-gauge">
-        <div class="gauge-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:14px;font-weight:700;color:var(--text);">학급 AI 훈련 진행도</span>
-            <span id="gauge-pct" style="font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">0%</span>
-          </div>
-          <div class="gauge-bar-wrap">
-            <div class="gauge-bar-fill" id="gauge-fill" style="width:0%"></div>
-          </div>
-          <div class="gauge-stats">
-            <span id="gauge-stat-score">총 점수: 0</span>
-            <span id="gauge-stat-people">참여 인원: 0명</span>
-          </div>
-          <div class="gauge-milestone" id="gauge-milestones">
-            <!-- JS가 마일스톤을 동적으로 채웁니다 -->
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. AI 오분류 토론방 탭 -->
-      <div class="collab-tab-content" id="tab-collab-discuss">
-        <div class="discuss-input-row">
-          <textarea id="discuss-input" placeholder="AI가 잘못 분류한 사례를 공유해 주세요! (예: AI가 고양이 사진을 강아지로 인식했어요 🐱→🐶)"></textarea>
-          <button onclick="postDiscussion()">✍️ 작성</button>
-        </div>
-        <div class="discuss-list" id="discuss-list" style="margin-top:12px;">
-          <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">
-            로딩 중...
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. 자유 소통 게시판 탭 -->
-      <div class="collab-tab-content" id="tab-collab-freeboard">
-        <div class="discuss-input-row">
-          <textarea id="freeboard-input" placeholder="우리 반 친구들과 자유롭게 이야기를 나누어 보세요! (예: 드디어 모든 퀘스트 완료! 🚀)"></textarea>
-          <button onclick="postFreeBoard()">✍️ 작성</button>
-        </div>
-        <div class="discuss-list" id="freeboard-list" style="margin-top:12px;">
-          <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">
-            로딩 중...
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script>
-let currentUser=null, userData=null, storyStep=0;
-
-const STORY=[
-  "📦 당신에게 특별한 소포가 도착했습니다!",
-  "인류의 문제를 해결하기 위해\n갓 태어난 초보 AI (아기 로봇)가\n당신에게 배달되었습니다! 🤖",
-  "당신은 이제 'AI 멘토'가 되어야 합니다.",
-  "현실 세계의 데이터를 수집하고\n라벨링하여...",
-  "이 AI를 최종 형태인\n'미래형 가디언'으로 진화시켜야 합니다! ⚡",
-  "퀘스트를 완료할수록 AI가 점점 강해집니다. 💪",
-  "자, 먼저 AI에게 이름을 지어주세요! 💫"
-];
-
-let shouldTriggerConfetti = false;
-requireAuth(async (user) => {
-  currentUser=user;
-
-  const fromQuest = sessionStorage.getItem('from_quest');
-  if (fromQuest) {
-    sessionStorage.removeItem('from_quest');
-    shouldTriggerConfetti = true;
-  }
-
-  if (user.uid==='student') {
-    const local = JSON.parse(localStorage.getItem('tempUserData')||'null');
-    document.getElementById('temp-reset-wrap').style.display='block';
-
-    // 이미 이번 세션에서 선택했으면 바로 진행
-    const alreadyChose = sessionStorage.getItem('temp_chose');
-
-    if (alreadyChose || shouldTriggerConfetti) {
-      userData = local || { charName:null, score:0, quests:{}, name:'임시학생' };
-      if (!userData.charName) showStory();
-      else initUI();
-      return;
-    }
-
-    if (local && local.charName) {
-      userData = local;
-      const questDone = Object.keys(local.quests||{}).filter(k=>k.endsWith('_done')).length;
-      document.getElementById('saved-info').innerHTML=`
-        <div style="margin-bottom:6px;">👤 캐릭터: <strong style="color:#63b3ed;">${local.charName}</strong></div>
-        <div style="margin-bottom:6px;">⭐ 점수: <strong style="color:#f6ad55;">${local.score||0} 점</strong></div>
-        <div>🎯 완료 퀘스트: <strong>${questDone}개</strong></div>`;
-      document.getElementById('temp-choice-screen').style.display='flex';
-    } else {
-      userData = { charName:null, score:0, quests:{}, name:'임시학생' };
-      sessionStorage.setItem('temp_chose','1');
-      showStory();
-    }
-    return;
-  } else if (user.uid==='admin') {
-    userData={ charName:'관리자', score:0, quests:{}, name:'관리자' };
-    initUI(); return;
-  } else {
-    const snap=await db.collection('users').where('id','==',user.id).get();
-    if (!snap.empty){ userData=snap.docs[0].data(); currentUser.uid=snap.docs[0].id; }
-  }
-
-  if (!userData.charName) {
-    showStory();
-  } else {
-    initUI();
-  }
-});
-
-function tempContinue(){
-  sessionStorage.setItem('temp_chose','1');
-  document.getElementById('temp-choice-screen').style.display='none';
-  initUI();
-}
-
-function tempNewStart(){
-  if(!confirm('정말 새로 시작할까요?\n기존 점수와 퀘스트 진행이 모두 사라집니다.')) return;
-  localStorage.removeItem('tempUserData');
-  userData = { charName:null, score:0, quests:{}, name:'임시학생' };
-  sessionStorage.setItem('temp_chose','1');
-  document.getElementById('temp-choice-screen').style.display='none';
-  storyStep=0;
-  showStory();
-}
-
-function showStory(){
-  // firebase-config.js의 사운드 함수로 대체됨 (위에서 재정의)
-  document.getElementById('story-screen').style.display='flex';
-  document.getElementById('story-text').textContent=STORY[storyStep];
-  setTimeout(()=>{ document.getElementById('story-btn').style.opacity='1'; },1200);
-  playBGM('main');
-  updateStoryBGMBtn();
-}
-
-function nextStory(){
-  playSFX('click');
-  storyStep++;
-  if (storyStep>=STORY.length){
-    document.getElementById('story-screen').style.display='none';
-    document.getElementById('name-screen').style.display='flex';
-    // BGM 계속 재생 (이름 짓기 화면에서도)
-    return;
-  }
-  const btn=document.getElementById('story-btn');
-  const txt=document.getElementById('story-text');
-  btn.style.opacity='0'; txt.style.opacity='0';
-  setTimeout(()=>{
-    txt.textContent=STORY[storyStep];
-    txt.style.opacity='1';
-    txt.style.transition='opacity .5s';
-    setTimeout(()=>btn.style.opacity='1',600);
-  },400);
-}
-
-async function saveName(){
-  const name=document.getElementById('char-name-input').value.trim();
-  if (!name) return showNameAlert('이름을 입력하세요.');
-  if (name.length<2||name.length>10) return showNameAlert('2~10자 사이로 입력하세요.');
-  if (filterName(name)) return showNameAlert('⚠️ 사용할 수 없는 이름입니다.');
-
-  const track = selectedTrack || 'robot';
-
-  if (currentUser.uid==='student'){
-    userData.charName=name;
-    userData.charTrack=track;
-    localStorage.setItem('tempUserData', JSON.stringify(userData));
-  } else {
-    await db.collection('users').doc(currentUser.uid).update({charName:name, charTrack:track});
-    userData.charName=name;
-    userData.charTrack=track;
-  }
-  currentUser.charName=name;
-  sessionStorage.setItem('gameUser',JSON.stringify(currentUser));
-  document.getElementById('name-screen').style.display='none';
-  playSFX('levelup');
-  initUI();
-}
-
-function showNameAlert(msg){
-  document.getElementById('name-alert').innerHTML=`<div class="alert alert-error">${msg}</div>`;
-}
-
-function initUI(){
-  const score=userData.score||0;
-  const track=userData.charTrack||'robot';
-  const lv=getLevelByScore(score, track);
-  const next=getNextLevel(score, track);
-
-  // 사이드바 캐릭터
-  const imgEl=document.getElementById('sb-char-img');
-  if(imgEl) imgEl.src=lv.img;
-  document.getElementById('sb-char-name').textContent=userData.charName||'-';
-  document.getElementById('sb-char-level').textContent=`Lv.${lv.level} ${lv.name}`;
-  document.getElementById('sb-score').textContent=score+' 점';
-  const pct=next?((score-lv.minScore)/(next.minScore-lv.minScore))*100:100;
-  document.getElementById('sb-xp-bar').style.width=Math.min(100,pct)+'%';
-  document.getElementById('sb-xp-label').textContent=next?`다음 레벨까지 ${next.minScore-score}점`:'🌟 최고 레벨!';
-
-  // 인사
-  const greet=userData.charName?`${userData.name}님 (${userData.charName})`:`${userData.name||''}님`;
-  document.getElementById('greeting-name').textContent=greet;
-
-  // 퀘스트 사이드바
-  document.getElementById('quest-list').innerHTML=QUESTS.map(q=>{
-    const done=(userData.quests||{})[`q${q.id}_done`];
-    return `<a href="quest${q.id}.html" class="quest-item ${done?'done':''}">
-      <div class="quest-check ${done?'done':''}">${done?'✓':''}</div>
-      <span>${q.icon} ${q.title}</span>
-      ${done?'<span style="margin-left:auto;font-size:11px;color:var(--green);">완료</span>':''}
-    </a>`;
-  }).join('');
-
-  // 뱃지 렌더링
-  renderBadges();
-
-  // 실시간 학습 분석 로드
-  loadAnalytics();
-
-  // 협동 기능 로드
-  loadLeaderboard();
-  loadClassGauge();
-  loadDiscussions();
-  loadFreeBoard();
-
-  // 설문조사 상태 UI 및 자동 트리거
-  updateSurveyStatusUI();
-  checkAutoSurveyTrigger();
-
-  // 활성 퀘스트 찾기 (가장 낮은 번호의 미완료 퀘스트, 모두 완료 시 9)
-  let activeQuestId = 9;
-  for (let i = 1; i <= 8; i++) {
-    if (!(userData.quests || {})[`q${i}_done`]) {
-      activeQuestId = i;
-      break;
-    }
-  }
-
-  // 8개 퀘스트의 2D 평면상 좌표 설정 (S자형 지도 형태)
-  const coords = {
-    1: { x: 22, y: 15 },
-    2: { x: 55, y: 15 },
-    3: { x: 80, y: 30 },
-    4: { x: 60, y: 50 },
-    5: { x: 30, y: 48 },
-    6: { x: 18, y: 70 },
-    7: { x: 48, y: 82 },
-    8: { x: 78, y: 78 }
+  const firebaseConfig = {
+    apiKey: "AIzaSyCdx4xwK3XIzgw_4hFEohnMe64dc4LDB00",
+    authDomain: "elemeelementary-textbook.firebaseapp.com",
+    projectId: "elemeelementary-textbook",
+    storageBucket: "elemeelementary-textbook.firebasestorage.app",
+    messagingSenderId: "713149004420",
+    appId: "1:713149004420:web:8483273681e16f5a8fa0d1",
+    measurementId: "G-TZT282J9E8"
   };
 
-  let roadmapHtml = '';
-  for (let qid = 1; qid <= 8; qid++) {
-    const q = QUESTS.find(item => item.id === qid);
-    const done = (userData.quests || {})[`q${qid}_done`];
-    const isActive = qid === activeQuestId;
-    const isLocked = qid > activeQuestId;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    let stateClass = 'locked';
-    if (done) stateClass = 'done';
-    else if (isActive) stateClass = 'active';
+  let teamCode = localStorage.getItem("elementary_teamCode") || "";
+  let studentId = localStorage.getItem("elementary_studentId") || "";
+  let studentName = localStorage.getItem("elementary_studentName") || "학생 탐정";
 
-    const pos = coords[qid] || { x: 50, y: 50 };
-
-    roadmapHtml += `
-      <div class="roadmap-node-wrapper" style="left: ${pos.x}%; top: ${pos.y}%;">
-        ${isActive ? `<div class="character-indicator">${lv.emoji}</div>` : ''}
-        <a href="${isLocked ? '#' : `quest${qid}.html`}" 
-           id="node-${qid}" 
-           class="roadmap-node ${stateClass}" 
-           style="${isLocked ? 'pointer-events: none;' : ''}"
-           title="${q.title}">
-          <span>${isLocked ? '🔒' : q.icon}</span>
-        </a>
-        <div class="roadmap-node-title">
-          <div class="roadmap-node-step">퀘스트 ${qid}</div>
-          ${q.title}
-        </div>
-      </div>
-    `;
-  }
-  
-  // 출발 및 골 지점 장식 추가
-  roadmapHtml += `
-    <div class="roadmap-decor" style="left: 8%; top: 15%;">
-      <span class="decor-emoji">🚩</span>
-      <div class="decor-label">START</div>
-    </div>
-    <div class="roadmap-decor" style="left: 88%; top: 80%;">
-      <span class="decor-emoji">🏰</span>
-      <div class="decor-label">GOAL</div>
-    </div>
-  `;
-
-  document.getElementById('roadmap-nodes-container').innerHTML = roadmapHtml;
-
-  // 연결선 그리기 (렌더링 직후 및 창 크기 변경 시)
-  setTimeout(drawRoadmapLines, 100);
-
-  // 별 파티클 생성
-  generateStarfield();
-
-  // 안내 및 사운드 재생 확인
-  checkGuideAndPlay();
-}
-
-// ── 별 파티클 생성 ──
-function generateStarfield() {
-  const container = document.querySelector('.roadmap-container');
-  if (!container || container.querySelector('.roadmap-star')) return; // 이미 생성됨
-  for (let i = 0; i < 40; i++) {
-    const star = document.createElement('div');
-    star.className = 'roadmap-star';
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 100 + '%';
-    star.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(1) + 's');
-    star.style.setProperty('--brightness', (0.3 + Math.random() * 0.5).toFixed(2));
-    star.style.animationDelay = (Math.random() * 5).toFixed(1) + 's';
-    const size = 1 + Math.random() * 2;
-    star.style.width = size + 'px';
-    star.style.height = size + 'px';
-    container.appendChild(star);
-  }
-}
-
-// ── 뱃지 보관함 렌더링 ──
-function renderBadges() {
-  const grid = document.getElementById('sb-badge-grid');
-  if (!grid) return;
-  const achievements = userData.achievements || [];
-  grid.innerHTML = BADGES.map(b => {
-    const unlocked = achievements.includes(b.id);
-    return `
-      <div class="badge-item ${unlocked ? 'unlocked' : 'locked'}" onclick="showBadgeDetail('${b.id}')" style="cursor: pointer;">
-        <span>${b.icon}</span>
-        <div class="badge-tooltip">
-          <strong>${b.title}</strong>
-          ${b.desc}<br>
-          <span style="color:${unlocked ? 'var(--green)' : 'var(--red)'}; font-weight:bold;">
-            ${unlocked ? '🔓 획득 완료 (클릭하여 상세 정보)' : '🔒 미획득 (클릭하여 상세 정보)'}
-          </span>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-// ── 뱃지 클릭 상세정보 모달 표시 ──
-function showBadgeDetail(badgeId) {
-  playSFX('click');
-  const badge = BADGES.find(b => b.id === badgeId);
-  if (!badge) return;
-
-  const achievements = userData.achievements || [];
-  const unlocked = achievements.includes(badgeId);
-
-  // 모달 생성
-  const overlay = document.createElement('div');
-  overlay.className = 'badge-detail-overlay';
-  overlay.id = 'badge-detail-modal-overlay';
-  
-  // 바깥쪽 클릭 시 닫기
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      overlay.remove();
+  // 로그인 정보가 전혀 없을 경우 index.html 로 안전하게 이동 (로컬 테스트 편의 지원)
+  if (!studentId && !teamCode) {
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      window.location.href = "index.html";
+    } else {
+      teamCode = "1모둠";
+      studentId = "test_student";
+      studentName = "체험 탐정";
+      localStorage.setItem("elementary_teamCode", teamCode);
+      localStorage.setItem("elementary_studentId", studentId);
+      localStorage.setItem("elementary_studentName", studentName);
     }
+  }
+
+  // 1. 상단 "'팀코드'의 아지트" 버튼 텍스트 동적 업데이트
+  function updateMyHomeTitle() {
+    const currentTeam = localStorage.getItem("elementary_teamCode") || teamCode || "";
+    const nameText = currentTeam ? `${currentTeam}의 아지트` : "우리 모둠 아지트";
+    
+    const azitTitleEl = document.getElementById("azitButtonTitle");
+    const btnAzitEl = document.getElementById("btnAzit");
+    const teamBadgeEl = document.getElementById("teamBadgeDisplay");
+    const myNickEl = document.getElementById("myNickDisplay");
+
+    if (azitTitleEl) azitTitleEl.textContent = nameText;
+    if (btnAzitEl) btnAzitEl.title = `[${nameText}] 바로가기 (클릭)`;
+    if (teamBadgeEl) teamBadgeEl.textContent = currentTeam || "탐정단";
+    if (myNickEl) myNickEl.textContent = studentName || "나";
+  }
+  updateMyHomeTitle();
+
+  // 2. 🟢 동접웹페이지: 실시간 동시 접속(Presence) 하트비트 전송
+  async function sendPresenceHeartbeat() {
+    if (!teamCode || !studentId) return;
+    try {
+      const teamRef = doc(db, "teams", teamCode);
+      const now = Date.now();
+      await updateDoc(teamRef, {
+        [`presence.${studentId}`]: {
+          name: studentName,
+          lastSeen: now
+        },
+        members: arrayUnion(studentName),
+        lastActive: serverTimestamp()
+      });
+    } catch (err) {
+      // presence 필드가 없을 경우 setDoc merge 로 초기화
+      try {
+        await setDoc(doc(db, "teams", teamCode), {
+          presence: {
+            [studentId]: {
+              name: studentName,
+              lastSeen: Date.now()
+            }
+          },
+          members: arrayUnion(studentName),
+          lastActive: serverTimestamp()
+        }, { merge: true });
+      } catch (e) {
+        console.warn("Presence heartbeat error:", e);
+      }
+    }
+  }
+
+  sendPresenceHeartbeat();
+  // 15초마다 실시간 접속 하트비트 유지
+  const heartbeatTimer = setInterval(sendPresenceHeartbeat, 15000);
+
+  window.addEventListener("beforeunload", () => {
+    clearInterval(heartbeatTimer);
   });
 
-  overlay.innerHTML = `
-    <div class="badge-detail-card">
-      <button class="badge-detail-close" onclick="document.getElementById('badge-detail-modal-overlay').remove();">✕</button>
-      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">뱃지 정보</div>
-      <div class="badge-detail-icon-wrap">
-        <div class="badge-detail-icon ${unlocked ? '' : 'locked-gray'}">${badge.icon}</div>
-      </div>
-      <div class="badge-detail-title">${badge.title}</div>
-      <div class="badge-detail-desc">${badge.desc}</div>
-      <div class="badge-detail-status ${unlocked ? 'unlocked' : 'locked'}" style="margin-top: 10px;">
-        ${unlocked ? '🔓 획득 완료' : '🔒 미획득'}
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-}
+  // 3. 퀘스트 상태 관리
+  let approvedQuestsState = {};
+  const submittedQuestsState = {
+    q1: false, q2: false, q3: false, q4: false,
+    q5: false, q6: false, q7: false, q8: false
+  };
 
-// ── 실시간 학습 분석 로드 ──
-async function loadAnalytics() {
-  const quests = userData.quests || {};
-  
-  // 1. 완료 퀘스트 개수 계산
-  const questDoneCount = Object.keys(quests).filter(k => k.endsWith('_done')).length;
-  const questDoneEl = document.getElementById('analytic-quests');
-  if (questDoneEl) questDoneEl.textContent = `${questDoneCount} / 8`;
+  const QUEST_INFO = {
+    q1: { name: "AI의 눈", num: 1 },
+    q2: { name: "분류기준 만들기", num: 2 },
+    q3: { name: "사진 데이터 수집", num: 3 },
+    q4: { name: "이름표 붙이기", num: 4 },
+    q5: { name: "교실쓰레기 AI탐정단", num: 5 },
+    q6: { name: "오류박물관", num: 6 },
+    q7: { name: "실천 규약 초안", num: 7 },
+    q8: { name: "실천하기", num: 8 }
+  };
 
-  // 2. 획득 뱃지 개수 계산
-  const achievements = userData.achievements || [];
-  const achievementsEl = document.getElementById('analytic-badges');
-  if (achievementsEl) achievementsEl.textContent = `${achievements.length} / ${BADGES.length}`;
-
-  // 3. 퀴즈 최고 점수 계산
-  const bestScore = quests.q5_best_score || 0;
-  const quizScoreEl = document.getElementById('analytic-quiz-score');
-  if (quizScoreEl) quizScoreEl.textContent = `${bestScore} 점`;
-
-  // 4. 수집한 사진 데이터 & 라벨링 개수 실시간 데이터베이스 조회
-  const userId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-  try {
-    // 수집한 사진 데이터 조회
-    const uploadSnap = await db.collection('uploads').where('userId', '==', userId).get();
-    const uploadsEl = document.getElementById('analytic-uploads');
-    if (uploadsEl) uploadsEl.textContent = `${uploadSnap.size} 장`;
-
-    // 라벨링한 데이터 개수 조회 (labels 컬렉션)
-    const labelSnap = await db.collection('labels').where('userId', '==', userId).get();
-    const labelsEl = document.getElementById('analytic-labels');
-    if (labelsEl) labelsEl.textContent = `${labelSnap.size} 장`;
-  } catch (error) {
-    console.error("실시간 분석 데이터 로드 오류:", error);
-    const uploadsEl = document.getElementById('analytic-uploads');
-    if (uploadsEl) uploadsEl.textContent = `- 장`;
-    const labelsEl = document.getElementById('analytic-labels');
-    if (labelsEl) labelsEl.textContent = `- 장`;
+  // 개별 퀘스트 완료 기록 검사
+  function hasQuestCompletionRecord(num) {
+    if (num < 1 || num > 8) return false;
+    const key = `q${num}`;
+    return !!approvedQuestsState[key] || 
+           !!submittedQuestsState[key] || 
+           (localStorage.getItem(`quest${num}_submitted`) === "true") ||
+           (localStorage.getItem(`quest${num}_completed`) === "true") ||
+           (localStorage.getItem(`elementary_q${num}_done`) === "true");
   }
-}
 
-// ── 로드맵 연결선 그리기 ──
-function drawRoadmapLines() {
-  const svg = document.getElementById('roadmap-svg');
-  if (!svg) return;
-  
-  // defs와 네온 필터 생성 및 초기화
-  svg.innerHTML = `
-    <defs>
-      <filter id="glow-green" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="6" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-      <filter id="glow-orange" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="6" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-    </defs>
-  `;
-  
-  const containerRect = svg.getBoundingClientRect();
-  
-  let points = [];
-  for (let i = 1; i <= 8; i++) {
-    const node = document.getElementById(`node-${i}`);
-    if (node) {
-      const rect = node.getBoundingClientRect();
-      const x = rect.left - containerRect.left + rect.width / 2;
-      const y = rect.top - containerRect.top + rect.height / 2;
-      points.push({ x, y, id: i });
-    }
-  }
-  
-  let activeQuestId = 9;
-  for (let i = 1; i <= 8; i++) {
-    if (!(userData.quests || {})[`q${i}_done`]) {
-      activeQuestId = i;
-      break;
-    }
-  }
-  
-  for (let i = 0; i < points.length - 1; i++) {
-    const p1 = points[i];
-    const p2 = points[i+1];
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', p1.x);
-    line.setAttribute('y1', p1.y);
-    line.setAttribute('x2', p2.x);
-    line.setAttribute('y2', p2.y);
-    
-    const q1Done = (userData.quests || {})[`q${p1.id}_done`];
-    const q2Done = (userData.quests || {})[`q${p2.id}_done`];
-    
-    let pathClass = 'roadmap-path';
-    if (q1Done && q2Done) {
-      pathClass += ' completed';
-    } else if (p2.id === activeQuestId && q1Done) {
-      pathClass += ' active-path';
-    }
-    
-    line.setAttribute('class', pathClass);
-    svg.appendChild(line);
-  }
-}
-
-// 리사이즈 이벤트 등록
-window.addEventListener('resize', drawRoadmapLines);
-
-// ── 가이드 팝업 및 오디오 활성화 ──
-function checkGuideAndPlay() {
-  playBGM('main');
-  if (shouldTriggerConfetti) {
-    setTimeout(() => {
-      startConfetti();
-      playSFX('complete');
-    }, 500);
-    shouldTriggerConfetti = false;
-  }
-}
-
-function closeGuideAndPlay() {
-  playBGM('main');
-  if (shouldTriggerConfetti) {
-    startConfetti();
-    playSFX('complete');
-    shouldTriggerConfetti = false;
-  }
-}
-
-// ── 꽃가루 파티클 효과 ──
-function startConfetti() {
-  const canvas = document.getElementById('confetti-canvas');
-  if (!canvas) return;
-  canvas.style.display = 'block';
-  const ctx = canvas.getContext('2d');
-  
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  
-  let particles = [];
-  const colors = ['#63b3ed', '#f6ad55', '#68d391', '#fc8181', '#a78bfa', '#ec4899'];
-  
-  for (let i = 0; i < 120; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      r: Math.random() * 5 + 3,
-      d: Math.random() * canvas.height,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      tilt: Math.random() * 8 - 4,
-      tiltAngleIncremental: Math.random() * 0.05 + 0.02,
-      tiltAngle: 0
-    });
-  }
-  
-  let animationFrameId;
-  let startTime = Date.now();
-  
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let active = false;
-    
-    particles.forEach(p => {
-      p.tiltAngle += p.tiltAngleIncremental;
-      p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
-      p.x += Math.sin(p.tiltAngle);
-      p.tilt = Math.sin(p.tiltAngle - p.r/2) * 5;
-      
-      if (p.y < canvas.height) {
-        active = true;
+  // 순차 검증: 1번부터 num번까지 완료되어야 해금
+  function isQuestUnlocked(num) {
+    if (num < 1 || num > 8) return false;
+    for (let k = 1; k <= num; k++) {
+      if (!hasQuestCompletionRecord(k)) {
+        return false;
       }
-      
-      ctx.beginPath();
-      ctx.lineWidth = p.r;
-      ctx.strokeStyle = p.color;
-      ctx.moveTo(p.x + p.tilt + p.r/2, p.y);
-      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r/2);
-      ctx.stroke();
-    });
-    
-    if (active && Date.now() - startTime < 3500) {
-      animationFrameId = requestAnimationFrame(draw);
-    } else {
-      canvas.style.display = 'none';
-      cancelAnimationFrame(animationFrameId);
     }
-  }
-  draw();
-}
-
-function confirmReset(){
-  if (confirm('비회원 진행상황을 초기화할까요?\n점수, 퀘스트, 캐릭터 이름이 모두 삭제됩니다.')){
-    localStorage.removeItem('tempUserData');
-    userData={ charName:null, score:0, quests:{}, name:'임시학생' };
-    storyStep=0;
-    showStory();
-  }
-}
-
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
-}
-function logout(){
-  sessionStorage.removeItem('gameUser');
-  sessionStorage.removeItem('temp_chose');
-  sessionStorage.removeItem('from_quest');
-  stopBGM();
-  window.location.href='index.html';
-}
-
-// ── 사운드 ──
-function showStory(){
-  document.getElementById('story-screen').style.display='flex';
-  document.getElementById('story-text').textContent=STORY[storyStep];
-  setTimeout(()=>{ document.getElementById('story-btn').style.opacity='1'; },1200);
-  // 스토리 BGM 시작
-  playBGM('main');
-  updateStoryBGMBtn();
-}
-
-function updateStoryBGMBtn(){
-  const btn=document.getElementById('story-sound-btn');
-  if(!btn) return;
-  const on=getSoundSettings().bgm;
-  btn.textContent=on?'🔊 배경음':'🔇 배경음';
-  btn.style.background=on?'rgba(99,179,237,0.25)':'rgba(255,255,255,0.1)';
-}
-
-function toggleStoryBGM(){
-  const on=toggleBGM();
-  if(on) playBGM('main');
-  updateStoryBGMBtn();
-}
-
-// ── 캐릭터 트랙 선택 ──
-let selectedTrack = null;
-
-function pickCharTrack(track){
-  playSFX('click');
-  selectedTrack = track;
-  // 선택된 카드 강조
-  document.getElementById('pick-robot').style.borderColor =
-    track==='robot' ? '#63b3ed' : 'rgba(99,179,237,0.3)';
-  document.getElementById('pick-robot').style.background =
-    track==='robot' ? 'rgba(99,179,237,0.2)' : 'rgba(99,179,237,0.06)';
-  document.getElementById('pick-wizard').style.borderColor =
-    track==='wizard' ? '#a78bfa' : 'rgba(167,139,250,0.3)';
-  document.getElementById('pick-wizard').style.background =
-    track==='wizard' ? 'rgba(167,139,250,0.2)' : 'rgba(167,139,250,0.06)';
-  document.getElementById('pick-alert').textContent = '';
-}
-
-function handleNameConfirm(){
-  playSFX('click');
-  const charPickSection = document.getElementById('char-pick-section');
-  const nameInputSection = document.getElementById('name-input-section');
-
-  // 1단계: 캐릭터 선택
-  if(charPickSection.style.display !== 'none' && nameInputSection.style.display === 'none'){
-    if(!selectedTrack){
-      document.getElementById('pick-alert').textContent = '캐릭터를 선택해주세요!';
-      return;
-    }
-    // 선택 완료 → 이름 입력 화면으로
-    charPickSection.style.display = 'none';
-    nameInputSection.style.display = 'block';
-    // 선택한 캐릭터 미리보기
-    const track = CHAR_TRACKS[selectedTrack];
-    const firstImg = track[0].img;
-    const previewEl = document.getElementById('selected-char-preview');
-    previewEl.innerHTML = `<img src="${firstImg}" style="width:clamp(50px,10vw,70px);height:clamp(50px,10vw,70px);object-fit:contain;"
-      onerror="this.outerHTML='${track[0].emoji}'">`;
-    document.getElementById('name-confirm-btn').textContent = '이름 확정하기 ✨';
-    return;
+    return true;
   }
 
-  // 2단계: 이름 확정
-  saveName();
-}
-
-// ── 설정에서 캐릭터 관련 함수 제거 ──
-function openSettings(){
-  document.getElementById('settings-modal').style.display='flex';
-  updateSettingsBtns();
-  // 학생 계정(isStudent)이면 비밀번호 변경 섹션 표시
-  const user=JSON.parse(sessionStorage.getItem('gameUser')||'null');
-  const pwSection=document.getElementById('pw-change-section');
-  if(pwSection){
-    pwSection.style.display=(user&&user.uid!=='student'&&user.uid!=='admin')?'block':'none';
+  // 퀘스트 열림 여부: 1단계는 항상 열림, 그 이후는 이전 단계 완료 시 열림
+  function isQuestOpen(num) {
+    if (num === 1) return true;
+    return isQuestUnlocked(num - 1);
   }
-  toggleSidebar();
-}
-function closeSettings(){
-  document.getElementById('settings-modal').style.display='none';
-}
 
-// ── 비밀번호 변경 ──
-async function changePassword(){
-  const cur=document.getElementById('pw-current').value;
-  const nw=document.getElementById('pw-new').value;
-  const nw2=document.getElementById('pw-new2').value;
-  const alertEl=document.getElementById('pw-alert');
+  // 4. 사각형 퀘스트 버튼 상태 및 색상 실시간 업데이트
+  function updateQuestLockImages() {
+    updateMyHomeTitle();
 
-  if(!cur||!nw||!nw2){alertEl.textContent='모든 항목을 입력하세요.';return;}
-  if(nw.length<4){alertEl.textContent='새 비밀번호는 4자 이상이어야 합니다.';return;}
-  if(nw!==nw2){alertEl.textContent='새 비밀번호가 일치하지 않습니다.';return;}
+    let completedCount = 0;
+    let firstCurrentQuestNum = 1;
+    let foundCurrent = false;
 
-  try{
-    // 현재 비밀번호 확인
-    const snap=await db.collection('users').doc(currentUser.uid).get();
-    const data=snap.data();
-    const hashedCur=await hashPW(cur);
-    if(data.password!==hashedCur){alertEl.textContent='현재 비밀번호가 틀렸습니다.';return;}
+    for (let i = 1; i <= 8; i++) {
+      const key = `q${i}`;
+      const isUnlocked = isQuestUnlocked(i);
+      const isOpen = isQuestOpen(i);
 
-    // 새 비밀번호 저장
-    const hashedNew=await hashPW(nw);
-    await db.collection('users').doc(currentUser.uid).update({password:hashedNew});
+      const btnEl = document.getElementById(`questBtn-${i}`);
+      const tagEl = document.getElementById(`statusTag-${i}`);
+      const qMeta = QUEST_INFO[key];
 
-    alertEl.style.color='#68d391';
-    alertEl.textContent='✅ 비밀번호가 변경되었습니다!';
-    document.getElementById('pw-current').value='';
-    document.getElementById('pw-new').value='';
-    document.getElementById('pw-new2').value='';
-    setTimeout(()=>{alertEl.textContent='';alertEl.style.color='#fc8181';},3000);
-  }catch(e){
-    alertEl.textContent='오류: '+e.message;
-  }
-}
+      if (btnEl && tagEl) {
+        // 클릭 이벤트 핸들러: 잠긴 퀘스트 클릭 시 친절한 안내 제공
+        btnEl.onclick = (e) => {
+          if (!isQuestOpen(i)) {
+            e.preventDefault();
+            e.stopPropagation();
+            alert(`[Q${i}. ${qMeta.name}] 퀘스트는 아직 잠겨있습니다.\n\n앞 단계인 [Q${i-1}. ${QUEST_INFO['q'+(i-1)].name}] 퀘스트를 먼저 완료해야 도전할 수 있습니다.`);
+            return false;
+          }
+        };
 
-async function hashPW(pw){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+        // 클래스 초기화
+        btnEl.classList.remove("is-completed", "is-locked", "is-current");
 
-function updateSettingsBtns(){
-  const s=getSoundSettings();
-  const bgmBtn=document.getElementById('bgm-toggle');
-  const sfxBtn=document.getElementById('sfx-toggle');
-  if(bgmBtn){
-    bgmBtn.textContent=s.bgm?'ON 🔊':'OFF 🔇';
-    bgmBtn.style.background=s.bgm?'linear-gradient(135deg,#63b3ed,#4299e1)':'rgba(255,255,255,0.1)';
-    bgmBtn.style.color=s.bgm?'#0a0e1a':'rgba(255,255,255,0.5)';
-  }
-  if(sfxBtn){
-    sfxBtn.textContent=s.sfx?'ON 🔔':'OFF 🔕';
-    sfxBtn.style.background=s.sfx?'linear-gradient(135deg,#68d391,#38a169)':'rgba(255,255,255,0.1)';
-    sfxBtn.style.color=s.sfx?'#0a0e1a':'rgba(255,255,255,0.5)';
-  }
-}
-
-function onToggleBGM(){
-  const on=toggleBGM();
-  if(on && document.getElementById('story-screen').style.display==='flex'){
-    playBGM('main');
-  }
-  updateSettingsBtns();
-  updateStoryBGMBtn();
-}
-
-function onToggleSFX(){
-  toggleSFX();
-  updateSettingsBtns();
-  // 효과음 미리듣기
-  if(getSoundSettings().sfx) playSFX('click');
-}
-
-// ── 캐릭터 변경 ──
-function renderCharSelect(){
-  const grid=document.getElementById('char-select-grid');
-  if(!grid||!userData) return;
-  const curScore=userData.score||0;
-  const track=userData.charTrack||'robot';
-  const levels=CHAR_TRACKS[track]||CHAR_TRACKS.robot;
-  const curLv=getLevelByScore(curScore, track);
-  const selectedImg=userData.selectedChar||getLevelByScore(curScore, track).img;
-
-  grid.innerHTML=levels.map(lv=>{
-    const unlocked=curScore>=lv.minScore;
-    const selected=selectedImg===lv.img;
-    return `<div onclick="${unlocked?`selectChar('${lv.img}','${lv.name}')`:'showLockedChar()'}"
-      style="aspect-ratio:1;border-radius:12px;border:2px solid ${selected?'#63b3ed':unlocked?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.04)'};
-             background:${selected?'rgba(99,179,237,0.15)':'rgba(255,255,255,0.03)'};
-             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-             cursor:${unlocked?'pointer':'not-allowed'};padding:6px;transition:all .2s;
-             ${!unlocked?'opacity:0.35':''}">
-      <img src="${lv.img}" style="width:clamp(32px,6vw,44px);height:clamp(32px,6vw,44px);object-fit:contain;${!unlocked?'filter:grayscale(1)':''}">
-      <div style="font-size:9px;color:${selected?'#63b3ed':'rgba(255,255,255,0.4)'};text-align:center;line-height:1.2;">
-        ${unlocked?lv.name:'🔒 '+lv.minScore+'점'}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function selectChar(img, name){
-  playSFX('click');
-  userData.selectedChar=img;
-  if(currentUser.uid==='student'){
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-  } else {
-    await db.collection('users').doc(currentUser.uid).update({selectedChar:img});
-  }
-  document.getElementById('sb-char-img').src=img;
-  renderCharSelect();
-}
-
-function showLockedChar(){
-  playSFX('wrong');
-  alert('아직 잠겨있어요! 점수를 더 모아서 해금하세요 🔒');
-}
-
-// ══════════════ 1. 리더보드 ══════════════
-async function loadLeaderboard() {
-  const list = document.getElementById('leaderboard-list');
-  if (!list) return;
-  try {
-    const snap = await db.collection('users').orderBy('score', 'desc').limit(20).get();
-    const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-    let rows = [];
-    let rank = 1;
-    snap.forEach(doc => {
-      const d = doc.data();
-      if (!d.charName) return; // 이름 없는 유저 제외
-      const isMe = doc.id === currentUser.uid;
-      const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : 'normal';
-      const medal = rank === 1 ? '👑' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-      rows.push(`<div class="lb-row ${isMe ? 'me' : ''}">
-        <div class="lb-rank ${rankClass}">${medal}</div>
-        <span class="lb-name">${isMe ? '⭐ ' : ''}${d.charName || '???'}</span>
-        <span class="lb-score">${d.score || 0}점</span>
-      </div>`);
-      rank++;
-    });
-
-    // 임시 유저(student)도 리더보드에 표시
-    if (currentUser.uid === 'student' && userData.charName) {
-      const myScore = userData.score || 0;
-      // 내 순위 계산
-      let inserted = false;
-      const finalRows = [];
-      let newRank = 1;
-      // DB에서 가져온 점수들과 비교
-      const scores = [];
-      snap.forEach(doc => {
-        const d = doc.data();
-        if (d.charName) scores.push(d.score || 0);
-      });
-      let myRankIdx = scores.filter(s => s > myScore).length;
-      // 기존 rows에 내 row 삽입
-      const meRow = `<div class="lb-row me">
-        <div class="lb-rank ${myRankIdx === 0 ? 'gold' : myRankIdx === 1 ? 'silver' : myRankIdx === 2 ? 'bronze' : 'normal'}">${myRankIdx === 0 ? '👑' : myRankIdx === 1 ? '🥈' : myRankIdx === 2 ? '🥉' : myRankIdx + 1}</div>
-        <span class="lb-name">⭐ ${userData.charName} <span style="font-size:10px;color:rgba(255,255,255,0.3);">(임시)</span></span>
-        <span class="lb-score">${myScore}점</span>
-      </div>`;
-      rows.splice(myRankIdx, 0, meRow);
+        if (isUnlocked) {
+          // 학습 완료: 로그인 화면의 다음 버튼 색 rgb(252, 220, 48) 적용
+          completedCount++;
+          btnEl.classList.add("is-completed");
+          btnEl.title = `[Q${i}. ${qMeta.name}] 학습 완료! 언제든 다시 복습할 수 있습니다.`;
+          tagEl.innerHTML = `완료 ✓`;
+        } else {
+          // 미완료: 로그인 화면의 기본 배경색 rgb(15, 71, 192) 적용
+          if (isOpen) {
+            // 지금 도전 가능한 퀘스트
+            if (!foundCurrent) {
+              btnEl.classList.add("is-current");
+              foundCurrent = true;
+              firstCurrentQuestNum = i;
+            }
+            btnEl.title = `[Q${i}. ${qMeta.name}] 지금 도전할 수 있습니다! (클릭)`;
+            tagEl.innerHTML = `도전하기 ➔`;
+          } else {
+            // 앞단계 미완료로 잠긴 퀘스트
+            btnEl.classList.add("is-locked");
+            btnEl.title = `[Q${i}. ${qMeta.name}] 이전 단계(Q${i-1}) 완료 필요`;
+            tagEl.innerHTML = `잠김 🔒`;
+          }
+        }
+      }
     }
 
-    if (!rows.length) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">아직 참여한 친구가 없어요!</div>';
-    } else {
-      list.innerHTML = rows.join('');
-    }
-  } catch (e) {
-    console.error('리더보드 로드 실패:', e);
-    list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">리더보드를 불러올 수 없습니다.</div>';
+    // 상단 진행도 업데이트
+    const progressTextEl = document.getElementById("progressStatusText");
+    const progressFillEl = document.getElementById("progressBarFill");
+    if (progressTextEl) progressTextEl.textContent = `${completedCount} / 8 완료`;
+    if (progressFillEl) progressFillEl.style.width = `${(completedCount / 8) * 100}%`;
   }
-}
 
-// ══════════════ 2. 학급 공동 AI 훈련 게이지 ══════════════
-const GAUGE_MILESTONES = [
-  { target: 500,  label: '🌱 AI 탄생', reward: '전원 +5점' },
-  { target: 1500, label: '🧠 학습 시작', reward: '전원 +10점' },
-  { target: 3000, label: '🚀 자율 사고', reward: '전원 +15점' },
-  { target: 5000, label: '⭐ 마스터 AI', reward: '협동 뱃지 해금' },
-];
+  // 5. 모둠(Team) 실시간 구독 (교사 승인 상태 & 동접 멤버 목록 동기화)
+  if (teamCode) {
+    onSnapshot(doc(db, "teams", teamCode), (docSnap) => {
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        if (d.aiName) {
+          localStorage.setItem("elementary_aiName", d.aiName);
+        }
+        if (d.score !== undefined) {
+          localStorage.setItem("elementary_score", d.score.toString());
+          const scoreEl = document.getElementById("teamScoreDisplay");
+          if (scoreEl) scoreEl.textContent = d.score.toString();
+        }
+        if (d.approvedQuests) {
+          for (let i = 1; i <= 8; i++) {
+            if (d.approvedQuests[`q${i}`] || d.approvedQuests[`Q${i}`]) {
+              approvedQuestsState[`q${i}`] = true;
+            }
+          }
+        }
 
-async function loadClassGauge() {
-  try {
-    const snap = await db.collection('users').get();
-    let totalScore = 0;
-    let participants = 0;
-    snap.forEach(doc => {
-      const d = doc.data();
-      if (d.charName && (d.score || 0) > 0) {
-        totalScore += (d.score || 0);
-        participants++;
+        // 🟢 실시간 동시 접속자 렌더링
+        const presenceData = d.presence || {};
+        const now = Date.now();
+        const activeMembers = [];
+
+        // 본인은 항상 포함
+        activeMembers.push({ id: studentId, name: studentName, isMe: true });
+
+        // 최근 45초 이내 하트비트가 수신된 팀원 필터링
+        for (const [sid, info] of Object.entries(presenceData)) {
+          if (sid !== studentId && info && info.lastSeen && (now - info.lastSeen < 45000)) {
+            activeMembers.push({
+              id: sid,
+              name: info.name || "동료 탐정",
+              isMe: false
+            });
+          }
+        }
+
+        // 화면 갱신
+        const countEl = document.getElementById("onlineCount");
+        const listEl = document.getElementById("onlineNamesList");
+        if (countEl) countEl.textContent = activeMembers.length.toString();
+
+        if (listEl) {
+          listEl.innerHTML = activeMembers.map(m => {
+            if (m.isMe) {
+              return `<span class="member-chip my-chip">${m.name} <small class="me-tag">나</small></span>`;
+            } else {
+              return `<span class="member-chip">🟢 ${m.name}</span>`;
+            }
+          }).join("");
+        }
+
+        updateQuestLockImages();
       }
     });
-
-    // 임시 유저 점수도 합산
-    if (currentUser.uid === 'student' && userData.charName && (userData.score || 0) > 0) {
-      totalScore += (userData.score || 0);
-      participants++;
-    }
-
-    const maxTarget = GAUGE_MILESTONES[GAUGE_MILESTONES.length - 1].target;
-    const pct = Math.min(100, Math.round((totalScore / maxTarget) * 100));
-
-    const fillEl = document.getElementById('gauge-fill');
-    const pctEl = document.getElementById('gauge-pct');
-    const statScore = document.getElementById('gauge-stat-score');
-    const statPeople = document.getElementById('gauge-stat-people');
-    const msEl = document.getElementById('gauge-milestones');
-
-    if (fillEl) fillEl.style.width = pct + '%';
-    if (pctEl) pctEl.textContent = pct + '%';
-    if (statScore) statScore.textContent = '총 점수: ' + totalScore.toLocaleString();
-    if (statPeople) statPeople.textContent = '참여 인원: ' + participants + '명';
-
-    if (msEl) {
-      msEl.innerHTML = GAUGE_MILESTONES.map(m => {
-        const reached = totalScore >= m.target;
-        return `<div class="gauge-milestone-item ${reached ? 'reached' : ''}">
-          ${reached ? '✅' : '🔒'} ${m.label} (${m.target.toLocaleString()}점) — ${m.reward}
-        </div>`;
-      }).join('');
-    }
-
-    // 마지막 마일스톤 달성 시 협동 뱃지 해금
-    if (totalScore >= maxTarget) {
-      await unlockBadge('team_player', currentUser, userData);
-    }
-  } catch (e) {
-    console.error('학급 게이지 로드 실패:', e);
   }
-}
 
-// ══════════════ 3. AI 오분류 토론방 ══════════════
-async function loadDiscussions() {
-  const list = document.getElementById('discuss-list');
-  if (!list) return;
-  try {
-    const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-    const snap = await db.collection('discuss_ai').orderBy('created_at', 'desc').limit(30).get();
-    if (snap.empty) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">아직 토론 글이 없어요! 첫 번째 글을 작성해 보세요 💬</div>';
-      return;
-    }
-    let html = '';
-    snap.forEach(doc => {
-      const d = doc.data();
-      const isMe = d.authorId === myId;
-      const cheers = d.cheers || [];
-      const cheerCount = d.cheerCount || cheers.length;
-      const alreadyCheered = cheers.includes(myId);
-      const date = d.created_at?.slice(0, 16).replace('T', ' ') || '';
-      html += `<div class="discuss-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
-          <span style="font-size:13px;font-weight:700;color:${isMe ? '#63b3ed' : '#e2e8f0'};">${isMe ? '👤 ' : ''}${d.authorName || '???'}</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
-            ${isMe || currentUser.uid === 'admin' ? `<button onclick="deleteDiscuss('${doc.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>` : ''}
-          </div>
-        </div>
-        <p style="font-size:14px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${d.content}</p>
-        <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
-                onclick="${alreadyCheered ? '' : `doCheerDiscuss('${doc.id}', this)`}" 
-                ${alreadyCheered ? 'disabled' : ''}>
-          👏 응원 ${cheerCount > 0 ? cheerCount : ''}
-        </button>
-      </div>`;
+  // 6. 학생 개별 문서 구독 (점수 및 퀘스트 완료 동기화)
+  if (studentId) {
+    onSnapshot(doc(db, "students", studentId), (docSnap) => {
+      if (docSnap.exists()) {
+        const sd = docSnap.data();
+        if (sd.score !== undefined) {
+          localStorage.setItem("elementary_score", sd.score.toString());
+          localStorage.setItem("studentExp", sd.score.toString());
+          const scoreEl = document.getElementById("teamScoreDisplay");
+          if (scoreEl) scoreEl.textContent = sd.score.toString();
+        }
+        if (sd.badge) {
+          localStorage.setItem("elementary_badge", sd.badge);
+        }
+        if (sd.aiPartnerName) {
+          localStorage.setItem("elementary_aiName", sd.aiPartnerName);
+        }
+
+        const maxDone = sd.questsDone || 0;
+        for (let i = 1; i <= 8; i++) {
+          const isDone = !!(sd[`q${i}Done`] || sd[`q${i}_done`] || sd[`quest${i}Done`] || sd[`quest${i}_done`] || sd[`quest${i}Completed`] || (maxDone >= i));
+          if (isDone) {
+            submittedQuestsState[`q${i}`] = true;
+            localStorage.setItem(`quest${i}_completed`, "true");
+            localStorage.setItem(`quest${i}_submitted`, "true");
+            localStorage.setItem(`elementary_q${i}_done`, "true");
+          }
+        }
+
+        updateQuestLockImages();
+      }
     });
-    list.innerHTML = html;
-  } catch (e) {
-    console.error('토론방 로드 실패:', e);
-    list.innerHTML = '<div style="color:#fc8181;font-size:13px;padding:16px;">로드 오류: ' + e.message + '</div>';
   }
-}
 
-async function postDiscussion() {
-  const input = document.getElementById('discuss-input');
-  const content = (input?.value || '').trim();
-  if (!content) { alert('내용을 입력해 주세요!'); return; }
-  if (content.length > 500) { alert('500자 이내로 작성해 주세요!'); return; }
-  if (!userData.charName) { alert('먼저 캐릭터 이름을 설정해 주세요!'); return; }
+  // 초기 렌더링
+  updateQuestLockImages();
 
-  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-  try {
-    await db.collection('discuss_ai').add({
-      content,
-      authorId: myId,
-      authorName: userData.charName,
-      isTemp: currentUser.uid === 'student',
-      cheers: [],
-      cheerCount: 0,
-      created_at: new Date().toISOString()
+  // 7. 과제 제출 실시간 컬렉션 감지 (자동 해금)
+  if (studentId || teamCode) {
+    const questCollections = [
+      { col: "quest1_records", key: "q1", num: 1 },
+      { col: "quest2_rules", key: "q2", num: 2 },
+      { col: "quest3_data", key: "q3", num: 3 },
+      { col: "uploads", key: "q3", num: 3 },
+      { col: "quest4_labeling", key: "q4", num: 4 },
+      { col: "labels", key: "q4", num: 4 },
+      { col: "quest5_logs", key: "q5", num: 5 },
+      { col: "quest5_records", key: "q5", num: 5 },
+      { col: "quest6_logs", key: "q6", num: 6 },
+      { col: "quest6_errors", key: "q6", num: 6 },
+      { col: "quest6_museum", key: "q6", num: 6 },
+      { col: "quest6_reflections", key: "q6", num: 6 },
+      { col: "quest7_rules", key: "q7", num: 7 },
+      { col: "quest7_logs", key: "q7", num: 7 },
+      { col: "quest8_logs", key: "q8", num: 8 }
+    ];
+
+    questCollections.forEach(({ col, key, num }) => {
+      try {
+        onSnapshot(collection(db, col), (snapshot) => {
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const sidMatch = studentId && (data.studentId === studentId || data.userId === studentId || data.authorName === studentName || data.userName === studentName);
+            const teamMatch = teamCode && (data.teamCode === teamCode || data.teamName === teamCode);
+
+            if (sidMatch || teamMatch) {
+              submittedQuestsState[key] = true;
+              if (sidMatch) {
+                localStorage.setItem(`quest${num}_completed`, "true");
+                localStorage.setItem(`quest${num}_submitted`, "true");
+                localStorage.setItem(`elementary_q${num}_done`, "true");
+              }
+            }
+          });
+          updateQuestLockImages();
+        }, (err) => console.warn(col, err));
+      } catch (e) {
+        console.warn("Snapshot error for", col, e);
+      }
     });
-    input.value = '';
-    // +3점 보상
-    if (currentUser.uid === 'student') {
-      userData.score = (userData.score || 0) + 3;
-      localStorage.setItem('tempUserData', JSON.stringify(userData));
-      updateHUD();
-    } else if (currentUser.uid !== 'admin') {
-      await addScore(currentUser.uid, 3, '토론방 게시글 작성');
-    }
-    playSFX('correct');
-    loadDiscussions();
-  } catch (e) {
-    alert('작성 실패: ' + e.message);
   }
-}
-
-async function doCheerDiscuss(docId, btn) {
-  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-  const result = await cheerPost('discuss_ai', docId, myId);
-  if (result.ok) {
-    btn.classList.add('cheered');
-    btn.disabled = true;
-    btn.innerHTML = '👏 응원 ' + result.count;
-    playSFX('correct');
-  } else {
-    alert(result.msg);
-  }
-}
-
-async function deleteDiscuss(docId) {
-  if (!confirm('이 글을 삭제할까요?')) return;
-  try {
-    await db.collection('discuss_ai').doc(docId).delete();
-    loadDiscussions();
-  } catch (e) {
-    alert('삭제 실패: ' + e.message);
-  }
-}
-
-// ══════════════ 4. 자유 소통 게시판 ══════════════
-async function loadFreeBoard() {
-  const list = document.getElementById('freeboard-list');
-  if (!list) return;
-  try {
-    const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-    const snap = await db.collection('class_free_board').orderBy('created_at', 'desc').limit(30).get();
-    if (snap.empty) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">아직 게시글이 없어요! 첫 번째 글을 작성해 보세요 📋</div>';
-      return;
-    }
-    let html = '';
-    snap.forEach(doc => {
-      const d = doc.data();
-      const isMe = d.authorId === myId;
-      const cheers = d.cheers || [];
-      const cheerCount = d.cheerCount || cheers.length;
-      const alreadyCheered = cheers.includes(myId);
-      const date = d.created_at?.slice(0, 16).replace('T', ' ') || '';
-      html += `<div class="discuss-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
-          <span style="font-size:13px;font-weight:700;color:${isMe ? '#63b3ed' : '#e2e8f0'};">${isMe ? '👤 ' : ''}${d.authorName || '???'}</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
-            ${isMe || currentUser.uid === 'admin' ? `<button onclick="deleteFreeBoard('${doc.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>` : ''}
-          </div>
-        </div>
-        <p style="font-size:14px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;margin-bottom:8px;">${d.content}</p>
-        <button class="cheer-btn ${alreadyCheered ? 'cheered' : ''}" 
-                onclick="${alreadyCheered ? '' : `doCheerFreeBoard('${doc.id}', this)`}" 
-                ${alreadyCheered ? 'disabled' : ''}>
-          👏 응원 ${cheerCount > 0 ? cheerCount : ''}
-        </button>
-      </div>`;
-    });
-    list.innerHTML = html;
-  } catch (e) {
-    console.error('자유 게시판 로드 실패:', e);
-    list.innerHTML = '<div style="color:#fc8181;font-size:13px;padding:16px;">로드 오류: ' + e.message + '</div>';
-  }
-}
-
-async function postFreeBoard() {
-  const input = document.getElementById('freeboard-input');
-  const content = (input?.value || '').trim();
-  if (!content) { alert('내용을 입력해 주세요!'); return; }
-  if (content.length > 500) { alert('500자 이내로 작성해 주세요!'); return; }
-  if (!userData.charName) { alert('먼저 캐릭터 이름을 설정해 주세요!'); return; }
-
-  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-  try {
-    await db.collection('class_free_board').add({
-      content,
-      authorId: myId,
-      authorName: userData.charName,
-      isTemp: currentUser.uid === 'student',
-      cheers: [],
-      cheerCount: 0,
-      created_at: new Date().toISOString()
-    });
-    input.value = '';
-    // +3점 보상
-    if (currentUser.uid === 'student') {
-      userData.score = (userData.score || 0) + 3;
-      localStorage.setItem('tempUserData', JSON.stringify(userData));
-      updateHUD();
-    } else if (currentUser.uid !== 'admin') {
-      await addScore(currentUser.uid, 3, '자유 게시판 글 작성');
-    }
-    playSFX('correct');
-    loadFreeBoard();
-  } catch (e) {
-    alert('작성 실패: ' + e.message);
-  }
-}
-
-async function doCheerFreeBoard(docId, btn) {
-  const myId = currentUser.uid === 'student' ? ('temp_' + (userData.charName || '익명')) : currentUser.uid;
-  const result = await cheerPost('class_free_board', docId, myId);
-  if (result.ok) {
-    btn.classList.add('cheered');
-    btn.disabled = true;
-    btn.innerHTML = '👏 응원 ' + result.count;
-    playSFX('correct');
-  } else {
-    alert(result.msg);
-  }
-}
-
-async function deleteFreeBoard(docId) {
-  if (!confirm('이 글을 삭제할까요?')) return;
-  try {
-    await db.collection('class_free_board').doc(docId).delete();
-    loadFreeBoard();
-  } catch (e) {
-    alert('삭제 실패: ' + e.message);
-  }
-}
-
-// ══════════════ 5. 탭 전환 기능 ══════════════
-function switchCollabTab(tabName) {
-  // 모든 탭 버튼 비활성화
-  const buttons = document.querySelectorAll('.collab-tab-btn');
-  buttons.forEach(btn => btn.classList.remove('active'));
-
-  // 모든 탭 콘텐츠 비활성화
-  const contents = document.querySelectorAll('.collab-tab-content');
-  contents.forEach(content => content.classList.remove('active'));
-
-  // 선택한 탭 활성화
-  if (tabName === 'leaderboard') {
-    document.querySelector('.collab-tab-btn[onclick*="leaderboard"]').classList.add('active');
-    document.getElementById('tab-collab-leaderboard').classList.add('active');
-    loadLeaderboard();
-  } else if (tabName === 'gauge') {
-    document.querySelector('.collab-tab-btn[onclick*="gauge"]').classList.add('active');
-    document.getElementById('tab-collab-gauge').classList.add('active');
-    loadClassGauge();
-  } else if (tabName === 'discuss') {
-    document.querySelector('.collab-tab-btn[onclick*="discuss"]').classList.add('active');
-    document.getElementById('tab-collab-discuss').classList.add('active');
-    loadDiscussions();
-  } else if (tabName === 'freeboard') {
-    document.querySelector('.collab-tab-btn[onclick*="freeboard"]').classList.add('active');
-    document.getElementById('tab-collab-freeboard').classList.add('active');
-    loadFreeBoard();
-  }
-}
-</script>
-
-<!-- 📋 사전/사후 설문조사 모달 & 스타일 -->
-<style>
-  .survey-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(12px, 3vw, 20px);
-  }
-  .survey-card {
-    background: #111827;
-    border: 1px solid rgba(99, 179, 237, 0.3);
-    border-radius: 20px;
-    width: 100%;
-    max-width: 640px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 50px rgba(99, 179, 237, 0.15);
-    animation: slideUp .4s ease;
-    overflow: hidden;
-  }
-  .survey-card-header {
-    padding: 18px 24px;
-    background: rgba(30, 41, 59, 0.6);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    position: relative;
-  }
-  .survey-card-header h2 {
-    font-family: 'Jua', sans-serif;
-    font-size: 20px;
-    color: #63b3ed;
-    margin: 0 0 4px 0;
-  }
-  .survey-card-header p {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0;
-  }
-  .survey-close-btn {
-    position: absolute;
-    top: 16px;
-    right: 18px;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-    font-size: 18px;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-  }
-  .survey-card-body {
-    padding: 20px 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .survey-q-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 16px;
-  }
-  .survey-q-num {
-    font-size: 11px;
-    color: #63b3ed;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-  }
-  .survey-q-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: #f8fafc;
-    margin-bottom: 12px;
-    line-height: 1.5;
-  }
-  .likert-group {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-  }
-  .likert-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 10px 4px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: all .2s;
-  }
-  .likert-btn .l-emoji { font-size: 16px; }
-  .likert-btn:hover {
-    background: rgba(99, 179, 237, 0.15);
-    border-color: #63b3ed;
-    color: white;
-  }
-  .likert-btn.selected {
-    background: linear-gradient(135deg, #63b3ed, #4299e1) !important;
-    border-color: #63b3ed !important;
-    color: #0a0e1a !important;
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(99, 179, 237, 0.3);
-  }
-  .survey-card-footer {
-    padding: 16px 24px;
-    background: rgba(30, 41, 59, 0.6);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  .survey-submit-btn {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, #63b3ed, #4299e1);
-    border: none;
-    border-radius: 12px;
-    color: #0a0e1a;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all .2s;
-  }
-  .survey-submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 179, 237, 0.4);
-  }
-  .survey-textarea {
-    width: 100%;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    color: #e2e8f0;
-    font-size: 13px;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-    transition: all .2s;
-  }
-  .survey-textarea:focus {
-    border-color: #63b3ed;
-    background: rgba(255, 255, 255, 0.08);
-  }
-</style>
-
-<!-- 🟢 사전 설문조사 모달 -->
-<div id="pre-survey-modal" class="survey-overlay">
-  <div class="survey-card">
-    <div class="survey-card-header">
-      <h2>🟢 사전 설문조사 (Pre-Survey)</h2>
-      <p>AI 가디언 수업을 시작하기 전, 여러분의 생각과 경험을 들려주세요! (완료 시 🎁 +10 XP 지급)</p>
-      <button class="survey-close-btn" onclick="closePreSurveyModal()">×</button>
-    </div>
-    <div class="survey-card-body">
-      <!-- Q1 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 01</div>
-        <div class="survey-q-text">나는 인공지능(AI) 기술과 그 작동 원리에 대해 흥미와 관심이 많다.</div>
-        <div class="likert-group" id="pre-q1-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q1', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q2 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 02</div>
-        <div class="survey-q-text">나는 인공지능과 관련된 실습 활동을 자신 있게 해낼 수 있다.</div>
-        <div class="likert-group" id="pre-q2-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q2', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q3 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 03</div>
-        <div class="survey-q-text">나는 인공지능이 데이터를 공부하고 학습하는 방식(머신러닝)을 설명할 수 있다.</div>
-        <div class="likert-group" id="pre-q3-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q3', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q4 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 04</div>
-        <div class="survey-q-text">나는 AI를 학습시키기 위해 데이터 수집과 라벨링이 왜 필요한지 알고 있다.</div>
-        <div class="likert-group" id="pre-q4-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q4', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q4', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q4', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q4', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q4', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q5 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 05</div>
-        <div class="survey-q-text">나는 AI가 이미지나 영상에서 물체를 인식/분석(객체 탐지)하는 원리를 알고 있다.</div>
-        <div class="likert-group" id="pre-q5-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q5', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q5', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q5', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q5', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q5', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q6 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 06</div>
-        <div class="survey-q-text">나는 AI 활용 시 발생하는 저작권, 초상권, 데이터 편향 등의 윤리 문제를 잘 알고 있다.</div>
-        <div class="likert-group" id="pre-q6-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q6', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q6', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q6', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q6', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q6', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q7 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 07</div>
-        <div class="survey-q-text">나는 AI 기술을 다룰 때 올바른 규칙과 법률을 준수하며 안전하게 사용할 수 있다.</div>
-        <div class="likert-group" id="pre-q7-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q7', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q7', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q7', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q7', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q7', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q8 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 08</div>
-        <div class="survey-q-text">나는 원하는 AI 모델을 만들기 위해 직접 이미지 데이터를 수집하고 라벨링할 수 있다.</div>
-        <div class="likert-group" id="pre-q8-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q8', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q8', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q8', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q8', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q8', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q9 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 09</div>
-        <div class="survey-q-text">나는 내가 준비한 데이터로 AI 모델을 학습시키고 결과를 확인할 수 있다.</div>
-        <div class="likert-group" id="pre-q9-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q9', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q9', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q9', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q9', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q9', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q10 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 10</div>
-        <div class="survey-q-text">나는 실생활 문제나 나만의 아이디어를 해결하는 데 AI 기술을 활용할 수 있다.</div>
-        <div class="likert-group" id="pre-q10-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q10', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q10', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q10', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q10', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('pre-q10', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-    </div>
-    <div class="survey-card-footer">
-      <button class="survey-submit-btn" onclick="submitPreSurvey()">🚀 사전 설문 제출하고 학습 시작하기</button>
-    </div>
-  </div>
-</div>
-
-<!-- 🔵 사후 설문조사 모달 -->
-<div id="post-survey-modal" class="survey-overlay">
-  <div class="survey-card">
-    <div class="survey-card-header">
-      <h2>🔵 사후 설문조사 (Post-Survey)</h2>
-      <p>수업을 모두 마쳤습니다! 여러분의 소중한 의견을 들려주세요. (완료 시 🎁 +10 XP 지급)</p>
-      <button class="survey-close-btn" onclick="closePostSurveyModal()">×</button>
-    </div>
-    <div class="survey-card-body">
-      <!-- Q1 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 01</div>
-        <div class="survey-q-text">본 프로그램을 통해 인공지능(AI) 기술에 대한 흥미와 관심이 높아졌다.</div>
-        <div class="likert-group" id="post-q1-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q1', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q2 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 02</div>
-        <div class="survey-q-text">나는 앞으로도 인공지능 관련 실습 활동을 스스로 해낼 수 있는 자신감이 생겼다.</div>
-        <div class="likert-group" id="post-q2-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q2', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q3 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 03</div>
-        <div class="survey-q-text">나는 인공지능이 데이터를 공부하고 학습하는 방식(머신러닝)을 명확히 이해하게 되었다.</div>
-        <div class="likert-group" id="post-q3-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q3', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q4 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 04</div>
-        <div class="survey-q-text">나는 AI 학습 시 데이터 수집과 라벨링(표시)의 핵심 역할과 필요성을 깨달았다.</div>
-        <div class="likert-group" id="post-q4-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q4', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q5 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 05</div>
-        <div class="survey-q-text">나는 AI가 이미지/영상에서 물체를 인식하고 분석(객체 탐지 등)하는 원리를 이해했다.</div>
-        <div class="likert-group" id="post-q5-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q5', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q5', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q5', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q5', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q5', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q6 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 06</div>
-        <div class="survey-q-text">나는 AI 활용 시 인공지능 윤리(저작권, 초상권, 데이터 편향 등)의 중요성을 깊이 인식하게 되었다.</div>
-        <div class="likert-group" id="post-q6-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q6', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q6', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q6', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q6', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q6', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q7 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 07</div>
-        <div class="survey-q-text">나는 앞으로 인공지능 기술을 사용할 때 올바른 규칙과 법률을 지켜 안전하게 활용할 것이다.</div>
-        <div class="likert-group" id="post-q7-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q7', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q7', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q7', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q7', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q7', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q8 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 08</div>
-        <div class="survey-q-text">나는 원하는 AI 모델을 만들기 위해 직접 이미지 데이터를 수집하고 라벨링할 수 있게 되었다.</div>
-        <div class="likert-group" id="post-q8-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q8', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q8', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q8', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q8', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q8', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q9 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 09</div>
-        <div class="survey-q-text">나는 내가 직접 구축한 데이터로 AI를 학습시키고 그 결과를 분석할 수 있게 되었다.</div>
-        <div class="likert-group" id="post-q9-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q9', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q9', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q9', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q9', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q9', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q10 -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 10</div>
-        <div class="survey-q-text">나는 실생활의 문제나 나만의 아이디어를 해결하는 데 AI 기술을 어떻게 활용할지 아이디어를 떠올릴 수 있다.</div>
-        <div class="likert-group" id="post-q10-group">
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q10', 1, this)"><span class="l-emoji">😡</span><span class="l-num">1. 전혀 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q10', 2, this)"><span class="l-emoji">🙁</span><span class="l-num">2. 아니다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q10', 3, this)"><span class="l-emoji">😐</span><span class="l-num">3. 보통이다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q10', 4, this)"><span class="l-emoji">🙂</span><span class="l-num">4. 그렇다</span></button>
-          <button type="button" class="likert-btn" onclick="selectLikert('post-q10', 5, this)"><span class="l-emoji">😍</span><span class="l-num">5. 매우 그렇다</span></button>
-        </div>
-      </div>
-      <!-- Q11 (주관식 소감) -->
-      <div class="survey-q-box">
-        <div class="survey-q-num">Question 11 (주관식 소감)</div>
-        <div class="survey-q-text">11. 본 소프트웨어에 만족하셨나요? 사용한 소감을 자유롭게 말씀해주세요.</div>
-        <textarea id="post-q11-input" class="survey-textarea" placeholder="소감 및 의견을 자유롭게 작성해 주세요 (선택 사항)" rows="3" oninput="postSurveyAnswers['q11']=this.value"></textarea>
-      </div>
-    </div>
-    <div class="survey-card-footer">
-      <button class="survey-submit-btn" onclick="submitPostSurvey()">🎉 사후 설문 제출하고 최종 완료하기</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ── 📋 사전 / 사후 설문조사 프론트엔드 로직 ──
-const preSurveyAnswers = {};
-const postSurveyAnswers = {};
-
-function selectLikert(key, val, btn) {
-  const group = btn.parentElement;
-  group.querySelectorAll('.likert-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-
-  if (key.startsWith('pre-')) {
-    const qKey = key.replace('pre-', '');
-    preSurveyAnswers[qKey] = val;
-  } else if (key.startsWith('post-')) {
-    const qKey = key.replace('post-', '');
-    postSurveyAnswers[qKey] = val;
-  }
-}
-
-function openPreSurveyModal() {
-  document.getElementById('pre-survey-modal').style.display = 'flex';
-}
-function closePreSurveyModal() {
-  document.getElementById('pre-survey-modal').style.display = 'none';
-}
-function openPostSurveyModal() {
-  document.getElementById('post-survey-modal').style.display = 'flex';
-}
-function closePostSurveyModal() {
-  document.getElementById('post-survey-modal').style.display = 'none';
-}
-
-async function submitPreSurvey() {
-  for (let i = 1; i <= 10; i++) {
-    if (!preSurveyAnswers['q' + i]) {
-      alert(`Question ${i < 10 ? '0' + i : i} 번 문항에 답변해 주세요!`);
-      return;
-    }
-  }
-
-  const btn = document.querySelector('#pre-survey-modal .survey-submit-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
-
-  const res = await submitPreSurveyData(currentUser, userData, preSurveyAnswers);
-  if (res.ok) {
-    closePreSurveyModal();
-    showXPPopup('🎁 사전 설문 제출 완료! +' + res.reward + ' XP');
-    updateHUD();
-    updateSurveyStatusUI();
-  } else {
-    alert('사전 설문 제출에 실패했습니다: ' + res.msg);
-    if (btn) { btn.disabled = false; btn.textContent = '🚀 사전 설문 제출하고 학습 시작하기'; }
-  }
-}
-
-async function submitPostSurvey() {
-  for (let i = 1; i <= 10; i++) {
-    if (!postSurveyAnswers['q' + i]) {
-      alert(`Question ${i < 10 ? '0' + i : i} 번 문항에 답변해 주세요!`);
-      return;
-    }
-  }
-
-  const q11Inp = document.getElementById('post-q11-input');
-  postSurveyAnswers['q11'] = q11Inp ? q11Inp.value.trim() : (postSurveyAnswers['q11'] || '');
-
-  const btn = document.querySelector('#post-survey-modal .survey-submit-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '제출 중...'; }
-
-  const res = await submitPostSurveyData(currentUser, userData, postSurveyAnswers);
-  if (res.ok) {
-    closePostSurveyModal();
-    showXPPopup('🎉 사후 설문 제출 완료! +' + res.reward + ' XP');
-    updateHUD();
-    updateSurveyStatusUI();
-  } else {
-    alert('사후 설문 제출에 실패했습니다: ' + res.msg);
-    if (btn) { btn.disabled = false; btn.textContent = '🎉 사후 설문 제출하고 최종 완료하기'; }
-  }
-}
-
-function updateSurveyStatusUI() {
-  if (!currentUser || typeof checkSurveyStatus !== 'function') return;
-  const status = checkSurveyStatus(currentUser, userData);
-
-  const preCheck = document.getElementById('sb-pre-check');
-  const preTag = document.getElementById('sb-pre-status-tag');
-  if (preCheck && preTag) {
-    if (status.pre) {
-      preCheck.className = 'quest-check done';
-      preCheck.textContent = '✓';
-      preTag.style.color = 'var(--green)';
-      preTag.textContent = '완료';
-    } else {
-      preCheck.className = 'quest-check';
-      preCheck.textContent = '';
-      preTag.style.color = '#f6ad55';
-      preTag.textContent = '미진행';
-    }
-  }
-
-  const postCheck = document.getElementById('sb-post-check');
-  const postTag = document.getElementById('sb-post-status-tag');
-  if (postCheck && postTag) {
-    if (status.post) {
-      postCheck.className = 'quest-check done';
-      postCheck.textContent = '✓';
-      postTag.style.color = 'var(--green)';
-      postTag.textContent = '완료';
-    } else {
-      postCheck.className = 'quest-check';
-      postCheck.textContent = '';
-      postTag.style.color = '#63b3ed';
-      postTag.textContent = '미진행';
-    }
-  }
-}
-
-function checkAutoSurveyTrigger() {
-  if (!currentUser || typeof checkSurveyStatus !== 'function') return;
-  const status = checkSurveyStatus(currentUser, userData);
-
-  if (!status.pre) {
-    setTimeout(() => {
-      openPreSurveyModal();
-    }, 800);
-    return;
-  }
-
-  const quests = (userData && userData.quests) || {};
-  const questDoneCount = Object.keys(quests).filter(k => k.endsWith('_done')).length;
-  if (questDoneCount >= 8 && !status.post) {
-    setTimeout(() => {
-      openPostSurveyModal();
-    }, 1200);
-  }
-}
 </script>
 </body>
 </html>

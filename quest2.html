@@ -2,973 +2,953 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <title>퀘스트2 - 아버지를 찾아서</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QUEST 2: 분류기준 만들기 | AI 자원순환 탐정단</title>
+  
+  <!-- 웹폰트 Pretendard 및 Jua -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <style>
-    *{box-sizing:border-box;}
-    body{margin:0;overflow:hidden;user-select:none;font-family:'Noto Sans KR',sans-serif;}
-    .game-screen{position:fixed;inset:0;background:#000;}
-    .game-bg{position:absolute;inset:0;background:url('images/bgq2-1.png') center/cover no-repeat;}
-    .game-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 25%,rgba(0,0,0,0.82) 100%);}
-    .ai-notice{position:absolute;top:52px;left:12px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.6);z-index:25;backdrop-filter:blur(4px);}
-
-    /* 캐릭터 */
-    .my-char{position:absolute;bottom:clamp(155px,21vw,210px);left:3%;height:clamp(110px,33vh,320px);object-fit:contain;filter:drop-shadow(4px 4px 10px rgba(0,0,0,0.9)) brightness(0.85);animation:charFloat 3s ease-in-out infinite .5s;z-index:10;transition:all .4s;}
-    .speaker-char{position:absolute;bottom:clamp(155px,21vw,210px);right:3%;height:clamp(110px,33vh,320px);object-fit:contain;filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9));animation:charFloat 3s ease-in-out infinite;z-index:11;transition:all .5s;}
-    .speaker-char2{position:absolute;bottom:clamp(155px,21vw,210px);right:clamp(110px,18vw,240px);height:clamp(90px,26vh,260px);object-fit:contain;filter:drop-shadow(-4px 4px 10px rgba(0,0,0,0.9)) brightness(0.85);animation:charFloat 3s ease-in-out infinite .8s;z-index:10;display:none;transition:all .5s;}
-    @keyframes charFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-
-    /* HUD */
-    .game-hud{position:absolute;top:0;left:0;right:0;padding:10px 14px;display:flex;align-items:center;gap:8px;background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);z-index:20;}
-    .hud-back{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:white;font-size:12px;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;}
-    .hud-title{font-family:'Jua',sans-serif;font-size:clamp(11px,2.2vw,14px);color:white;text-shadow:0 2px 4px rgba(0,0,0,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .hud-right{display:flex;gap:6px;margin-left:auto;flex-shrink:0;}
-    .hud-score{background:rgba(99,179,237,0.25);border:1px solid rgba(99,179,237,0.4);border-radius:20px;padding:4px 10px;font-size:12px;color:#63b3ed;font-weight:700;white-space:nowrap;}
-    .hud-progress{background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap;}
-
-    /* 대화창 */
-    .dialog-box{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:0 clamp(8px,3vw,20px) clamp(10px,2vh,16px);}
-    .dialog-top-bar{display:flex;align-items:center;gap:8px;margin-bottom:0;}
-    .char-name-tag{display:inline-block;background:linear-gradient(135deg,#63b3ed,#4299e1);color:#0a0e1a;font-weight:700;font-family:'Jua',sans-serif;padding:5px 16px;border-radius:10px 10px 0 0;font-size:clamp(12px,3vw,15px);box-shadow:0 -2px 10px rgba(99,179,237,0.3);transition:background .4s;}
-    .char-name-tag.turing{background:linear-gradient(135deg,#68d391,#38a169);}
-    .char-name-tag.hinton{background:linear-gradient(135deg,#f6ad55,#ed8936);}
-    .char-name-tag.both{background:linear-gradient(135deg,#b794f4,#805ad5);}
-    .char-name-tag.goodfellow{background:linear-gradient(135deg,#fc8181,#e53e3e);}
-    .btn-prev{margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 10px;color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;font-family:inherit;display:none;align-items:center;transition:all .2s;}
-    .dialog-text-box{background:rgba(10,14,26,0.94);border:2px solid rgba(99,179,237,0.4);border-radius:0 12px 12px 12px;padding:clamp(14px,2.5vw,20px) clamp(40px,6vw,55px) clamp(14px,2.5vw,20px) clamp(14px,2.5vw,22px);position:relative;min-height:clamp(90px,13vh,125px);max-height:clamp(150px,26vh,220px);overflow-y:auto;backdrop-filter:blur(10px);box-shadow:0 -4px 30px rgba(0,0,0,0.5);}
-    .dialog-text{font-size:clamp(14px,2.4vw,17px);line-height:1.85;color:#e2e8f0;text-shadow:0 1px 3px rgba(0,0,0,0.5);white-space:pre-line;}
-    .dialog-next{position:absolute;bottom:12px;right:12px;width:26px;height:26px;background:rgba(99,179,237,0.2);border:2px solid rgba(99,179,237,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:arrowBounce 1s ease-in-out infinite;}
-    .dialog-next::after{content:'▼';font-size:10px;color:#63b3ed;}
-    @keyframes arrowBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(3px);}}
-
-    /* 퀴즈 팝업 */
-    .quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-box{background:#111827;border:1px solid rgba(99,179,237,0.3);border-radius:20px;width:100%;max-width:600px;padding:clamp(18px,3vw,28px);animation:slideUp .4s ease;box-shadow:0 0 80px rgba(99,179,237,0.15);max-height:92vh;overflow-y:auto;}
-    @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
-    .quiz-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-    .quiz-header h2{font-family:'Jua',sans-serif;font-size:clamp(16px,3vw,20px);color:#63b3ed;}
-    .quiz-question{font-size:clamp(14px,2.5vw,16px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;}
-
-    /* 드래그앤드롭 */
-    .dnd-two-col{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
-    .dnd-person{flex:1;min-width:140px;background:rgba(255,255,255,0.03);border-radius:12px;padding:12px;}
-    .dnd-person h4{font-size:13px;font-weight:700;margin-bottom:10px;text-align:center;padding:7px;border-radius:8px;}
-    .dnd-person.turing h4{background:rgba(104,211,145,0.2);color:#68d391;}
-    .dnd-person.hinton h4{background:rgba(246,173,85,0.2);color:#f6ad55;}
-    .source-pool{background:rgba(255,255,255,0.03);border-radius:12px;padding:12px;margin-bottom:12px;}
-    .source-pool h4{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;}
-    .pool-items{display:flex;flex-wrap:wrap;gap:7px;}
-    .dnd-item{background:rgba(99,179,237,0.1);border:2px solid rgba(99,179,237,0.25);border-radius:9px;padding:8px 12px;cursor:grab;font-size:clamp(12px,2vw,13px);color:#e2e8f0;transition:all .2s;display:flex;align-items:center;gap:6px;}
-    .dnd-item:hover{background:rgba(99,179,237,0.2);border-color:rgba(99,179,237,0.5);}
-    .dnd-item.dragging{opacity:0.35;}
-    .drag-handle{color:rgba(255,255,255,0.3);}
-    .dnd-slot{background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.15);border-radius:9px;padding:8px 10px;margin-bottom:7px;min-height:40px;font-size:clamp(11px,2vw,12px);color:rgba(255,255,255,0.3);transition:all .2s;display:flex;align-items:center;}
-    .dnd-slot.over{background:rgba(99,179,237,0.1);border-color:rgba(99,179,237,0.4);}
-    .dnd-slot.filled{background:rgba(99,179,237,0.08);border:2px solid rgba(99,179,237,0.3);color:#e2e8f0;}
-    .dnd-slot.correct{background:rgba(104,211,145,0.15);border:2px solid #68d391;color:#68d391;}
-    .dnd-slot.wrong{background:rgba(252,129,129,0.15);border:2px solid #fc8181;color:#fc8181;}
-    .quiz-check-btn{width:100%;padding:12px;margin-top:12px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:11px;color:#0a0e1a;font-size:clamp(13px,2.5vw,15px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
-    .quiz-check-btn:hover{transform:translateY(-2px);}
-    .quiz-feedback{margin-top:10px;padding:10px 14px;border-radius:9px;font-size:clamp(12px,2vw,13px);line-height:1.5;}
-    .quiz-feedback.correct{background:rgba(104,211,145,0.15);border:1px solid #68d391;color:#68d391;}
-    .quiz-feedback.wrong{background:rgba(252,129,129,0.15);border:1px solid #fc8181;color:#fc8181;}
-    .quiz-result{text-align:center;padding:16px 0;}
-    .quiz-result .big-emoji{font-size:clamp(48px,8vw,64px);margin-bottom:12px;}
-    .quiz-result h3{font-size:clamp(18px,3.5vw,22px);margin-bottom:6px;}
-    .quiz-result .xp-gain{color:#f6ad55;font-size:clamp(16px,3vw,20px);margin-bottom:16px;}
-
-    .levelup-screen{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
-    .levelup-screen h1{font-family:'Jua',sans-serif;font-size:clamp(32px,6vw,48px);color:#f6ad55;}
-    .levelup-screen p{font-size:clamp(16px,3vw,20px);color:#63b3ed;}
-    .xp-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#63b3ed,#f6ad55);color:#0a0e1a;font-weight:700;font-size:clamp(18px,4vw,24px);padding:14px 36px;border-radius:18px;z-index:500;animation:popIn .4s ease,fadeOutUp .5s ease 1.5s forwards;pointer-events:none;}
-    @keyframes popIn{from{transform:translate(-50%,-50%) scale(.5);opacity:0;}to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
-    @keyframes fadeOutUp{to{opacity:0;transform:translate(-50%,-70%);}}
-    @media(max-width:480px){
-      .my-char,.speaker-char{height:clamp(90px,25vh,180px);}
-      .speaker-char2{height:clamp(70px,18vh,140px);}
-      .dnd-two-col{flex-direction:column;}
+    :root {
+      --bg-blue: rgb(14, 70, 191);        /* 배경 파랑 r14, g70, b191 */
+      --card-navy: rgb(6, 27, 80);        /* 기타 남색 r6, g27, b80 */
+      --btn-yellow: rgb(254, 218, 53);    /* 버튼 노랑 r254, g218, b53 */
+      --btn-yellow-hover: rgb(255, 230, 80);
+      --accent-cyan: #38BDF8;
+      --accent-green: #22C55E;
+      --text-white: #FFFFFF;              /* 글씨: 흰색 */
+      --text-white-dim: rgba(255, 255, 255, 0.85);
+      --radius: 20px;
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
     }
 
-    /* 퀴즈 확인 팝업 */
-    .quiz-confirm-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,20px);}
-    .quiz-confirm-box{background:#111827;border:2px solid rgba(104,211,145,0.4);border-radius:24px;padding:clamp(24px,4vw,36px) clamp(20px,4vw,32px);text-align:center;max-width:360px;width:90%;box-shadow:0 0 60px rgba(104,211,145,0.2);animation:slideUp .4s ease;}
-    .quiz-confirm-emoji{font-size:clamp(44px,8vw,64px);margin-bottom:14px;}
-    .quiz-confirm-title{font-family:'Jua',sans-serif;font-size:clamp(18px,4vw,24px);color:#68d391;margin-bottom:8px;}
-    .quiz-confirm-desc{font-size:clamp(13px,2.5vw,15px);color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;}
-    .quiz-confirm-btns{display:flex;gap:10px;}
-    .quiz-confirm-ok{flex:1;padding:clamp(12px,2.5vw,14px);background:linear-gradient(135deg,#68d391,#38a169);border:none;border-radius:12px;color:#0b101d;font-size:clamp(14px,3vw,16px);font-weight:700;cursor:pointer;font-family:inherit;transition:all .3s;}
-    .quiz-confirm-ok:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(104,211,145,0.4);}
-    .quiz-confirm-cancel{padding:clamp(12px,2.5vw,14px) clamp(16px,3vw,20px);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:rgba(255,255,255,0.6);font-size:clamp(13px,2.5vw,15px);cursor:pointer;font-family:inherit;}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: var(--bg-blue);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.2), transparent 35%),
+        radial-gradient(circle at 90% 90%, rgba(254, 218, 53, 0.15), transparent 35%),
+        linear-gradient(to bottom, rgb(14, 70, 191), rgb(8, 50, 145));
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 60px;
+    }
+
+    /* 상단 네비게이션 헤더 */
+    .app-header {
+      width: 100%;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--card-navy);
+      backdrop-filter: blur(12px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+      padding: 10px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-logo-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      transition: transform 0.2s ease;
+    }
+
+    .header-logo-link:hover {
+      transform: scale(1.05);
+    }
+
+    .header-bs-logo {
+      height: 42px;
+      max-width: 130px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+    }
+
+    .btn-quest-map {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(254, 218, 53, 0.4);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+    }
+
+    .btn-quest-map:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(254, 218, 53, 0.6);
+    }
+
+    .header-title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-quest-badge {
+      font-family: 'Jua', sans-serif;
+      font-size: 12px;
+      color: var(--btn-yellow);
+      background: rgba(254, 218, 53, 0.2);
+      border: 1px solid var(--btn-yellow);
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      width: fit-content;
+      font-weight: bold;
+    }
+
+    .header-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 20px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .student-badge {
+      background: rgba(14, 70, 191, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .score-badge {
+      background: rgba(6, 27, 80, 0.8);
+      border: 2px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      font-family: 'Jua', sans-serif;
+      font-weight: 900;
+      font-size: 16px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    /* 메인 컨테이너 */
+    .app-container {
+      width: 100%;
+      max-width: 960px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* 인트로 안내 배너 */
+    .intro-card {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      color: var(--text-white);
+    }
+
+    .intro-icon {
+      font-size: 38px;
+      background: rgba(14, 70, 191, 0.4);
+      padding: 12px;
+      border-radius: 18px;
+      line-height: 1;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .intro-text h2 {
+      font-family: 'Jua', sans-serif;
+      font-size: 24px;
+      color: var(--text-white);
+      margin-bottom: 6px;
+    }
+
+    .intro-text p {
+      font-size: 15px;
+      color: var(--text-white-dim);
+      line-height: 1.6;
+    }
+
+    /* 5대 품목 입력 섹션 */
+    .form-card {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--text-white);
+    }
+
+    .form-section-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 12px;
+    }
+
+    .rule-input-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .rule-item-box {
+      background: rgba(14, 70, 191, 0.35);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 16px 20px;
+      transition: all 0.25s;
+    }
+
+    .rule-item-box:focus-within {
+      border-color: var(--btn-yellow);
+      background: rgba(14, 70, 191, 0.5);
+      box-shadow: 0 0 0 4px rgba(254, 218, 53, 0.25);
+    }
+
+    .rule-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .rule-label {
+      font-family: 'Jua', sans-serif;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag-paper { color: #2563EB; }
+    .tag-plastic { color: #0284C7; }
+    .tag-can { color: #D97706; }
+    .tag-milk { color: #16A34A; }
+    .tag-general { color: #64748B; }
+
+    .rule-textarea {
+      width: 100%;
+      min-height: 58px;
+      padding: 12px 14px;
+      border: 2.5px solid #CBD5E1;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #0F172A;
+      outline: none;
+      resize: vertical;
+      line-height: 1.5;
+      background: #FFFFFF;
+      transition: all 0.2s;
+    }
+
+    .rule-textarea:focus {
+      border-color: var(--btn-yellow);
+      background: #FFFDF0;
+      box-shadow: 0 0 0 4px rgba(254, 218, 53, 0.35);
+    }
+
+    .btn-submit-rules {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px;
+      padding: 16px 24px;
+      font-family: 'Jua', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(254, 218, 53, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
+
+    .btn-submit-rules:hover {
+      background: var(--btn-yellow-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(254, 218, 53, 0.6);
+    }
+
+    .btn-submit-rules:active {
+      transform: translateY(1px);
+    }
+
+    /* 실시간 모둠 공유 게시판 */
+    .board-card {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--text-white);
+    }
+
+    .board-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 12px;
+    }
+
+    .board-title {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-count-badge {
+      background: rgba(254, 218, 53, 0.2);
+      color: var(--btn-yellow);
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      padding: 4px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--btn-yellow);
+    }
+
+    .posts-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .post-card {
+      background: rgba(14, 70, 191, 0.35);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.2s;
+      color: var(--text-white);
+    }
+
+    .post-card.my-post {
+      background: rgba(14, 70, 191, 0.55);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25);
+    }
+
+    .post-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .post-author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .author-avatar {
+      font-size: 24px;
+      background: rgba(6, 27, 80, 0.7);
+      padding: 6px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent-cyan);
+    }
+
+    .author-name {
+      font-family: 'Jua', sans-serif;
+      font-size: 18px;
+      color: var(--text-white);
+    }
+
+    .author-tag {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--text-white);
+    }
+
+    .author-tag.me {
+      background: rgba(254, 218, 53, 0.25);
+      color: var(--btn-yellow);
+      border: 1px solid var(--btn-yellow);
+    }
+
+    .post-date {
+      font-size: 13px;
+      color: var(--text-white-dim);
+    }
+
+    .post-rules-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .rule-pill-box {
+      background: #FFFFFF;
+      border: 2px solid #CBD5E1;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: #0F172A;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .rule-pill-box:hover, .rule-pill-box:active {
+      border-color: var(--btn-yellow);
+      background: #FFFDF0;
+      transform: translateY(-1px);
+    }
+
+    .rule-pill-header {
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #0F172A;
+    }
+
+    .rule-pill-text {
+      font-size: 14px;
+      color: #0F172A;
+      font-weight: 600;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .post-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 10px;
+    }
+
+    .btn-post-del {
+      background: rgba(239, 68, 68, 0.2);
+      color: #FECACA;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'Jua', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-post-del:hover {
+      background: rgba(239, 68, 68, 0.4);
+      color: #FFFFFF;
+    }
+
+    /* 다음 퀘스트 완료 이동 바 */
+    .next-quest-banner {
+      background: var(--card-navy);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      color: white;
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .next-quest-info h3 {
+      font-family: 'Jua', sans-serif;
+      font-size: 22px;
+      color: var(--btn-yellow);
+      margin-bottom: 4px;
+    }
+
+    .next-quest-info p {
+      font-size: 14px;
+      color: var(--text-white-dim);
+    }
+
+    .btn-go-next {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      font-weight: 800;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      padding: 14px 24px;
+      border-radius: 16px;
+      font-family: 'Jua', sans-serif;
+      font-size: 18px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(254, 218, 53, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-go-next:hover {
+      background: var(--btn-yellow-hover);
+      transform: scale(1.04);
+      box-shadow: 0 6px 18px rgba(254, 218, 53, 0.6);
+    }
+
+    /* 토스트 알림창 */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1E293B;
+      color: #FFFFFF;
+      padding: 14px 28px;
+      border-radius: 40px;
+      font-size: 15px;
+      font-weight: 800;
+      z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
+  <script src="quest-intro.js"></script>
 </head>
 <body>
 
-<!-- 퀴즈 팝업 -->
-<div id="quiz-overlay" class="quiz-overlay" style="display:none;">
-  <div class="quiz-box">
-    <div class="quiz-header">
-      <h2 id="quiz-title">🔍 인공지능 아버지 퀴즈!</h2>
-      <span id="quiz-step" style="font-size:12px;color:rgba(255,255,255,0.4);margin-left:auto;"></span>
-    </div>
-    <div id="quiz-content"></div>
-  </div>
-</div>
-
-<div class="game-screen">
-  <div class="game-bg" id="game-bg"></div>
-  <div class="ai-notice">본 프로그램의 배경화면과 캐릭터는 AI로 생성되었습니다.</div>
-
-  <!-- 내 캐릭터 (왼쪽) -->
-  <img class="my-char" id="my-char" src="images/robot_1.png" alt="내캐릭터">
-  <!-- 두 번째 화자 (오른쪽 뒤) -->
-  <img class="speaker-char2" id="speaker-char2" src="images/char2-1.png" alt="앨런튜링">
-  <!-- 주 화자 (오른쪽 앞) -->
-  <img class="speaker-char" id="speaker-char" src="images/char2-1.png" alt="캐릭터">
-
-  <div class="game-hud">
-    <a href="main.html" class="hud-back">← 메인</a>
-    <div class="hud-title">🔍 퀘스트 2: 아버지를 찾아서</div>
-    <div class="hud-right">
-      <div class="hud-progress" id="hud-progress">1 / 9</div>
-      <div class="hud-score" id="hud-score">0 점</div>
-    </div>
-  </div>
-
-  <div class="dialog-box">
-    <div class="dialog-top-bar">
-      <div class="char-name-tag" id="dialog-name">내레이터</div>
-      <button class="btn-prev" id="btn-prev" onclick="prevMessage()">◀ 이전</button>
-    </div>
-    <div class="dialog-text-box hud-style">
-      <div class="dialog-text" id="dialog-text"></div>
-      <div class="dialog-next" id="dialog-next" onclick="nextMessage()"></div>
-    </div>
-  </div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script>
-// speaker: 0=내레이터, 1=앨런튜링(char2-1), 2=제프리힌턴(char2-2), 3=둘다, 4=이언굿펠로(char2-3)
-// bg: 기본=bgq2-1, 지정 시 msg.bg로 배경 변경
-const MESSAGES = [
-  { speaker:0, name:"내레이터", cls:"",
-    text:"나의 아버지를 소개할께.\n음악의 아버지가 바흐라면\n인공지능의 아버지는 앨런 튜링(Alan Turing)과\n제프리 힌턴(Geoffrey Hinton)이야." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"나를 소개하지.\n나는 영국의 수학자야.\n나는 1912년에 태어났지.\n그래서 나 때에는 우리가 아는 컴퓨터가 없었지.\n그냥 내 생각으로만 무엇이든 계산할 수 있는\n상상속의 기계를 설계했지.\n이게 바로 튜링 기계야." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"기계가 생각하는지 어떻게 알까?\n그래서 난 기계가 생각할 수 있는지 알 수 있는\n시험방법을 생각해냈지.\n먼저 벽 뒤에 있는 사람과 기계에게 채팅으로 질문을 하는거야.\n만약 {{name}}이 그 둘하고 대화해서\n누가 사람이고 기계인지 구분할 수 없다면\n그 기계는 지능을 가졌다고 볼 수 있는거야." },
-  { speaker:1, name:"앨런 튜링", cls:"turing",
-    text:"이걸 튜링 테스트라고 해. 🧪\n오늘날 ChatGPT 같은 AI들이 바로 이 테스트를\n통과할 수 있는 수준이야!" },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"나를 소개하지.\n나는 영국에서 태어나 캐나다 국적도 가지고 있지.\n나는 1947년에 태어난 컴퓨터 과학자 겸 심리학자야.\n앞에 나온 앨런 튜링 이후 인공지능은 긴 침체기였어.\n그 동안에는 기계에게 인간이 모든 규칙을 가르쳐야 했지." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"그래서 나는 인공신경망 방식을 주장했지.\n인간의 뇌가 수많은 뉴런으로 연결되서 학습하는 것처럼\n뉴런처럼 생긴 수학적 노드를 엄청 많이 쌓아 올리는 방법이지. 🧠" },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton",
-    text:"나는 결국 이 방법으로 효율적으로 학습시키는 방법을 찾았고\n이걸 딥러닝이라고 불렀어.\n덕분에 2024년 노벨 물리학상을 수상했지! 🏆" },
-  { speaker:3, name:"앨런 튜링 & 제프리 힌턴", cls:"both",
-    text:"앨런 튜링이 AI라는 꿈을 꾸었다면,\n제프리 힌턴은 그 꿈을 현실로 만드는 딥러닝을 만들었지.\n둘 다 인공지능의 역사에서 빠질 수 없는 아버지들이야! 👨‍👨‍👦" },
-  { speaker:3, name:"앨런 튜링 & 제프리 힌턴", cls:"both",
-    text:"자, 우리 두 사람에 대해 잘 배웠지?\n두 사람의 특징을 구분하는 퀴즈를 풀어볼까? 🎮",
-    type:"quiz_1" },
-
-  // ── 2부: 지도학습/비지도학습 (배경 bgq2-2) ──
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
-    text:"인공지능의 시작을 알아봤으니\n인공지능 학습의 가장 큰 두 줄기를 알아보도록 하자." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
-    text:"인공지능 학습방법에는 크게\n[지도학습]과 [비지도학습]이 있지." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
-    text:"지도학습이란 인공지능에게 문제와 정답을\n세트로 다 알려주면서 가르치는 방법이야." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-2",
-    text:"마치 인간이 기출문제와 답을 보면서\n\"아! 이 문제는 이렇게 푸는구나!\"라고\n깨닫게 하는 방법이야." },
-
-  // 배경 bgq2-3
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"인공지능에게 수천장의 강아지와 고양이 사진을\n보여주면서 \"이건 강아지야\", \"이건 고양이야\"라고\n이름을 붙여주는거야." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"이걸 라벨링(레이블링)이라고 하지. 🏷️" },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"그럼 인공지능은 학습하지 않은 강아지나 고양이 사진을 보면\n\"아 이건 예전에 배운 특징을 보니 고양이구나\"라고\n정답을 맞추는 거야." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"정답을 맞춘다고 했지만 정확히 말하면\n예측하는 거지. 🎯" },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"여기서 똑똑한 친구들은 눈치챘겠지만\n인공지능이 배우지 않은 내용은\n정확한 예측을 할 수 없어." },
-  { speaker:2, name:"제프리 힌턴", cls:"hinton", bg:"bgq2-3",
-    text:"대표적인 학자는 '제프리힌턴', '얀 르쿤', '앤드류 응'이 있지." },
-
-  // 이언 굿펠로 (char2-3) 등장
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
-    text:"안녕 나는 이언 굿펠로야. 👋\n이번에는 비지도학습에 대해 설명해줄께." },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-3",
-    text:"지도학습과 다르게 비지도학습은 정답이 없어.\n그냥 데이터들만 던져주고\n\"인공지능아 니가 여기서 뭐가 비슷한지 찾아봐\"라고 하는거야." },
-
-  // 배경 bgq2-5
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
-    text:"우리가 여러 옷 더미를 던져줬을 때\n양말은 양말끼리, 반팔은 반팔끼리,\n바지는 바지끼리 분류하는 것과 같아. 👕👖🧦" },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
-    text:"라벨링 되어있지 않은 수만개의 데이터를 보여주고\n스스로 데이터 사이의 공통점을 찾는거지." },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-5",
-    text:"그럼 언제 활용할 수 있을까? 🤔" },
-
-  // 배경 bgq2-6
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-6",
-    text:"음악 취향 찾기나 카드 부정사용을 방지하는데\n활용하기 좋지! 🎵💳" },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-6",
-    text:"\"이 사람은 이런 음악들을 듣네?\n비슷한 음악들을 그룹으로 묶어서 추천해주자!\"" },
-
-  // 배경 bgq2-7
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
-    text:"\"평소 이 사람은 한국에서 만원 정도 쓰는데\n갑자기 외국에서 100만원이 결제되었네?\n일단 정지시키자!\" 🚨" },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
-    text:"대표적인 학자로는\n'요수아 벤지오', '테우보 코호넨', '이언 굿펠로'가 있지." },
-  { speaker:4, name:"이언 굿펠로", cls:"goodfellow", bg:"bgq2-7",
-    text:"자, 지도학습과 비지도학습에 대해 잘 배웠지?\n퀴즈로 확인해볼까? 🎮",
-    type:"quiz_2" },
-];
-
-const QUIZ_ITEMS = [
-  { id:"a", text:"🇬🇧 1912년 영국 출생", answer:"turing" },
-  { id:"b", text:"🧮 튜링 기계 설계", answer:"turing" },
-  { id:"c", text:"🧪 튜링 테스트 고안", answer:"turing" },
-  { id:"d", text:"🧠 인공신경망 주장", answer:"hinton" },
-  { id:"e", text:"🔬 딥러닝 개발", answer:"hinton" },
-  { id:"f", text:"🏆 노벨 물리학상 수상", answer:"hinton" },
-];
-
-// 퀴즈2 - OX 2문제 + 객관식 1문제
-const QUIZZES_2 = [
-  { type:"ox", q:"지도학습에서는 AI에게 문제와 정답을 함께 알려주면서 학습시킨다.", ans:true,
-    exp:"지도학습은 문제와 정답 세트를 함께 제공해서 AI를 학습시키는 방법이에요." },
-  { type:"ox", q:"비지도학습에서는 AI에게 정답이 있는 라벨링된 데이터를 제공한다.", ans:false,
-    exp:"비지도학습은 정답(라벨) 없이 데이터만 주고 AI 스스로 패턴을 찾게 해요." },
-  { type:"mc", q:"다음 중 비지도학습을 활용하기 가장 적합한 사례는?",
-    opts:["사진 속 동물이 강아지인지 고양이인지 분류하기","음악 취향을 분석해서 비슷한 음악 추천하기","손글씨 숫자를 0~9로 인식하기","스팸 메일 여부를 '스팸/정상'으로 분류하기"],
-    ans:1, exp:"음악 취향 분석은 정답 없이 비슷한 패턴을 묶는 비지도학습의 대표적인 활용 사례예요!" },
-];
-
-let currentUser=null, userData=null;
-let msgIdx=0, isTyping=false, typingTimer=null;
-let quizShowing=false;
-let slotMap={}, currentDragId=null, touchDragId=null, touchClone=null;
-
-requireAuth(async (user) => {
-  currentUser=user;
-  if(user.uid==='student'){
-    const local=JSON.parse(localStorage.getItem('tempUserData')||'null');
-    userData=local||{charName:'AI',score:0,quests:{},name:'임시학생'};
-  } else if(user.uid==='admin'){
-    userData={charName:'관리자',score:0,quests:{},name:'관리자'};
-  } else {
-    try {
-      const snap=await db.collection('users').where('id','==',user.id).get();
-      if(!snap.empty){userData=snap.docs[0].data();currentUser.uid=snap.docs[0].id;}
-      else{userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};}
-    } catch(e){
-      userData={charName:user.name||'학생',score:0,quests:{},name:user.name||'학생'};
-    }
-  }
-  userData = userData || {charName:'AI',score:0,quests:{},name:'학생'};
-  // 이름 치환
-  MESSAGES[2].text=MESSAGES[2].text.replace('{{name}}', userData.name||'당신');
-  updateHUD(); updateCharImages();
-  startQuestTimer(2);
-  window.addEventListener('beforeunload', () => recordQuestProgress(currentUser, userData, 2));
-
-  // 완료된 퀘스트는 처음부터 다시 시작
-  const quests=userData.quests||{};
-  if(quests.q2_done){
-    msgIdx=0;
-  } else {
-    msgIdx=Math.min(quests.q2_msgIdx||0, MESSAGES.length-1);
-  }
-  setTimeout(()=>showMessage(msgIdx),500);
-  playBGM('quest');
-});
-
-function updateCharImages(){
-  const lv=getLevelByScore(userData.score||0, userData.charTrack);
-  document.getElementById('my-char').src=lv.img;
-}
-function updateHUD(){
-  document.getElementById('hud-score').textContent=(userData.score||0)+' 점';
-  document.getElementById('hud-progress').textContent=`${msgIdx+1} / ${MESSAGES.length}`;
-}
-
-function showMessage(idx){
-  if(idx>=MESSAGES.length){showComplete();return;}
-  const msg=MESSAGES[idx];
-  document.getElementById('hud-progress').textContent=`${idx+1} / ${MESSAGES.length}`;
-  document.getElementById('btn-prev').style.display=idx>0?'flex':'none';
-
-  // 배경 변경
-  if(msg.bg){
-    document.getElementById('game-bg').style.backgroundImage=`url('images/${msg.bg}.png')`;
-  }
-
-  // 화자별 처리
-  const nameTag=document.getElementById('dialog-name');
-  const sc=document.getElementById('speaker-char');
-  const sc2=document.getElementById('speaker-char2');
-  nameTag.className='char-name-tag '+(msg.cls||'');
-  nameTag.textContent=msg.name;
-
-  if(msg.speaker===0){
-    sc.src='images/char2-1.png'; sc.style.display='block';
-    sc2.style.display='none';
-  } else if(msg.speaker===1){
-    sc.src='images/char2-1.png'; sc.style.display='block';
-    sc2.style.display='none';
-  } else if(msg.speaker===2){
-    sc.src='images/char2-2.png'; sc.style.display='block';
-    sc2.style.display='none';
-  } else if(msg.speaker===3){
-    sc.src='images/char2-2.png'; sc.style.display='block';
-    sc2.src='images/char2-1.png'; sc2.style.display='block';
-  } else if(msg.speaker===4){
-    sc.src='images/char2-3.png'; sc.style.display='block';
-    sc2.style.display='none';
-  }
-
-  document.getElementById('dialog-next').style.display='flex';
-  typeText(document.getElementById('dialog-text'), msg.text, ()=>{
-    if(msg.type==='quiz_1'){
-      document.getElementById('dialog-next').style.display='none';
-      quizShowing=true;
-      setTimeout(()=>showQuizConfirm(()=>showQuiz1()), 600);
-    } else if(msg.type==='quiz_2'){
-      document.getElementById('dialog-next').style.display='none';
-      quizShowing=true;
-      setTimeout(()=>showQuizConfirm(()=>showQuiz2()), 600);
-    }
-  });
-}
-
-function typeText(el,text,cb){
-  el.textContent=''; isTyping=true;
-  document.getElementById('dialog-next').style.opacity='0.3';
-  let i=0;
-  typingTimer=setInterval(()=>{
-    if(i<text.length){el.textContent=text.slice(0,i+1);i++;}
-    else{
-      clearInterval(typingTimer); el.textContent=text; isTyping=false;
-      document.getElementById('dialog-next').style.opacity='1';
-      if(cb) cb();
-    }
-  },22);
-}
-
-function nextMessage(){
-  if(quizShowing) return;
-  if(isTyping){
-    clearInterval(typingTimer);
-    const msg=MESSAGES[msgIdx];
-    document.getElementById('dialog-text').textContent=msg.text;
-    isTyping=false;
-    document.getElementById('dialog-next').style.opacity='1';
-    if(msg.type==='quiz_1'){
-      document.getElementById('dialog-next').style.display='none';
-      quizShowing=true; setTimeout(()=>showQuizConfirm(()=>showQuiz1()),400);
-    } else if(msg.type==='quiz_2'){
-      document.getElementById('dialog-next').style.display='none';
-      quizShowing=true; setTimeout(()=>showQuizConfirm(()=>showQuiz2()),400);
-    }
-    return;
-  }
-  msgIdx++; autoSave(); showMessage(msgIdx);
-}
-
-function prevMessage(){
-  if(quizShowing) return;
-  if(isTyping){clearInterval(typingTimer);isTyping=false;}
-  if(msgIdx>0){msgIdx--;showMessage(msgIdx);}
-}
-
-async function autoSave(){
-  if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};
-    userData.quests.q2_msgIdx=msgIdx;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-    return;
-  }
-  await db.collection('users').doc(currentUser.uid).update({'quests.q2_msgIdx':msgIdx});
-}
-
-document.addEventListener('click',(e)=>{
-  if(quizShowing) return;
-  if(document.getElementById('board-overlay')) return;
-  if(document.getElementById('complete-btns')) return;
-  if(e.target.closest('.quiz-overlay')||e.target.closest('.dialog-next')||
-     e.target.closest('.hud-back')||e.target.closest('.btn-prev')) return;
-  nextMessage();
-});
-document.addEventListener('keydown',(e)=>{
-  if(quizShowing) return;
-  if(document.getElementById('board-overlay')) return;
-  if(document.getElementById('complete-btns')) return;
-  if(e.code==='Space'||e.code==='Enter') nextMessage();
-  if(e.code==='ArrowLeft') prevMessage();
-});
-
-// ══ 퀴즈1: 드래그앤드롭 분류 ══
-function showQuiz1(){
-  slotMap={};
-  const shuffled=[...QUIZ_ITEMS].sort(()=>Math.random()-.5);
-  document.getElementById('quiz-overlay').style.display='flex';
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-question">두 사람의 특징을 올바른 인물에게 드래그하세요!</div>
-    <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:14px;">
-      📱 모바일: 길게 눌러 드래그 | PC: 드래그앤드롭
-    </p>
-    <!-- 항목 풀 -->
-    <div class="source-pool">
-      <h4>📦 특징 목록</h4>
-      <div class="pool-items" id="item-pool">
-        ${shuffled.map(item=>`
-          <div class="dnd-item" id="item-${item.id}" draggable="true"
-            ondragstart="dragStart(event,'${item.id}')" ondragend="dragEnd(event)"
-            ontouchstart="touchStart(event,'${item.id}')" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">
-            <span class="drag-handle">⠿</span>${item.text}
-          </div>`).join('')}
+  <!-- 상단 헤더 -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="main.html" class="header-logo-link" title="메인 화면으로 이동">
+        <img src="images/bs-logo.png" alt="AI 자원순환 탐정단" class="header-bs-logo">
+      </a>
+      <a href="main.html" class="btn-quest-map" title="퀘스트 지도로 이동">🧭 퀘스트지도가기</a>
+      <div class="header-title-group">
+        <span class="header-quest-badge">QUEST 2</span>
+        <h1 class="header-title">분류기준 만들기</h1>
       </div>
     </div>
-    <!-- 두 사람 슬롯 -->
-    <div class="dnd-two-col">
-      <div class="dnd-person turing">
-        <h4>🇬🇧 앨런 튜링</h4>
-        ${['t1','t2','t3'].map(sid=>`
-          <div class="dnd-slot" id="slot-${sid}" data-person="turing" data-sid="${sid}"
-            ondragover="dragOver(event)" ondragleave="dragLeave(event)"
-            ondrop="dropItem(event,'${sid}','turing')">
-            여기에 드래그
-          </div>`).join('')}
+    <div class="header-right">
+      <div class="student-badge" id="dispStudent">학생 탐정 (1모둠)</div>
+      <div class="score-badge" id="scoreDisplay">0 EXP</div>
+    </div>
+  </header>
+
+  <!-- 메인 컨테이너 -->
+  <main class="app-container">
+
+    <!-- 인트로 안내 카드 -->
+    <section class="intro-card">
+      <div class="intro-icon"></div>
+      <div class="intro-text">
+        <h2>5대 쓰레기 품목별 분류 규칙 정립하기</h2>
+        <p>
+          AI가 교실 쓰레기를 헷갈리지 않고 정확히 인식할 수 있도록, <strong>종이, 플라스틱, 캔, 우유팩, 일반쓰레기</strong>의 구체적인 분류 기준과 분리배출 규칙을 작성해 보세요.<br>
+          작성한 규칙은 게시판에 실시간으로 공유되어 같은 모둠원들과 함께 비교하고 발전시킬 수 있습니다!
+        </p>
       </div>
-      <div class="dnd-person hinton">
-        <h4>🍁 제프리 힌턴</h4>
-        ${['h1','h2','h3'].map(sid=>`
-          <div class="dnd-slot" id="slot-${sid}" data-person="hinton" data-sid="${sid}"
-            ondragover="dragOver(event)" ondragleave="dragLeave(event)"
-            ondrop="dropItem(event,'${sid}','hinton')">
-            여기에 드래그
-          </div>`).join('')}
-      </div>
-    </div>
-    <div id="quiz-feedback"></div>
-    <button class="quiz-check-btn" id="check-btn" onclick="checkQuiz()">✅ 정답 확인</button>`;
-}
+    </section>
 
-function dropItem(e,sid,person){
-  e.preventDefault(); e.currentTarget.classList.remove('over');
-  const itemId=e.dataTransfer.getData('text')||currentDragId;
-  const item=QUIZ_ITEMS.find(i=>i.id===itemId); if(!item) return;
-  // 기존 슬롯에서 제거
-  Object.keys(slotMap).forEach(k=>{
-    if(slotMap[k]===itemId){
-      const old=document.getElementById('slot-'+k);
-      if(old){old.textContent='여기에 드래그';old.classList.remove('filled');}
-      delete slotMap[k];
-    }
-  });
-  slotMap[sid]=itemId;
-  const slot=document.getElementById('slot-'+sid);
-  slot.textContent=item.text; slot.classList.add('filled');
-}
+    <!-- 5대 품목 분류 규칙 작성 폼 -->
+    <section class="form-card">
+      <h3 class="form-section-title">
+        <span></span>
+        <span>우리 모둠 5대 품목 분류 규칙 작성하기</span>
+      </h3>
 
-function checkQuiz(){
-  let correct=0;
-  QUIZ_ITEMS.forEach(item=>{
-    const sid=Object.keys(slotMap).find(k=>slotMap[k]===item.id);
-    if(!sid) return;
-    const slot=document.getElementById('slot-'+sid);
-    const assignedPerson=document.getElementById('slot-'+sid)?.dataset?.person;
-    if(assignedPerson===item.answer){slot.classList.add('correct');correct++;}
-    else slot.classList.add('wrong');
-  });
-  const total=QUIZ_ITEMS.length;
-  const ok=correct===total;
-  document.getElementById('quiz-feedback').innerHTML=`
-    <div class="quiz-feedback ${ok?'correct':'wrong'}" style="margin-top:10px;">
-      ${ok?'🎉 완벽해요!':'❌ 아쉬워요!'} ${correct}/${total}개 정답!<br>
-      튜링: 1912년생·튜링기계·튜링테스트 / 힌턴: 인공신경망·딥러닝·노벨상
-    </div>
-    <button class="quiz-check-btn" onclick="finishQuiz1(${correct},${total})">
-      결과 보기 →
-    </button>`;
-  document.getElementById('check-btn').style.display='none';
-}
-
-async function finishQuiz1(correct, total){
-  const xp=correct*8+(correct===total?20:0);
-  await saveQuizResult('q2_quiz1',correct,total,xp);
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-result">
-      <div class="big-emoji">${correct===total?'🏆':correct>=4?'👍':'💪'}</div>
-      <h3>${correct} / ${total} 정답</h3>
-      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(correct/total*100)}%</div>
-      <div class="xp-gain">+${xp} 점 획득!</div>
-      <button class="quiz-check-btn" onclick="closeQuiz1()">계속하기 →</button>
-    </div>`;
-  showXPPopup('+'+xp+' 점');
-}
-
-function closeQuiz1(){
-  quizShowing=false;
-  document.getElementById('quiz-overlay').style.display='none';
-  msgIdx++; autoSave(); showMessage(msgIdx);
-}
-
-// ══ 퀴즈2: OX 2문제 + 객관식 1문제 ══
-let q2Idx=0, q2Score=0;
-
-function showQuiz2(){
-  q2Idx=0; q2Score=0;
-  document.getElementById('quiz-title').textContent='🧠 지도/비지도학습 퀴즈!';
-  document.getElementById('quiz-overlay').style.display='flex';
-  renderQ2();
-}
-
-function renderQ2(){
-  const q=QUIZZES_2[q2Idx];
-  document.getElementById('quiz-step').textContent=`${q2Idx+1} / ${QUIZZES_2.length}`;
-  if(q.type==='ox') renderOX(q);
-  else renderMC2(q);
-}
-
-function renderOX(q){
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-question" style="font-size:clamp(14px,2.5vw,16px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;">${q.q}</div>
-    <div style="display:flex;gap:12px;margin-top:16px;">
-      <button onclick="selectOX(true,this)"
-        style="flex:1;padding:20px;background:rgba(104,211,145,0.1);border:2px solid rgba(104,211,145,0.3);
-               border-radius:14px;color:#68d391;font-size:32px;cursor:pointer;font-family:inherit;">⭕</button>
-      <button onclick="selectOX(false,this)"
-        style="flex:1;padding:20px;background:rgba(252,129,129,0.1);border:2px solid rgba(252,129,129,0.3);
-               border-radius:14px;color:#fc8181;font-size:32px;cursor:pointer;font-family:inherit;">❌</button>
-    </div>
-    <div id="quiz-feedback" style="margin-top:12px;"></div>`;
-}
-
-function selectOX(val,btn){
-  const q=QUIZZES_2[q2Idx];
-  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
-  const ok=val===q.ans;
-  if(ok) q2Score++;
-  btn.style.transform='scale(1.05)';
-  document.getElementById('quiz-feedback').innerHTML=`
-    <div class="quiz-feedback ${ok?'correct':'wrong'}" style="margin-top:10px;">
-      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
-    </div>
-    <button class="quiz-check-btn" onclick="nextQ2()">
-      ${q2Idx+1<QUIZZES_2.length?'다음 문제 →':'결과 보기 →'}
-    </button>`;
-}
-
-function renderMC2(q){
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-question" style="font-size:clamp(14px,2.5vw,16px);font-weight:600;margin:12px 0;line-height:1.6;color:#e2e8f0;">${q.q}</div>
-    ${q.opts.map((opt,i)=>`
-      <button onclick="selectMC2(${i},this)"
-        style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.06);
-               border:2px solid rgba(99,179,237,0.2);border-radius:11px;color:#e2e8f0;
-               font-size:clamp(13px,2.3vw,14px);cursor:pointer;margin-bottom:8px;
-               text-align:left;font-family:inherit;transition:all .2s;">
-        ${opt}</button>`).join('')}
-    <div id="quiz-feedback" style="margin-top:4px;"></div>`;
-}
-
-function selectMC2(idx,btn){
-  const q=QUIZZES_2[q2Idx];
-  document.querySelectorAll('#quiz-content button').forEach(b=>b.disabled=true);
-  const ok=idx===q.ans;
-  if(ok) q2Score++;
-  btn.style.background=ok?'rgba(104,211,145,0.15)':'rgba(252,129,129,0.15)';
-  btn.style.borderColor=ok?'#68d391':'#fc8181';
-  document.querySelectorAll('#quiz-content button')[q.ans].style.background='rgba(104,211,145,0.15)';
-  document.querySelectorAll('#quiz-content button')[q.ans].style.borderColor='#68d391';
-  document.getElementById('quiz-feedback').innerHTML=`
-    <div class="quiz-feedback ${ok?'correct':'wrong'}">
-      ${ok?'✅ 정답!':'❌ 오답!'} ${q.exp}
-    </div>
-    <button class="quiz-check-btn" onclick="nextQ2()">결과 보기 →</button>`;
-}
-
-function nextQ2(){
-  q2Idx++;
-  if(q2Idx>=QUIZZES_2.length) finishQuiz2();
-  else renderQ2();
-}
-
-async function finishQuiz2(){
-  const total=QUIZZES_2.length;
-  const xp=q2Score*12+(q2Score===total?20:0);
-  await saveQuizResult('q2_quiz2',q2Score,total,xp);
-  document.getElementById('quiz-content').innerHTML=`
-    <div class="quiz-result">
-      <div class="big-emoji">${q2Score===total?'🏆':q2Score>=2?'👍':'💪'}</div>
-      <h3>${q2Score} / ${total} 정답</h3>
-      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;">정답률 ${Math.round(q2Score/total*100)}%</div>
-      <div class="xp-gain">+${xp} 점 획득!</div>
-      <button class="quiz-check-btn" onclick="closeQuiz2()">계속하기 →</button>
-    </div>`;
-  showXPPopup('+'+xp+' 점');
-}
-
-function closeQuiz2(){
-  quizShowing=false;
-  document.getElementById('quiz-overlay').style.display='none';
-  showBoard();
-}
-
-async function saveQuizResult(quizName, score, total, xp){
-  if(currentUser.uid==='student'){
-    userData.score=(userData.score||0)+xp;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-    updateHUD(); updateCharImages();
-  } else {
-    await addScore(currentUser.uid,xp,'퀘스트2 퀴즈');
-    await db.collection('quiz_results').doc(currentUser.uid).set({
-      [quizName]:firebase.firestore.FieldValue.arrayUnion({
-        score,total,xp,accuracy:Math.round(score/total*100),
-        date:new Date().toISOString()
-      })
-    },{merge:true});
-    userData.score=(userData.score||0)+xp;
-    updateHUD(); updateCharImages();
-    checkLevelUp(userData.score-xp,userData.score);
-  }
-}
-
-// ══════════════════════════════════════════
-//  게시판
-// ══════════════════════════════════════════
-function showBoard(){
-  const old=document.getElementById('board-overlay');
-  if(old) old.remove();
-  const overlay=document.createElement('div');
-  overlay.id='board-overlay';
-  overlay.style.cssText=`position:fixed;inset:0;z-index:160;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;`;
-  overlay.innerHTML=`
-    <div style="background:#111827;border:1px solid rgba(99,179,237,0.3);border-radius:20px;
-         width:100%;max-width:600px;padding:clamp(18px,3vw,28px);
-         max-height:90vh;overflow-y:auto;animation:slideUp .4s ease;">
-
-      <!-- 헤더 -->
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;">
-        <div style="flex:1;">
-          <h2 style="font-family:'Jua',sans-serif;font-size:clamp(15px,3vw,18px);color:#63b3ed;margin-bottom:4px;">
-            📋 인공지능과 관련 있는 사람들의<br>업적을 조사해볼까?
-          </h2>
-          <p style="font-size:12px;color:rgba(255,255,255,0.4);">찾은 내용이나 링크를 공유해보세요!</p>
-        </div>
-      </div>
-
-      <!-- 글 작성 -->
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(99,179,237,0.2);
-           border-radius:14px;padding:16px;margin-bottom:20px;">
-        <h4 style="font-size:13px;color:#63b3ed;margin-bottom:12px;">✏️ 글 쓰기</h4>
-        <textarea id="board-content" placeholder="조사한 인물이나 업적을 써보세요..."
-          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
-                 border-radius:10px;padding:12px;color:#e2e8f0;font-size:14px;
-                 font-family:inherit;resize:vertical;min-height:80px;outline:none;
-                 transition:border .2s;"
-          onfocus="this.style.borderColor='#63b3ed'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'"></textarea>
-        <input id="board-link" placeholder="🔗 관련 링크 (선택사항, https://...)"
-          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
-                 border-radius:10px;padding:10px 12px;color:#e2e8f0;font-size:13px;
-                 font-family:inherit;outline:none;margin-top:8px;transition:border .2s;"
-          onfocus="this.style.borderColor='#63b3ed'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
-        <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:10px;">
-          <button onclick="submitPost()"
-            style="background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;
-                   border-radius:9px;padding:8px 18px;color:#0a0e1a;font-size:13px;
-                   font-weight:700;cursor:pointer;font-family:inherit;">
-            게시하기 📤
-          </button>
-        </div>
-        <div id="board-alert" style="margin-top:8px;"></div>
-      </div>
-
-      <!-- 글 목록 -->
-      <div>
-        <h4 style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:12px;">📌 모든 게시글</h4>
-        <div id="board-posts">
-          <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3);font-size:13px;">
-            <div style="width:30px;height:30px;border:2px solid rgba(255,255,255,0.2);border-top-color:#63b3ed;border-radius:50%;animation:sp .6s linear infinite;margin:0 auto 10px;"></div>
-            불러오는 중...
+      <div class="rule-input-grid">
+        <!-- 1. 종이 -->
+        <div class="rule-item-box">
+          <div class="rule-item-header">
+            <span class="rule-label tag-paper">1. 종이류 분류 규칙</span>
           </div>
+          <textarea id="rulePaper" class="rule-textarea" placeholder="종이류 판별 및 올바른 분리배출 규칙을 입력하세요."></textarea>
+        </div>
+
+        <!-- 2. 플라스틱 -->
+        <div class="rule-item-box">
+          <div class="rule-item-header">
+            <span class="rule-label tag-plastic">2. 플라스틱류 분류 규칙</span>
+          </div>
+          <textarea id="rulePlastic" class="rule-textarea" placeholder="플라스틱류 판별 및 올바른 분리배출 규칙을 입력하세요."></textarea>
+        </div>
+
+        <!-- 3. 캔류 -->
+        <div class="rule-item-box">
+          <div class="rule-item-header">
+            <span class="rule-label tag-can">3. 캔류(철캔·알루미늄캔) 분류 규칙</span>
+          </div>
+          <textarea id="ruleCan" class="rule-textarea" placeholder="캔류 판별 및 올바른 분리배출 규칙을 입력하세요."></textarea>
+        </div>
+
+        <!-- 4. 우유팩 -->
+        <div class="rule-item-box">
+          <div class="rule-item-header">
+            <span class="rule-label tag-milk">4. 우유팩(살균팩·멸균팩) 분류 규칙</span>
+          </div>
+          <textarea id="ruleMilk" class="rule-textarea" placeholder="우유팩(종이팩) 판별 및 일반 종이류와의 구분 분리배출 규칙을 입력하세요."></textarea>
+        </div>
+
+        <!-- 5. 일반쓰레기 -->
+        <div class="rule-item-box">
+          <div class="rule-item-header">
+            <span class="rule-label tag-general">5. 일반쓰레기(종량제) 분류 규칙</span>
+          </div>
+          <textarea id="ruleGeneral" class="rule-textarea" placeholder="재활용이 불가능하여 일반 종량제 봉투에 버려야 하는 기준을 입력하세요."></textarea>
         </div>
       </div>
 
-      <!-- 완료 버튼 -->
-      <button onclick="skipBoard()"
-        style="width:100%;padding:13px;margin-top:16px;
-               background:linear-gradient(135deg,#63b3ed,#4299e1);
-               border:none;border-radius:12px;color:#0a0e1a;
-               font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
-        퀘스트 완료하기 →
+      <button id="btnSaveRules" class="btn-submit-rules" onclick="submitRules()">
+        <span></span>
+        <span>우리 모둠 분류 규칙 저장 및 게시판에 등록 (+100 EXP)</span>
       </button>
-    </div>
-    <style>@keyframes sp{to{transform:rotate(360deg);}}</style>`;
-  document.body.appendChild(overlay);
-  loadPosts();
-}
+    </section>
 
-async function submitPost(){
-  const content=document.getElementById('board-content').value.trim();
-  const link=document.getElementById('board-link').value.trim();
-  const alertEl=document.getElementById('board-alert');
-  alertEl.innerHTML=`<div style="color:#63b3ed;font-size:12px;">게시 중...</div>`;
-  const result=await submitBoardPost('board_q2',userData,currentUser,content,link);
-  if(!result.ok){alertEl.innerHTML=`<div style="color:#fc8181;font-size:12px;">⚠️ ${result.msg}</div>`;return;}
-  document.getElementById('board-content').value='';
-  document.getElementById('board-link').value='';
-  alertEl.innerHTML=`<div style="color:#68d391;font-size:12px;">✅ 게시완료! +${BOARD_DEFAULT_XP}점</div>`;
-  setTimeout(()=>alertEl.innerHTML='',2500);
-  showXPPopup('+'+BOARD_DEFAULT_XP+' 점');
-  loadPosts();
-}
-
-async function loadPosts(){
-  const container=document.getElementById('board-posts');
-  if(!container) return;
-  try{
-    const myId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-    const posts=await loadBoardPosts('board_q2',myId);
-    if(!posts.length){container.innerHTML=`<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:13px;">아직 게시글이 없어요!</div>`;return;}
-    container.innerHTML=posts.map(d=>{
-      const isMe=d.authorId===myId;
-      const isAdmin=currentUser.uid==='admin';
-      const canDelete=isMe||isAdmin;
-      const date=d.created_at?.slice(0,16).replace('T',' ')||'';
-      const xp=d.xp||BOARD_DEFAULT_XP;
-      const cheers=d.cheers||[];
-      const cheerCount=d.cheerCount||cheers.length;
-      const alreadyCheered=cheers.includes(myId);
-      return `<div id="post-${d.id}" style="background:rgba(255,255,255,0.04);border:1px solid ${isMe?'rgba(99,179,237,0.3)':'rgba(255,255,255,0.08)'};border-radius:12px;padding:14px;margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
-          <span style="font-size:13px;font-weight:700;color:${isMe?'#63b3ed':'#e2e8f0'};">${isMe?'👤 ':''}${d.authorName}${d.isTemp?'<span style="font-size:10px;color:rgba(255,255,255,0.3);"> (임시)</span>':''}</span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.3);border-radius:6px;padding:2px 8px;font-size:11px;color:#f6ad55;">+${xp}점</span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.3);">${date}</span>
-            ${canDelete?`<button onclick="deleteMyPost('${d.id}')" style="background:rgba(252,129,129,0.15);border:1px solid rgba(252,129,129,0.3);border-radius:6px;padding:3px 8px;color:#fc8181;font-size:11px;cursor:pointer;font-family:inherit;">🗑️</button>`:''}
-          </div>
+    <!-- 실시간 모둠 공유 게시판 -->
+    <section class="board-card">
+      <div class="board-header">
+        <div class="board-title">
+          <span></span>
+          <span>우리 모둠 실시간 분류 규칙 게시판</span>
         </div>
-        <p style="font-size:14px;color:#e2e8f0;line-height:1.6;margin-bottom:8px;white-space:pre-wrap;">${d.content}</p>
-        <div style="display:flex;align-items:center;gap:8px;">
-          ${d.link?`<a href="${d.link}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#63b3ed;text-decoration:none;background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.2);border-radius:6px;padding:4px 10px;">🔗 링크 보기</a>`:''}
-          <button class="cheer-btn ${alreadyCheered?'cheered':''}" onclick="${alreadyCheered?'':`doCheerQ2('${d.id}',this)`}" ${alreadyCheered?'disabled':''} style="display:inline-flex;align-items:center;gap:4px;background:rgba(246,173,85,0.1);border:1px solid rgba(246,173,85,0.2);border-radius:8px;padding:4px 10px;color:#f6ad55;font-size:12px;font-family:inherit;cursor:${alreadyCheered?'default':'pointer'};">👏 응원 ${cheerCount>0?cheerCount:''}</button>
+        <span class="board-count-badge" id="boardCountBadge">등록 0건</span>
+      </div>
+
+      <div class="posts-grid" id="postsContainer">
+        <div style="text-align:center; padding:30px; color:#94A3B8; font-size:15px;">
+          아직 모둠원들이 등록한 분류 규칙이 없습니다. 위에서 먼저 작성하고 등록해보세요!
         </div>
-      </div>`;
-    }).join('');
-  }catch(e){container.innerHTML=`<div style="color:#fc8181;font-size:13px;padding:16px;">오류: ${e.message}</div>`;}
-}
+      </div>
+    </section>
 
-async function doCheerQ2(docId, btn){
-  const myId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-  const result=await cheerPost('board_q2', docId, myId);
-  if(result.ok){
-    btn.classList.add('cheered');
-    btn.disabled=true;
-    btn.innerHTML='👏 응원 '+result.count;
-    playSFX('correct');
-  } else {
-    alert(result.msg);
-  }
-}
+    <!-- 메인 화면 이동 배너 -->
+    <section class="next-quest-banner">
+      <div class="next-quest-info">
+        <h3>분류 기준 등록 완료!</h3>
+        <p>우리 모둠의 분류 규칙이 게시판에 공유되었습니다. 메인 화면으로 이동하여 전체 진도를 확인해보세요.</p>
+      </div>
+      <a href="main.html" class="btn-go-next">
+        <span>퀘스트지도가기</span>
+      </a>
+    </section>
 
-async function deleteMyPost(docId){
-  if(!confirm('이 게시글을 삭제할까요?')) return;
-  try{
-    const snap=await db.collection('board_q2').doc(docId).get();
-    if(snap.exists){
-      const post=snap.data();
-      const xp=post.xp||BOARD_DEFAULT_XP;
-      
-      const myId=currentUser.uid==='student'?('temp_'+(userData.charName||'익명')):currentUser.uid;
-      const isAdmin=currentUser.uid==='admin';
-      if(post.authorId!==myId && !isAdmin){
-        alert('삭제 권한이 없습니다.');
+  </main>
+
+  <!-- 토스트 알림창 -->
+  <div class="toast-msg" id="toastMsg">알림 메시지</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where, serverTimestamp, increment 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCdx4xwK3XIzgw_4hFEohnMe64dc4LDB00",
+      authDomain: "elemeelementary-textbook.firebaseapp.com",
+      projectId: "elemeelementary-textbook",
+      storageBucket: "elemeelementary-textbook.firebasestorage.app",
+      messagingSenderId: "713149004420",
+      appId: "1:713149004420:web:8483273681e16f5a8fa0d1",
+      measurementId: "G-TZT282J9E8"
+    };
+
+    let db = null;
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    } catch (e) {
+      console.warn("Firebase 초기화 오류:", e);
+    }
+
+    const studentId = localStorage.getItem("elementary_studentId") || "guest";
+    const studentName = localStorage.getItem("elementary_studentName") || "학생 탐정";
+    const teamCode = localStorage.getItem("elementary_teamCode") || "1모둠";
+    let currentScore = parseInt(localStorage.getItem("elementary_score") || "0", 10);
+
+    // 상단 HUD 표시
+    document.getElementById("dispStudent").textContent = `${studentName} (${teamCode})`;
+    document.getElementById("scoreDisplay").textContent = `${currentScore} EXP`;
+
+    // 사운드 시스템
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.start(now); osc.stop(now + 0.08);
+      } else if (type === 'success') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g); g.connect(audioCtx.destination);
+          o.frequency.setValueAtTime(freq, now + i * 0.1);
+          g.gain.setValueAtTime(0.2, now + i * 0.1);
+          g.gain.linearRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
+          o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.2);
+        });
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMsg');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function addScore(pts) {
+      currentScore += pts;
+      document.getElementById('scoreDisplay').textContent = `${currentScore} EXP`;
+      localStorage.setItem("elementary_score", currentScore.toString());
+    }
+
+    // 1. 규칙 저장 및 게시
+    window.submitRules = async function() {
+      playSound('click');
+      const paper = document.getElementById("rulePaper").value.trim();
+      const plastic = document.getElementById("rulePlastic").value.trim();
+      const can = document.getElementById("ruleCan").value.trim();
+      const milk = document.getElementById("ruleMilk").value.trim();
+      const general = document.getElementById("ruleGeneral").value.trim();
+
+      if (!paper && !plastic && !can && !milk && !general) {
+        alert("최소 하나 이상의 분류 규칙을 작성해주세요!");
+        document.getElementById("rulePaper").focus();
         return;
       }
-      
-      await db.collection('board_q2').doc(docId).delete();
-      if(post.isTemp){
-        if(post.authorId===myId){
-          userData.score=Math.max(0,(userData.score||0)-xp);
-          localStorage.setItem('tempUserData',JSON.stringify(userData));
+
+      const btn = document.getElementById("btnSaveRules");
+      btn.disabled = true;
+      btn.textContent = "저장 및 게시판 등록 중...";
+
+      try {
+        const postData = {
+          studentId: studentId,
+          studentName: studentName,
+          teamCode: teamCode,
+          paperRule: paper || "규칙 미작성",
+          plasticRule: plastic || "규칙 미작성",
+          canRule: can || "규칙 미작성",
+          milkRule: milk || "규칙 미작성",
+          generalRule: general || "규칙 미작성",
+          statement: `[종이] ${paper || '-'} / [플라스틱] ${plastic || '-'} / [캔] ${can || '-'} / [우유팩] ${milk || '-'} / [일반] ${general || '-'}`,
+          createdAt: serverTimestamp()
+        };
+
+        if (db) {
+          await addDoc(collection(db, "quest2_rules"), postData);
+
+          // 점수 및 퀘스트 완료 처리
+          if (studentId && studentId !== "guest") {
+            await updateDoc(doc(db, "students", studentId), {
+              score: increment(100),
+              questsDone: increment(1),
+              q2Done: true,
+              q2_done: true
+            }).catch(e => console.warn(e));
+
+            await updateDoc(doc(db, "teams", teamCode), {
+              score: increment(100),
+              questsDone: increment(1),
+              lastActive: serverTimestamp()
+            }).catch(e => console.warn(e));
+          }
         }
-      } else {
-        await addScore(post.authorId,-xp,'게시글 삭제 (board_q2)');
+
+        // 로컬 상태 완료 반영
+        addScore(100);
+        localStorage.setItem("quest2_completed", "true");
+        localStorage.setItem("elementary_q2_done", "true");
+
+        playSound('success');
+        showToast("분류 규칙이 성공적으로 게시판에 등록되었습니다! (+100 EXP)");
+
+        // 폼 초기화
+        document.getElementById("rulePaper").value = "";
+        document.getElementById("rulePlastic").value = "";
+        document.getElementById("ruleCan").value = "";
+        document.getElementById("ruleMilk").value = "";
+        document.getElementById("ruleGeneral").value = "";
+
+      } catch (err) {
+        console.error(err);
+        alert("등록 중 오류가 발생했습니다: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span></span><span>우리 모둠 분류 규칙 저장 및 게시판에 등록 (+100 EXP)</span>`;
       }
+    };
+
+    // 2. 글 삭제
+    window.deleteRulePost = async function(postId) {
+      if (!confirm("작성하신 분류 규칙 게시글을 삭제할까요?")) return;
+      try {
+        if (db) {
+          await deleteDoc(doc(db, "quest2_rules", postId));
+          showToast("게시글이 삭제되었습니다.");
+        }
+      } catch (err) {
+        alert("삭제 실패: " + err.message);
+      }
+    };
+
+    // 3. 실시간 같은 모둠 게시판 구독
+    if (db && teamCode) {
+      const q = query(collection(db, "quest2_rules"), where("teamCode", "==", teamCode));
+      onSnapshot(q, (snapshot) => {
+        const container = document.getElementById("postsContainer");
+        const countBadge = document.getElementById("boardCountBadge");
+
+        if (snapshot.empty) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:30px; color:#94A3B8; font-size:15px;">
+              아직 모둠원들이 등록한 분류 규칙이 없습니다. 위에서 먼저 작성하고 등록해보세요!
+            </div>
+          `;
+          countBadge.textContent = "등록 0건";
+          return;
+        }
+
+        countBadge.textContent = `등록 ${snapshot.size}건`;
+
+        const posts = [];
+        snapshot.forEach(docSnap => {
+          posts.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // 최신순 정렬
+        posts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        container.innerHTML = posts.map(post => {
+          const isMe = (post.studentId === studentId) || (post.studentName === studentName);
+          const timeStr = post.createdAt?.seconds 
+            ? new Date(post.createdAt.seconds * 1000).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) 
+            : '방금 전';
+
+          return `
+            <div class="post-card ${isMe ? 'my-post' : ''}">
+              <div class="post-top">
+                <div class="post-author-wrap">
+                  <div class="author-avatar" style="font-size:12px; font-weight:bold;">${isMe ? '나' : '학생'}</div>
+                  <div class="author-name">${post.studentName || '탐정 모둠원'}</div>
+                  <span class="author-tag ${isMe ? 'me' : ''}">${isMe ? '내가 쓴 글' : '모둠원'}</span>
+                </div>
+                <div class="post-date">${timeStr}</div>
+              </div>
+
+              <div class="post-rules-content">
+                <div class="rule-pill-box">
+                  <div class="rule-pill-header tag-paper">종이류</div>
+                  <div class="rule-pill-text">${post.paperRule || '-'}</div>
+                </div>
+                <div class="rule-pill-box">
+                  <div class="rule-pill-header tag-plastic">플라스틱류</div>
+                  <div class="rule-pill-text">${post.plasticRule || '-'}</div>
+                </div>
+                <div class="rule-pill-box">
+                  <div class="rule-pill-header tag-can">캔류</div>
+                  <div class="rule-pill-text">${post.canRule || '-'}</div>
+                </div>
+                <div class="rule-pill-box">
+                  <div class="rule-pill-header tag-milk">우유팩(살균/멸균)</div>
+                  <div class="rule-pill-text">${post.milkRule || '-'}</div>
+                </div>
+                <div class="rule-pill-box">
+                  <div class="rule-pill-header tag-general">일반쓰레기</div>
+                  <div class="rule-pill-text">${post.generalRule || '-'}</div>
+                </div>
+              </div>
+
+              ${isMe ? `
+                <div class="post-actions">
+                  <button class="btn-post-del" onclick="deleteRulePost('${post.id}')">내 글 삭제</button>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }, (err) => {
+        console.warn("게시판 로드 실패:", err);
+      });
     }
-    document.getElementById('post-'+docId)?.remove();
-  }catch(e){alert('삭제 실패: '+e.message);}
-}
-
-async function skipBoard(){
-  const el=document.getElementById('board-overlay');
-  if(el) el.remove();
-  userData.quests=userData.quests||{};
-  userData.quests.q2_done=true;
-  if(currentUser.uid==='student'){
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-  } else {
-    await db.collection('users').doc(currentUser.uid).set({
-      quests: { q2_done: true, q2_msgIdx: MESSAGES.length }
-    }, { merge: true });
-  }
-  await unlockBadge('truth_seeker', currentUser, userData);
-  showComplete();
-}
-
-let completeShown=false;
-function showComplete(){
-  if(completeShown) return;
-  completeShown=true;
-  recordQuestProgress(currentUser, userData, 2, 100, true);
-  document.getElementById('dialog-next').style.display='none';
-  typeText(document.getElementById('dialog-text'),
-    '🎉 퀘스트 2 완료!\n인공지능의 아버지들을 잘 배웠어!',()=>{
-    const old=document.getElementById('complete-btns');
-    if(old) old.remove();
-    const overlay=document.createElement('div');
-    overlay.id='complete-btns';
-    overlay.style.cssText=`position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;`;
-    overlay.innerHTML=`
-      <div style="background:#111827;border:2px solid rgba(99,179,237,0.4);border-radius:24px;
-           padding:36px 32px;text-align:center;max-width:360px;width:90%;
-           box-shadow:0 0 60px rgba(99,179,237,0.2);animation:slideUp .4s ease;">
-        <div style="font-size:56px;margin-bottom:12px;">🏅</div>
-        <h2 style="font-family:'Jua',sans-serif;font-size:22px;color:#63b3ed;margin-bottom:6px;">
-          퀘스트 2 완료!
-        </h2>
-        <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.6;">
-          인공지능의 아버지들을<br>성공적으로 만났어요! 🧠
-        </p>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <button onclick="window.location.href='quest3.html'"
-            style="padding:14px;background:linear-gradient(135deg,#63b3ed,#4299e1);border:none;border-radius:12px;color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;"
-            onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-            다음 퀘스트 → 인공지능 수업자료 만들기 📚
-          </button>
-          <button onclick="replayQuest()"
-            style="padding:12px;background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.4);border-radius:12px;color:#f6ad55;font-size:14px;cursor:pointer;font-family:inherit;">
-            🔄 퀘스트 다시 하기
-          </button>
-          <button onclick="goMain()"
-            style="padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:rgba(255,255,255,0.7);font-size:14px;cursor:pointer;font-family:inherit;">
-            🏠 메인으로 돌아가기
-          </button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-  });
-}
-
-function replayQuest(){
-  // 진행도 리셋
-  if(currentUser.uid==='student'){
-    userData.quests=userData.quests||{};
-    userData.quests.q2_msgIdx=0;
-    userData.quests.q2_done=false;
-    localStorage.setItem('tempUserData',JSON.stringify(userData));
-  } else {
-    db.collection('users').doc(currentUser.uid).update({'quests.q2_msgIdx':0,'quests.q2_done':false});
-  }
-  // 페이지 새로고침으로 처음부터
-  window.location.reload();
-}
-
-function goMain(){
-  // sessionStorage에 from_quest 플래그 설정 → main.html이 이어하기 화면 안 띄우도록
-  sessionStorage.setItem('from_quest','1');
-  window.location.href='main.html';
-}
-
-function checkLevelUp(before,after){
-  const lvB=getLevelByScore(before, userData.charTrack),lvA=getLevelByScore(after, userData.charTrack);
-  if(lvA.level>lvB.level){
-    const el=document.createElement('div');
-    el.className='levelup-screen';
-    el.innerHTML=`
-      <div class="levelup-container">
-        <div class="levelup-ring"></div>
-        <img src="${lvA.img}" style="height:120px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(246,173,85,0.8));position:relative;z-index:1;animation:float 3s ease-in-out infinite;">
-        <h1 style="font-family:'Jua',sans-serif;font-size:36px;color:#f6ad55;margin:0;position:relative;z-index:1;">레벨 업! 🎉</h1>
-        <p style="font-size:18px;color:#63b3ed;margin:0;position:relative;z-index:1;">Lv.${lvA.level} ${lvA.name}</p>
-        <button class="quiz-check-btn" style="max-width:180px;margin-top:8px;position:relative;z-index:1;" onclick="this.parentElement.parentElement.remove()">확인</button>
-      </div>`;
-    document.body.appendChild(el);
-  }
-}
-
-// 드래그
-function dragStart(e,id){currentDragId=id;e.dataTransfer.setData('text',id);setTimeout(()=>document.getElementById('item-'+id)?.classList.add('dragging'),0);}
-function dragEnd(){document.querySelectorAll('.dnd-item').forEach(el=>el.classList.remove('dragging'));}
-function dragOver(e){e.preventDefault();e.currentTarget.classList.add('over');}
-function dragLeave(e){e.currentTarget.classList.remove('over');}
-
-// 터치
-function touchStart(e,id){
-  touchDragId=id;
-  const el=document.getElementById('item-'+id);
-  touchClone=el.cloneNode(true);
-  touchClone.style.cssText=`position:fixed;opacity:0.85;pointer-events:none;z-index:999;background:#1a2235;border-radius:9px;padding:8px 12px;font-size:13px;color:#e2e8f0;border:2px solid rgba(99,179,237,0.4);`;
-  document.body.appendChild(touchClone);
-}
-function touchMove(e){
-  e.preventDefault();
-  const t=e.touches[0];
-  if(touchClone){touchClone.style.left=(t.clientX-60)+'px';touchClone.style.top=(t.clientY-20)+'px';}
-  document.querySelectorAll('.dnd-slot').forEach(s=>s.classList.remove('over'));
-  document.elementFromPoint(t.clientX,t.clientY)?.closest('.dnd-slot')?.classList.add('over');
-}
-function touchEnd(e){
-  if(touchClone){touchClone.remove();touchClone=null;}
-  document.querySelectorAll('.dnd-slot').forEach(s=>s.classList.remove('over'));
-  const t=e.changedTouches[0];
-  const el=document.elementFromPoint(t.clientX,t.clientY)?.closest('.dnd-slot');
-  if(!el||!touchDragId) return;
-  const sid=el.dataset.sid;
-  const person=el.dataset.person;
-  const item=QUIZ_ITEMS.find(i=>i.id===touchDragId);
-  if(item&&sid){
-    Object.keys(slotMap).forEach(k=>{
-      if(slotMap[k]===touchDragId){
-        const old=document.getElementById('slot-'+k);
-        if(old){old.textContent='여기에 드래그';old.classList.remove('filled');}
-        delete slotMap[k];
-      }
-    });
-    slotMap[sid]=touchDragId;
-    el.textContent=item.text; el.classList.add('filled');
-  }
-  touchDragId=null;
-}
-
-// 퀴즈 시작 확인 팝업
-function showQuizConfirm(onConfirm){
-  const old=document.getElementById('quiz-confirm-overlay');
-  if(old) old.remove();
-  const overlay=document.createElement('div');
-  overlay.id='quiz-confirm-overlay';
-  overlay.className='quiz-confirm-overlay';
-  overlay.innerHTML=`
-    <div class="quiz-confirm-box">
-      <div class="quiz-confirm-emoji">🔍</div>
-      <div class="quiz-confirm-title">퀴즈 시간! 🎯</div>
-      <div class="quiz-confirm-desc">지금까지 배운 내용을<br>퀴즈로 확인해볼까요?</div>
-      <div class="quiz-confirm-btns">
-        <button class="quiz-confirm-cancel" onclick="document.getElementById('quiz-confirm-overlay').remove();quizShowing=false;">나중에</button>
-        <button class="quiz-confirm-ok" onclick="document.getElementById('quiz-confirm-overlay').remove();onConfirmCallback();">도전하기! 🚀</button>
-      </div>
-    </div>`;
-  window.onConfirmCallback=onConfirm;
-  document.body.appendChild(overlay);
-}
-
-</script>
+  </script>
 </body>
 </html>
