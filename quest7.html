@@ -134,6 +134,28 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     }
 
+    .btn-intro-replay {
+      background: rgba(254, 218, 53, 0.18);
+      border: 1.5px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'Jua', sans-serif;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-intro-replay:hover {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      transform: translateY(-1px);
+    }
+
     .step-nav {
       background: rgba(6, 27, 80, 0.85);
       backdrop-filter: blur(8px);
@@ -810,6 +832,7 @@
       <span class="header-title">QUEST 7: 우리 모둠 실천 규약 초안 입력하기</span>
     </div>
     <div class="header-right">
+      <button class="btn-intro-replay" onclick="window.replayQuestIntro && window.replayQuestIntro()" title="대화형 인트로 다시보기">🎬 인트로</button>
       <div class="team-badge" id="headerTeamBadge">모둠 로딩 중...</div>
       <div class="score-badge" id="scoreDisplay">0 EXP</div>
     </div>

@@ -145,6 +145,28 @@
       color: var(--btn-yellow);
     }
 
+    .btn-intro-replay {
+      background: rgba(254, 218, 53, 0.18);
+      border: 1.5px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'Jua', sans-serif;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-intro-replay:hover {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      transform: translateY(-1px);
+    }
+
     .page-title {
       font-family: 'Jua', sans-serif;
       font-size: 28px;
@@ -421,6 +443,7 @@
       <a href="main.html" class="btn-quest-map" title="퀘스트 지도로 이동">🧭 퀘스트지도가기</a>
     </div>
     <div class="header-info-group">
+      <button class="btn-intro-replay" onclick="window.replayQuestIntro && window.replayQuestIntro()" title="대화형 인트로 다시보기">🎬 인트로</button>
       <div class="header-team" id="dispTeam">1모둠</div>
       <div class="header-score" id="dispScore">0점</div>
     </div>

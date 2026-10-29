@@ -166,6 +166,28 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
+    .btn-intro-replay {
+      background: rgba(254, 218, 53, 0.18);
+      border: 1.5px solid var(--btn-yellow);
+      color: var(--btn-yellow);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'Jua', sans-serif;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .btn-intro-replay:hover {
+      background: var(--btn-yellow);
+      color: #0F172A;
+      transform: translateY(-1px);
+    }
+
     /* 메인 컨테이너 */
     .app-container {
       width: 100%;
@@ -614,6 +636,7 @@
       </div>
     </div>
     <div class="header-right">
+      <button class="btn-intro-replay" onclick="window.replayQuestIntro && window.replayQuestIntro()" title="대화형 인트로 다시보기">🎬 인트로</button>
       <div class="score-badge" id="scoreDisplay">0 EXP</div>
       <button class="btn-sound" id="soundToggle" onclick="toggleSound()" style="font-size:13px; font-weight:bold; padding:6px 10px; border-radius:10px; cursor:pointer;">소리</button>
     </div>
